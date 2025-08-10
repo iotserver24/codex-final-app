@@ -142,7 +142,7 @@ export function TokenBar({ chatId }: TokenBarProps) {
             }
             className="text-blue-500 dark:text-blue-400 cursor-pointer hover:underline"
           >
-            Dyad Pro's Smart Context
+            codeX Pro's Smart Context
           </a>
         </div>
       )}

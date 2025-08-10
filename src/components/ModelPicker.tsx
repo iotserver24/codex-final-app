@@ -1,4 +1,4 @@
-import { isDyadProEnabled, type LargeLanguageModel } from "@/lib/schemas";
+import { isCodexProEnabled, type LargeLanguageModel } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -120,7 +120,7 @@ export function ModelPicker() {
   }
   const selectedModel = settings?.selectedModel;
   const isSmartAutoEnabled =
-    settings.enableProSmartFilesContextMode && isDyadProEnabled(settings);
+    settings.enableProSmartFilesContextMode && isCodexProEnabled(settings);
   const modelDisplayName = getModelDisplayName();
 
   return (
@@ -201,7 +201,7 @@ export function ModelPicker() {
                           <div className="flex items-center gap-1.5">
                             {isSmartAutoEnabled && (
                               <span className="text-[10px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_100%] animate-[shimmer_5s_ease-in-out_infinite] text-white px-1.5 py-0.5 rounded-full font-medium">
-                                Dyad Pro
+                                codeX Pro
                               </span>
                             )}
                             {model.tag && (

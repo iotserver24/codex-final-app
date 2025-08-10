@@ -251,7 +251,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
         <ChatErrorBox
           onDismiss={dismissError}
           error={error}
-          isDyadProEnabled={settings.enableDyadPro ?? false}
+          isCodexProEnabled={true}
         />
       )}
       {/* Display loading or error state for proposal */}
@@ -313,7 +313,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
               onPaste={handlePaste}
-              placeholder="Ask Dyad to build..."
+              placeholder="Ask codeX to build..."
               className="flex-1 p-2 focus:outline-none overflow-y-auto min-h-[40px] max-h-[200px]"
               style={{ resize: "none" }}
             />

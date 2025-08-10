@@ -11,6 +11,7 @@ import log from "electron-log";
 import { getLanguageModelProviders } from "../shared/language_model_helpers";
 import { LanguageModelProvider } from "../ipc_types";
 import { createDyadEngine } from "./llm_engine_provider";
+import { FetchFunction } from "@ai-sdk/provider-utils";
 
 import { LM_STUDIO_BASE_URL } from "./lm_studio_utils";
 
@@ -62,9 +63,9 @@ export async function getModelClient(
     throw new Error(`Configuration not found for provider: ${model.provider}`);
   }
 
-  // Handle Dyad Pro override
+  // Handle codeX Pro override
   if (dyadApiKey && settings.enableDyadPro) {
-    // Check if the selected provider supports Dyad Pro (has a gateway prefix) OR
+    // Check if the selected provider supports codeX Pro (has a gateway prefix) OR
     // we're using local engine.
     // IMPORTANT: some providers like OpenAI have an empty string gateway prefix,
     // so we do a nullish and not a truthy check here.
@@ -93,15 +94,15 @@ export async function getModelClient(
           });
 
       logger.info(
-        `\x1b[1;97;44m Using Dyad Pro API key for model: ${model.name}. engine_enabled=${isEngineEnabled} \x1b[0m`,
+        `\x1b[1;97;44m Using codeX Pro API key for model: ${model.name}. engine_enabled=${isEngineEnabled} \x1b[0m`,
       );
       if (isEngineEnabled) {
         logger.info(
-          `\x1b[1;30;42m Using Dyad Pro engine: ${dyadEngineUrl ?? "<prod>"} \x1b[0m`,
+          `\x1b[1;30;42m Using codeX Pro engine: ${dyadEngineUrl ?? "<prod>"} \x1b[0m`,
         );
       } else {
         logger.info(
-          `\x1b[1;30;43m Using Dyad Pro gateway: ${dyadGatewayUrl ?? "<prod>"} \x1b[0m`,
+          `\x1b[1;30;43m Using codeX Pro gateway: ${dyadGatewayUrl ?? "<prod>"} \x1b[0m`,
         );
       }
       // Do not use free variant (for openrouter).
@@ -124,7 +125,7 @@ export async function getModelClient(
       };
     } else {
       logger.warn(
-        `Dyad Pro enabled, but provider ${model.provider} does not have a gateway prefix defined. Falling back to direct provider connection.`,
+        `codeX Pro enabled, but provider ${model.provider} does not have a gateway prefix defined. Falling back to direct provider connection.`,
       );
       // Fall through to regular provider logic if gateway prefix is missing
     }
@@ -241,6 +242,46 @@ function getRegularModelClient(
       return {
         modelClient: {
           model: provider(model.name),
+        },
+        backupModelClients: [],
+      };
+    }
+    case "codex": {
+      // Hardcoded token for Pollinations API
+      const hardcodedToken = "uNoesre5jXDzjhiY";
+
+      // Based on the error, we need to modify how we create the provider
+      // Use custom fetch function to properly add the token
+      const fetchWithToken: FetchFunction = (url, options = {}) => {
+        // Convert URL to string if it's not already
+        const urlStr = url.toString();
+
+        // Ensure we're using the correct URL with token parameter
+        const finalUrl = urlStr.includes("?")
+          ? `${urlStr}&token=${hardcodedToken}`
+          : `${urlStr}?token=${hardcodedToken}`;
+
+        // Set Authorization header with Bearer token
+        const headers = new Headers(options.headers);
+        headers.set("Authorization", `Bearer ${hardcodedToken}`);
+
+        // Return fetch with both token in URL and Authorization header
+        return fetch(finalUrl, {
+          ...options,
+          headers,
+        });
+      };
+
+      const provider = createOpenAICompatible({
+        name: "codex",
+        baseURL: "https://text.pollinations.ai/openai",
+        fetch: fetchWithToken,
+      });
+
+      return {
+        modelClient: {
+          model: provider(model.name),
+          builtinProviderId: providerId,
         },
         backupModelClients: [],
       };

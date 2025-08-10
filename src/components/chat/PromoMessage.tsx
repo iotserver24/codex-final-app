@@ -56,7 +56,7 @@ export function Message({ spans }: MessageConfig) {
 export const TURBO_EDITS_PROMO_MESSAGE: MessageConfig = {
   spans: [
     { type: "text", content: "Tired of waiting on AI?" },
-    { type: "link", content: " Get Dyad Pro", url: "https://dyad.sh/pro#ai" },
+    { type: "link", content: " Get codeX Pro", url: "https://dyad.sh/pro#ai" },
     { type: "text", content: " for faster edits with Turbo Edits." },
   ],
 };
@@ -66,7 +66,7 @@ export const SMART_CONTEXT_PROMO_MESSAGE: MessageConfig = {
     { type: "text", content: "Save up to 5x on AI costs with " },
     {
       type: "link",
-      content: "Dyad Pro's Smart Context",
+      content: "codeX Pro's Smart Context",
       url: "https://dyad.sh/pro#ai",
     },
   ],
@@ -196,21 +196,27 @@ export const GITHUB_TIP: MessageConfig = {
     },
   ],
 };
-// Array of all available messages for rotation
-const ALL_MESSAGES = [
-  TURBO_EDITS_PROMO_MESSAGE,
-  SMART_CONTEXT_PROMO_MESSAGE,
-  DIFFERENT_MODEL_TIP,
-  REDDIT_TIP,
-  REPORT_A_BUG_TIP,
-  UPLOAD_CHAT_TIP,
-  BUILD_A_BIBLE_APP_TIP,
-  DEBUGGING_TIPS_TIP,
-  AI_RULES_TIP,
-  NEW_CHAT_TIP,
-  ROADMAP_TIP,
-  GITHUB_TIP,
-];
+
+// Like codeX? Donate or share now! https://codex.anishkumar.tech/docs/support#-one-time-donations
+export const CODEX_DONATION_TIP: MessageConfig = {
+  spans: [
+    {
+      type: "text",
+      content: "Like codeX? ",
+    },
+    {
+      type: "link",
+      content: "Donate",
+      url: "https://codex.anishkumar.tech/docs/support#-one-time-donations",
+    },
+    {
+      type: "text",
+      content: " or share now!",
+    },
+  ],
+};
+// Only show the codeX donation message
+const ALL_MESSAGES = [CODEX_DONATION_TIP];
 
 // Main PromoMessage component using the modular system
 export function PromoMessage({ seed }: { seed: number }) {

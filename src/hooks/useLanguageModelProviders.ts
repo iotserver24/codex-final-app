@@ -20,6 +20,10 @@ export function useLanguageModelProviders() {
     if (queryResult.isLoading) {
       return false;
     }
+    // codeX provider is always ready since it uses a hardcoded token
+    if (provider === "codex") {
+      return true;
+    }
     if (providerSettings?.apiKey?.value) {
       return true;
     }

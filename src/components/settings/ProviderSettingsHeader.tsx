@@ -17,6 +17,7 @@ interface ProviderSettingsHeaderProps {
   hasFreeTier?: boolean;
   providerWebsiteUrl?: string;
   isDyad: boolean;
+  isCodeX?: boolean;
   onBackClick: () => void;
 }
 
@@ -42,6 +43,7 @@ export function ProviderSettingsHeader({
   hasFreeTier,
   providerWebsiteUrl,
   isDyad,
+  isCodeX,
   onBackClick,
 }: ProviderSettingsHeaderProps) {
   const handleGetApiKeyClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -95,7 +97,7 @@ export function ProviderSettingsHeader({
         )}
       </div>
 
-      {providerWebsiteUrl && !isLoading && (
+      {providerWebsiteUrl && !isLoading && !isCodeX && (
         <Button
           onClick={handleGetApiKeyClick}
           className="mb-4 bg-(--background-lightest) cursor-pointer py-5"

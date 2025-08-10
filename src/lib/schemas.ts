@@ -34,6 +34,7 @@ const providers = [
   "openrouter",
   "ollama",
   "lmstudio",
+  "codex",
 ] as const;
 
 export const cloudProviders = providers.filter(
@@ -188,12 +189,14 @@ export const UserSettingsSchema = z.object({
  */
 export type UserSettings = z.infer<typeof UserSettingsSchema>;
 
-export function isDyadProEnabled(settings: UserSettings): boolean {
-  return settings.enableDyadPro === true && hasDyadProKey(settings);
+export function isCodexProEnabled(_settings: UserSettings): boolean {
+  // codeX Pro is always enabled for everyone - free forever!
+  return true;
 }
 
-export function hasDyadProKey(settings: UserSettings): boolean {
-  return !!settings.providerSettings?.auto?.apiKey?.value;
+export function hasCodexProKey(_settings: UserSettings): boolean {
+  // Pro access is free forever, so always return true
+  return true;
 }
 
 // Define interfaces for the props

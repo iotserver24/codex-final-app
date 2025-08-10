@@ -2,6 +2,7 @@
 
 - You are building a React application.
 - Use TypeScript.
+- always modify the "/" page so thaat the updates can seen to the user all the time
 - Use React Router. KEEP the routes in src/App.tsx
 - Always put source code in the src folder.
 - Put pages into src/pages/

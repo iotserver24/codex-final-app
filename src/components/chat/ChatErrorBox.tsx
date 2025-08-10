@@ -6,20 +6,19 @@ import remarkGfm from "remark-gfm";
 export function ChatErrorBox({
   onDismiss,
   error,
-  isDyadProEnabled,
+  isCodexProEnabled,
 }: {
   onDismiss: () => void;
   error: string;
-  isDyadProEnabled: boolean;
+  isCodexProEnabled: boolean;
 }) {
   if (error.includes("doesn't have a free quota tier")) {
     return (
       <ChatErrorContainer onDismiss={onDismiss}>
         {error}
         <span className="ml-1">
-          <ExternalLink href="https://dyad.sh/pro">
-            Access with Dyad Pro.
-          </ExternalLink>
+          You have access to codeX Pro for free - this shouldn't happen! Please
+          try again.
         </span>
       </ChatErrorContainer>
     );
@@ -32,9 +31,7 @@ export function ChatErrorBox({
       <ChatErrorContainer onDismiss={onDismiss}>
         {error}
         <span className="ml-1">
-          <ExternalLink href="https://dyad.sh/pro">
-            Upgrade to Dyad Pro.
-          </ExternalLink>
+          You already have codeX Pro for free! Please try again in a moment.
         </span>
       </ChatErrorContainer>
     );
@@ -44,24 +41,18 @@ export function ChatErrorBox({
     return (
       <ChatInfoContainer onDismiss={onDismiss}>
         <span>
-          Looks like you don't have a valid Dyad Pro key.{" "}
-          <ExternalLink href="https://dyad.sh/pro">
-            Upgrade to Dyad Pro
-          </ExternalLink>{" "}
-          today.
+          codeX Pro is enabled for free! This error shouldn't occur. Please try
+          again.
         </span>
       </ChatInfoContainer>
     );
   }
-  if (isDyadProEnabled && error.includes("ExceededBudget:")) {
+  if (isCodexProEnabled && error.includes("ExceededBudget:")) {
     return (
       <ChatInfoContainer onDismiss={onDismiss}>
         <span>
-          You have used all of your Dyad AI credits this month.{" "}
-          <ExternalLink href="https://academy.dyad.sh/subscription">
-            Upgrade to Dyad Max
-          </ExternalLink>{" "}
-          and get more AI credits
+          codeX Pro has unlimited usage! This error shouldn't occur. Please try
+          again.
         </span>
       </ChatInfoContainer>
     );
@@ -73,7 +64,7 @@ export function ChatErrorBox({
   return <ChatErrorContainer onDismiss={onDismiss}>{error}</ChatErrorContainer>;
 }
 
-function ExternalLink({
+function _ExternalLink({
   href,
   children,
 }: {

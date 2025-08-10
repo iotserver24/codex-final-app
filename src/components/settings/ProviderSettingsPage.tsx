@@ -43,6 +43,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
     providerData?.type === "custom" || providerData?.type === "cloud";
 
   const isDyad = provider === "auto";
+  const isCodeX = provider === "codex";
 
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -69,7 +70,8 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
     userApiKey !== "Not Set";
   const hasEnvKey = !!(envVarName && envVars[envVarName]);
 
-  const isConfigured = isValidUserKey || hasEnvKey; // Configured if either is set
+  // codeX is always configured since it uses hardcoded token
+  const isConfigured = isCodeX ? true : isValidUserKey || hasEnvKey;
 
   // --- Save Handler ---
   const handleSaveKey = async () => {
@@ -128,7 +130,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
     }
   };
 
-  // --- Toggle Dyad Pro Handler ---
+  // --- Toggle codeX Pro Handler ---
   const handleToggleDyadPro = async (enabled: boolean) => {
     setIsSaving(true);
     try {
@@ -136,7 +138,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
         enableDyadPro: enabled,
       });
     } catch (error: any) {
-      showError(`Error toggling Dyad Pro: ${error}`);
+      showError(`Error toggling codeX Pro: ${error}`);
     } finally {
       setIsSaving(false);
     }
@@ -233,6 +235,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
           hasFreeTier={hasFreeTier}
           providerWebsiteUrl={providerWebsiteUrl}
           isDyad={isDyad}
+          isCodeX={isCodeX}
           onBackClick={() => router.history.back()}
         />
 
@@ -247,6 +250,16 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
               Could not load configuration data: {settingsError.message}
             </AlertDescription>
           </Alert>
+        ) : isCodeX ? (
+          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
+            <h3 className="text-lg font-medium text-green-800 dark:text-green-200 mb-2">
+              ✅ codeX Provider Ready
+            </h3>
+            <p className="text-green-700 dark:text-green-300">
+              The codeX provider is configured and ready to use with 23 AI
+              models available.
+            </p>
+          </div>
         ) : (
           <ApiKeyConfiguration
             provider={provider}
@@ -267,9 +280,9 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
         {isDyad && !settingsLoading && (
           <div className="mt-6 flex items-center justify-between p-4 bg-(--background-lightest) rounded-lg border">
             <div>
-              <h3 className="font-medium">Enable Dyad Pro</h3>
+              <h3 className="font-medium">Enable codeX Pro</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Toggle to enable Dyad Pro
+                Toggle to enable codeX Pro
               </p>
             </div>
             <Switch

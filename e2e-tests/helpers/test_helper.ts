@@ -645,7 +645,7 @@ export class PageObject {
   }
 
   getChatInput() {
-    return this.page.getByRole("textbox", { name: "Ask Dyad to build..." });
+    return this.page.getByRole("textbox", { name: "Ask codeX to build..." });
   }
 
   clickNewChat({ index = 0 }: { index?: number } = {}) {
