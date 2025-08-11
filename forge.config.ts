@@ -82,7 +82,10 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerSquirrel({
-      signWithParams: `/sha1 ${process.env.SM_CODE_SIGNING_CERT_SHA1_HASH} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
+      // Only sign if certificate is available
+      ...(process.env.SM_CODE_SIGNING_CERT_SHA1_HASH && {
+        signWithParams: `/sha1 ${process.env.SM_CODE_SIGNING_CERT_SHA1_HASH} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
+      }),
     }),
     new MakerZIP({}, ["darwin"]),
     new MakerRpm({}),
@@ -97,8 +100,8 @@ const config: ForgeConfig = {
       name: "@electron-forge/publisher-github",
       config: {
         repository: {
-          owner: "dyad-sh",
-          name: "dyad",
+          owner: "codex-sh",
+          name: "codex",
         },
         draft: true,
         force: true,

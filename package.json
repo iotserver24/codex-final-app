@@ -12,7 +12,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "clean": "rm -rf out && rm -rf scaffold/node_modules",
+    "clean": "rimraf out && rimraf scaffold/node_modules",
     "start": "electron-forge start",
     "dev:engine": "DYAD_ENGINE_URL=http://localhost:8080/v1 npm start",
     "staging:engine": "DYAD_ENGINE_URL=https://staging---dyad-llm-engine-kq7pivehnq-uc.a.run.app/v1 npm start",
@@ -78,6 +78,7 @@
     "lint-staged": "^15.5.2",
     "oxlint": "^1.8.0",
     "prettier": "3.5.3",
+    "rimraf": "^6.0.1",
     "typescript": "^5.8.3",
     "vite": "^5.4.17",
     "vitest": "^3.1.1"

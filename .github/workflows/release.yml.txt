@@ -10,7 +10,6 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    environment: release
     strategy:
       # Uncomment max-parallel to prevent race condition (where multiple releases are
       # created concurrently). Typically though, we'll create a release manually ahead of time
@@ -19,7 +18,7 @@ jobs:
       matrix:
         os: [
             { name: "windows", image: "windows-latest" },
-            # See https://github.com/dyad-sh/dyad/issues/96
+            # See https://github.com/codex-sh/codex/issues/96
             { name: "linux", image: "ubuntu-22.04" },
             { name: "macos-intel", image: "macos-13" },
             { name: "macos", image: "macos-latest" },
@@ -33,26 +32,40 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
+      
+      # Optional: Code signing for macOS
       - name: add macos cert
         if: contains(matrix.os.name, 'macos')
         env:
           MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
           MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
-        run: chmod +x tools/add-macos-cert.sh && . ./tools/add-macos-cert.sh
-      # Windows only
+        run: |
+          if [ -n "$MACOS_CERT_P12" ]; then
+            chmod +x tools/add-macos-cert.sh && . ./tools/add-macos-cert.sh
+          else
+            echo "Skipping macOS code signing - no certificate provided"
+          fi
+      
+      # Optional: Code signing for Windows
       - name: Set up certificate
         if: contains(matrix.os.name, 'windows')
         run: |
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+          if [ -n "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" ]; then
+            echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+          else
+            echo "Skipping Windows code signing - no certificate provided"
+          fi
         shell: bash
       - name: Set variables
         if: contains(matrix.os.name, 'windows')
         id: variables
         run: |
-          echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV" 
-          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV" 
-          echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV" 
-          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
+          if [ -n "${{ secrets.SM_HOST }}" ]; then
+            echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV" 
+            echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> "$GITHUB_ENV" 
+            echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV" 
+            echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> "$GITHUB_ENV"
+          fi
         shell: bash
       - name: Code signing with Software Trust Manager
         if: contains(matrix.os.name, 'windows')
@@ -60,12 +73,18 @@ jobs:
       - name: Sync certificate (Windows)
         if: contains(matrix.os.name, 'windows')
         run: |
-          smctl windows certsync --keypair-alias=${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+          if [ -n "${{ secrets.DIGICERT_KEYPAIR_ALIAS }}" ]; then
+            smctl windows certsync --keypair-alias=${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
+          else
+            echo "Skipping certificate sync - no alias provided"
+          fi
         shell: bash
-        # Publish (all platforms)
+        
+      # Publish (all platforms)
       - name: Publish app
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
+          # Code signing will be skipped if secrets are not available
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
