@@ -53,10 +53,10 @@ async function getSystemDebugInfo({
 
   // Get Dyad version from package.json
   const packageJsonPath = path.resolve(__dirname, "..", "..", "package.json");
-  let dyadVersion = "unknown";
+  let codexVersion = "unknown";
   try {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-    dyadVersion = packageJson.version;
+    codexVersion = packageJson.version;
   } catch (err) {
     console.error("Failed to read package.json:", err);
   }
@@ -107,7 +107,7 @@ async function getSystemDebugInfo({
       serializeModelForDebug(settings.selectedModel) || "unknown",
     telemetryConsent: settings.telemetryConsent || "unknown",
     telemetryUrl: "https://us.i.posthog.com", // Hardcoded from renderer.tsx
-    dyadVersion,
+    codexVersion,
     platform: process.platform,
     architecture: arch(),
     logs,

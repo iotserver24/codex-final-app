@@ -9,6 +9,7 @@ import type {
   CopyAppParams,
   EditAppFileReturnType,
   RespondToAppInputParams,
+  UpdateCheckResult,
 } from "../ipc_types";
 import fs from "node:fs";
 import path from "node:path";
@@ -983,6 +984,26 @@ export function registerAppHandlers() {
     const packageJsonPath = path.resolve(__dirname, "..", "..", "package.json");
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
     return { version: packageJson.version };
+  });
+
+  ipcMain.handle("check-for-updates", async (): Promise<UpdateCheckResult> => {
+    try {
+      const res = await fetch("https://codex.anishkumar.tech/version.json");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      // Validate the response structure
+      if (!data.stable || !data.beta) {
+        throw new Error(
+          "Invalid version.json format: missing stable or beta channel",
+        );
+      }
+
+      return data;
+    } catch (error: any) {
+      logger.error("Failed to check for updates:", error);
+      throw new Error(`Failed to check for updates: ${error.message}`);
+    }
   });
 
   handle("rename-branch", async (_, params: RenameBranchParams) => {

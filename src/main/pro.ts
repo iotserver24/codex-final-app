@@ -13,6 +13,6 @@ export function handleCodexProReturn({ apiKey }: { apiKey: string }) {
         },
       },
     },
-    enableDyadPro: true, // Always enabled for free codeX Pro
+    enableCodexPro: true, // Always enabled - CodeX Pro is now free and client-side
   });
 }

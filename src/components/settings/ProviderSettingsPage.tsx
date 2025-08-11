@@ -94,7 +94,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
         },
       };
       if (isDyad) {
-        settingsUpdate.enableDyadPro = true;
+        settingsUpdate.enableCodexPro = true;
       }
       await updateSettings(settingsUpdate);
       setApiKeyInput(""); // Clear input on success
@@ -135,7 +135,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
     setIsSaving(true);
     try {
       await updateSettings({
-        enableDyadPro: enabled,
+        enableCodexPro: enabled,
       });
     } catch (error: any) {
       showError(`Error toggling codeX Pro: ${error}`);
@@ -286,7 +286,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
               </p>
             </div>
             <Switch
-              checked={settings?.enableDyadPro}
+              checked={settings?.enableCodexPro}
               onCheckedChange={handleToggleDyadPro}
               disabled={isSaving}
             />

@@ -13,13 +13,7 @@ import { useEffect, useState } from "react";
 import { CodexProSuccessDialog } from "@/components/CodexProSuccessDialog";
 import { useTheme } from "@/contexts/ThemeContext";
 import { IpcClient } from "@/ipc/ipc_client";
-import { useUserBudgetInfo } from "@/hooks/useUserBudgetInfo";
-import { UserBudgetInfo } from "@/ipc/ipc_types";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import { PreviewHeader } from "@/components/preview_panel/PreviewHeader";
 
 export const TitleBar = () => {
@@ -73,7 +67,7 @@ export const TitleBar = () => {
   };
 
   const isCodexPro = !!settings?.providerSettings?.auto?.apiKey?.value;
-  const isCodexProEnabled = Boolean(settings?.enableDyadPro);
+  const isCodexProEnabled = Boolean(settings?.enableCodexPro);
 
   return (
     <>
@@ -199,7 +193,6 @@ export function CodexProButton({
   isCodexProEnabled: boolean;
 }) {
   const { navigate } = useRouter();
-  const { userBudget } = useUserBudgetInfo();
   return (
     <Button
       data-testid="title-bar-codex-pro-button"
@@ -217,35 +210,6 @@ export function CodexProButton({
       size="sm"
     >
       {isCodexProEnabled ? "Pro" : "Pro (off)"}
-      {userBudget && isCodexProEnabled && (
-        <AICreditStatus userBudget={userBudget} />
-      )}
     </Button>
-  );
-}
-
-export function AICreditStatus({ userBudget }: { userBudget: UserBudgetInfo }) {
-  const remaining = Math.round(
-    userBudget.totalCredits - userBudget.usedCredits,
-  );
-  return (
-    <Tooltip>
-      <TooltipTrigger>
-        <div className="text-xs pl-1 mt-0.5">{remaining} credits</div>
-      </TooltipTrigger>
-      <TooltipContent>
-        <div>
-          <p>
-            You have used {Math.round(userBudget.usedCredits)} credits out of{" "}
-            {userBudget.totalCredits}.
-          </p>
-          <p>
-            Your budget resets on{" "}
-            {userBudget.budgetResetDate.toLocaleDateString()}
-          </p>
-          <p>Note: there is a slight delay in updating the credit status.</p>
-        </div>
-      </TooltipContent>
-    </Tooltip>
   );
 }

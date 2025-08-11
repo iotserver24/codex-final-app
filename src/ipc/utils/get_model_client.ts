@@ -10,13 +10,13 @@ import { getEnvVar } from "./read_env";
 import log from "electron-log";
 import { getLanguageModelProviders } from "../shared/language_model_helpers";
 import { LanguageModelProvider } from "../ipc_types";
-import { createDyadEngine } from "./llm_engine_provider";
+
 import { FetchFunction } from "@ai-sdk/provider-utils";
 
 import { LM_STUDIO_BASE_URL } from "./lm_studio_utils";
 
-const dyadEngineUrl = process.env.DYAD_ENGINE_URL;
-const dyadGatewayUrl = process.env.DYAD_GATEWAY_URL;
+const _dyadEngineUrl = process.env.DYAD_ENGINE_URL;
+const _dyadGatewayUrl = process.env.DYAD_GATEWAY_URL;
 
 const AUTO_MODELS = [
   {
@@ -54,7 +54,7 @@ export async function getModelClient(
 }> {
   const allProviders = await getLanguageModelProviders();
 
-  const dyadApiKey = settings.providerSettings?.auto?.apiKey?.value;
+  const _dyadApiKey = settings.providerSettings?.auto?.apiKey?.value;
 
   // --- Handle specific provider ---
   const providerConfig = allProviders.find((p) => p.id === model.provider);
@@ -63,72 +63,34 @@ export async function getModelClient(
     throw new Error(`Configuration not found for provider: ${model.provider}`);
   }
 
-  // Handle codeX Pro override
-  if (dyadApiKey && settings.enableDyadPro) {
-    // Check if the selected provider supports codeX Pro (has a gateway prefix) OR
-    // we're using local engine.
-    // IMPORTANT: some providers like OpenAI have an empty string gateway prefix,
-    // so we do a nullish and not a truthy check here.
-    if (providerConfig.gatewayPrefix != null || dyadEngineUrl) {
-      const isEngineEnabled =
-        settings.enableProSmartFilesContextMode ||
-        settings.enableProLazyEditsMode;
-      const provider = isEngineEnabled
-        ? createDyadEngine({
-            apiKey: dyadApiKey,
-            baseURL: dyadEngineUrl ?? "https://engine.dyad.sh/v1",
-            originalProviderId: model.provider,
-            dyadOptions: {
-              enableLazyEdits:
-                settings.selectedChatMode === "ask"
-                  ? false
-                  : settings.enableProLazyEditsMode,
-              enableSmartFilesContext: settings.enableProSmartFilesContextMode,
-            },
-            settings,
-          })
-        : createOpenAICompatible({
-            name: "dyad-gateway",
-            apiKey: dyadApiKey,
-            baseURL: dyadGatewayUrl ?? "https://llm-gateway.dyad.sh/v1",
-          });
+  // Handle codeX Pro override - now client-side only
+  if (settings.enableCodexPro) {
+    // CodeX Pro is now client-side and works with any provider
+    const isEngineEnabled =
+      settings.enableProSmartFilesContextMode ||
+      settings.enableProLazyEditsMode;
 
+    logger.info(
+      `\x1b[1;97;44m Using client-side CodeX Pro for model: ${model.name}. engine_enabled=${isEngineEnabled} \x1b[0m`,
+    );
+
+    // Use the regular provider but with Pro features enabled
+    const regularClient = getRegularModelClient(
+      model,
+      settings,
+      providerConfig,
+    );
+
+    if (isEngineEnabled) {
       logger.info(
-        `\x1b[1;97;44m Using codeX Pro API key for model: ${model.name}. engine_enabled=${isEngineEnabled} \x1b[0m`,
+        `\x1b[1;30;42m CodeX Pro features enabled: Smart Context & Lazy Edits \x1b[0m`,
       );
-      if (isEngineEnabled) {
-        logger.info(
-          `\x1b[1;30;42m Using codeX Pro engine: ${dyadEngineUrl ?? "<prod>"} \x1b[0m`,
-        );
-      } else {
-        logger.info(
-          `\x1b[1;30;43m Using codeX Pro gateway: ${dyadGatewayUrl ?? "<prod>"} \x1b[0m`,
-        );
-      }
-      // Do not use free variant (for openrouter).
-      const modelName = model.name.split(":free")[0];
-      const autoModelClient = {
-        model: provider(
-          `${providerConfig.gatewayPrefix || ""}${modelName}`,
-          isEngineEnabled
-            ? {
-                files,
-              }
-            : undefined,
-        ),
-        builtinProviderId: model.provider,
-      };
-
-      return {
-        modelClient: autoModelClient,
-        isEngineEnabled,
-      };
-    } else {
-      logger.warn(
-        `codeX Pro enabled, but provider ${model.provider} does not have a gateway prefix defined. Falling back to direct provider connection.`,
-      );
-      // Fall through to regular provider logic if gateway prefix is missing
     }
+
+    return {
+      modelClient: regularClient,
+      isEngineEnabled,
+    };
   }
   // Handle 'auto' provider by trying each model in AUTO_MODELS until one works
   if (model.provider === "auto") {

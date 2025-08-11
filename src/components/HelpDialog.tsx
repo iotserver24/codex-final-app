@@ -1,27 +1,31 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import {
   BookOpenIcon,
   BugIcon,
-  UploadIcon,
   ChevronLeftIcon,
   CheckIcon,
   XIcon,
-  FileIcon,
+  RefreshCw,
+  Info,
+  Gift,
+  ExternalLink,
+  Copy,
+  UploadIcon,
 } from "lucide-react";
-import { IpcClient } from "@/ipc/ipc_client";
-import { useState, useEffect } from "react";
-import { useAtomValue } from "jotai";
-import { selectedChatIdAtom } from "@/atoms/chatAtoms";
-import { ChatLogsData } from "@/ipc/ipc_types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { showError } from "@/lib/toast";
+import { useState, useEffect } from "react";
+import { ChatLogsData } from "@/ipc/ipc_types";
+import { IpcClient } from "@/ipc/ipc_client";
+import { useSettings } from "@/hooks/useSettings";
+import type { UpdateCheckResult } from "@/ipc/ipc_types";
 
 interface HelpDialogProps {
   isOpen: boolean;
@@ -29,13 +33,22 @@ interface HelpDialogProps {
 }
 
 export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
+  const [updateInfo, setUpdateInfo] = useState<null | {
+    version: string;
+    releaseNotes: string;
+    downloadUrl: string;
+  }>(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const { settings } = useSettings();
+
+  // Add missing state variables
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
   const [chatLogsData, setChatLogsData] = useState<ChatLogsData | null>(null);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [sessionId, setSessionId] = useState("");
-  const selectedChatId = useAtomValue(selectedChatIdAtom);
+  const [appVersionState, setAppVersion] = useState<string | null>(null);
 
   // Function to reset all dialog state
   const resetDialogState = () => {
@@ -53,6 +66,11 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
       resetDialogState();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    // Fetch app version on mount
+    IpcClient.getInstance().getAppVersion?.().then(setAppVersion);
+  }, []);
 
   // Wrap the original onClose to also reset state
   const handleClose = () => {
@@ -80,7 +98,7 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
 <!-- What actually happened? -->
 
 ## System Information
-- Dyad Version: ${debugInfo.dyadVersion}
+- CodeX Version: ${debugInfo.codexVersion}
 - Platform: ${debugInfo.platform}
 - Architecture: ${debugInfo.architecture}
 - Node Version: ${debugInfo.nodeVersion || "n/a"}
@@ -98,7 +116,7 @@ ${debugInfo.logs.slice(-3_500) || "No logs available"}
       // Create the GitHub issue URL with the pre-filled body
       const encodedBody = encodeURIComponent(issueBody);
       const encodedTitle = encodeURIComponent("[bug] <add title>");
-      const githubIssueUrl = `https://github.com/dyad-sh/dyad/issues/new?title=${encodedTitle}&labels=bug,filed-from-app&body=${encodedBody}`;
+      const githubIssueUrl = `https://github.com/iotserver24/codex/issues/new?title=${encodedTitle}&labels=bug,filed-from-app&body=${encodedBody}`;
 
       // Open the pre-filled GitHub issue page
       IpcClient.getInstance().openExternalUrl(githubIssueUrl);
@@ -106,35 +124,10 @@ ${debugInfo.logs.slice(-3_500) || "No logs available"}
       console.error("Failed to prepare bug report:", error);
       // Fallback to opening the regular GitHub issue page
       IpcClient.getInstance().openExternalUrl(
-        "https://github.com/dyad-sh/dyad/issues/new",
+        "https://github.com/iotserver24/codex/issues/new",
       );
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleUploadChatSession = async () => {
-    if (!selectedChatId) {
-      alert("Please select a chat first");
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      // Get chat logs (includes debug info, chat data, and codebase)
-      const chatLogs =
-        await IpcClient.getInstance().getChatLogs(selectedChatId);
-
-      // Store data for review and switch to review mode
-      setChatLogsData(chatLogs);
-      setReviewMode(true);
-    } catch (error) {
-      console.error("Failed to upload chat session:", error);
-      alert(
-        "Failed to upload chat session. Please try again or report manually.",
-      );
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -152,7 +145,7 @@ ${debugInfo.logs.slice(-3_500) || "No logs available"}
 
       // Get signed URL
       const response = await fetch(
-        "https://upload-logs.dyad.sh/generate-upload-url",
+        "https://upload-logs.codex.anishkumar.tech/generate-upload-url",
         {
           method: "POST",
           headers: {
@@ -214,10 +207,66 @@ Session ID: ${sessionId}
 
     const encodedBody = encodeURIComponent(issueBody);
     const encodedTitle = encodeURIComponent("[session report] <add title>");
-    const githubIssueUrl = `https://github.com/dyad-sh/dyad/issues/new?title=${encodedTitle}&labels=support&body=${encodedBody}`;
+    const githubIssueUrl = `https://github.com/iotserver24/codex/issues/new?title=${encodedTitle}&labels=support&body=${encodedBody}`;
 
     IpcClient.getInstance().openExternalUrl(githubIssueUrl);
     handleClose();
+  };
+
+  const handleDonate = () => {
+    IpcClient.getInstance().openExternalUrl(
+      "https://codex.anishkumar.tech/docs/support#-one-time-donations",
+    );
+  };
+
+  const handleCheckForUpdates = async () => {
+    try {
+      const data: UpdateCheckResult =
+        await IpcClient.getInstance().checkForUpdates();
+      if (!appVersionState || !settings) {
+        showError("Could not determine current app version or settings.");
+        return;
+      }
+
+      // Get the appropriate channel based on user settings
+      const channel = settings.releaseChannel === "beta" ? "beta" : "stable";
+      const channelData = data[channel];
+
+      const isNewer = (a: string, b: string) => {
+        const pa = a.split(".").map(Number);
+        const pb = b.split(".").map(Number);
+        for (let i = 0; i < 3; i++) {
+          if ((pa[i] || 0) < (pb[i] || 0)) return true;
+          if ((pa[i] || 0) > (pb[i] || 0)) return false;
+        }
+        return false;
+      };
+
+      if (isNewer(appVersionState, channelData.version)) {
+        setUpdateInfo({
+          version: channelData.version,
+          releaseNotes: channelData.releaseNotes,
+          downloadUrl: channelData.downloadUrl,
+        });
+        setShowUpdateModal(true);
+      } else {
+        showError("You are using the latest version.");
+      }
+    } catch (e: any) {
+      showError(e?.message || "Failed to check for updates.");
+    }
+  };
+
+  const renderReleaseNotes = (notes: string | undefined) => {
+    if (!notes) return null;
+    return (
+      <div
+        className="max-h-40 overflow-y-auto whitespace-pre-line border rounded p-2 bg-muted text-sm mb-4"
+        style={{ fontFamily: "inherit" }}
+      >
+        {notes.replace(/\n/g, "\n")}
+      </div>
+    );
   };
 
   if (uploadComplete) {
@@ -235,7 +284,7 @@ Session ID: ${sessionId}
               Chat Logs Uploaded Successfully
             </h3>
             <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded flex items-center space-x-2 font-mono text-sm">
-              <FileIcon
+              <Copy
                 className="h-4 w-4 cursor-pointer"
                 onClick={async () => {
                   try {
@@ -316,7 +365,7 @@ Session ID: ${sessionId}
             <div className="border rounded-md p-3">
               <h3 className="font-medium mb-2">System Information</h3>
               <div className="text-sm bg-slate-50 dark:bg-slate-900 rounded p-2 max-h-32 overflow-y-auto">
-                <p>Dyad Version: {chatLogsData.debugInfo.dyadVersion}</p>
+                <p>CodeX Version: {chatLogsData.debugInfo.codexVersion}</p>
                 <p>Platform: {chatLogsData.debugInfo.platform}</p>
                 <p>Architecture: {chatLogsData.debugInfo.architecture}</p>
                 <p>
@@ -358,60 +407,112 @@ Session ID: ${sessionId}
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Need help with Dyad?</DialogTitle>
+          <DialogTitle>Need help with CodeX?</DialogTitle>
         </DialogHeader>
-        <DialogDescription className="">
-          If you need help or want to report an issue, here are some options:
-        </DialogDescription>
-        <div className="flex flex-col space-y-4 w-full">
-          <div className="flex flex-col space-y-2">
+        <div className="space-y-6">
+          <div className="space-y-2">
             <Button
               variant="outline"
-              onClick={() => {
+              className="w-full flex items-center justify-start gap-2 text-lg py-4"
+              onClick={() =>
                 IpcClient.getInstance().openExternalUrl(
-                  "https://www.dyad.sh/docs",
-                );
-              }}
-              className="w-full py-6 bg-(--background-lightest)"
+                  "https://codex.anishkumar.tech/docs",
+                )
+              }
             >
-              <BookOpenIcon className="mr-2 h-5 w-5" /> Open Docs
+              <BookOpenIcon className="h-5 w-5" />
+              Open Docs
             </Button>
-            <p className="text-sm text-muted-foreground px-2">
+            <div className="text-sm text-muted-foreground">
               Get help with common questions and issues.
-            </p>
+            </div>
           </div>
-
-          <div className="flex flex-col space-y-2">
+          <div className="space-y-2">
             <Button
               variant="outline"
+              className="w-full flex items-center justify-start gap-2 text-lg py-4"
               onClick={handleReportBug}
               disabled={isLoading}
-              className="w-full py-6 bg-(--background-lightest)"
             >
-              <BugIcon className="mr-2 h-5 w-5" />{" "}
-              {isLoading ? "Preparing Report..." : "Report a Bug"}
+              <BugIcon className="h-5 w-5" />
+              Report a Bug
             </Button>
-            <p className="text-sm text-muted-foreground px-2">
+            <div className="text-sm text-muted-foreground">
               We'll auto-fill your report with system info and logs. You can
               review it for any sensitive info before submitting.
-            </p>
+            </div>
           </div>
-          <div className="flex flex-col space-y-2">
+          <div className="space-y-2">
             <Button
               variant="outline"
-              onClick={handleUploadChatSession}
-              disabled={isUploading || !selectedChatId}
-              className="w-full py-6 bg-(--background-lightest)"
+              className="w-full flex items-center justify-start gap-2 text-lg py-4 opacity-50 cursor-not-allowed"
+              disabled={true}
             >
-              <UploadIcon className="mr-2 h-5 w-5" />{" "}
-              {isUploading ? "Preparing Upload..." : "Upload Chat Session"}
+              <UploadIcon className="h-5 w-5" />
+              Upload Chat Session
+              <span className="ml-2 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+                Coming Soon
+              </span>
             </Button>
-            <p className="text-sm text-muted-foreground px-2">
-              Share chat logs and code for troubleshooting. Data is used only to
-              resolve your issue and auto-deleted after a limited time.
-            </p>
+            <div className="text-sm text-muted-foreground">
+              Share chat logs and code for troubleshooting. This feature will be
+              available in a future release.
+            </div>
           </div>
         </div>
+        <div className="flex flex-col gap-2 mt-8">
+          <Button
+            variant="outline"
+            className="w-full flex items-center justify-start gap-2 text-lg py-3"
+            onClick={handleDonate}
+          >
+            <Gift className="w-5 h-5" /> Donate
+            <ExternalLink className="w-4 h-4 ml-1 opacity-60" />
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full flex items-center justify-start gap-2 text-lg py-3"
+            onClick={handleCheckForUpdates}
+          >
+            <RefreshCw className="w-5 h-5" /> Check for Updates
+          </Button>
+        </div>
+        {/* Update Modal */}
+        <Dialog open={showUpdateModal} onOpenChange={setShowUpdateModal}>
+          <DialogContent>
+            <div className="flex items-center gap-3 mb-2">
+              <Info className="w-6 h-6 text-blue-500" />
+              <DialogTitle>Update Available</DialogTitle>
+            </div>
+            <DialogDescription>
+              <div className="mb-2">
+                A new version (<b>{updateInfo?.version}</b>) is available!
+              </div>
+              <div className="font-semibold mb-1">Release Notes:</div>
+              {renderReleaseNotes(updateInfo?.releaseNotes)}
+            </DialogDescription>
+            <DialogFooter>
+              <Button
+                variant="default"
+                onClick={() => {
+                  if (updateInfo?.downloadUrl) {
+                    IpcClient.getInstance().openExternalUrl(
+                      updateInfo.downloadUrl,
+                    );
+                  }
+                }}
+              >
+                Download Update
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowUpdateModal(false)}
+              >
+                Remind Me Later
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

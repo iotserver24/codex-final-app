@@ -728,6 +728,13 @@ export class IpcClient {
     return result.version as string;
   }
 
+  // Check for updates
+  public async checkForUpdates(): Promise<any> {
+    const res = await fetch("https://codex.anishkumar.tech/version.json");
+    if (!res.ok) throw new Error("Failed to fetch update info");
+    return res.json();
+  }
+
   // Get proposal details
   public async getProposal(chatId: number): Promise<ProposalResult | null> {
     try {

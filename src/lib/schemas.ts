@@ -106,11 +106,11 @@ export const ExperimentsSchema = z.object({
 });
 export type Experiments = z.infer<typeof ExperimentsSchema>;
 
-export const DyadProBudgetSchema = z.object({
+export const CodexProBudgetSchema = z.object({
   budgetResetAt: z.string(),
   maxBudget: z.number(),
 });
-export type DyadProBudget = z.infer<typeof DyadProBudgetSchema>;
+export type CodexProBudget = z.infer<typeof CodexProBudgetSchema>;
 
 export const GlobPathSchema = z.object({
   globPath: z.string(),
@@ -154,7 +154,7 @@ export const UserSettingsSchema = z.object({
   telemetryConsent: z.enum(["opted_in", "opted_out", "unset"]).optional(),
   telemetryUserId: z.string().optional(),
   hasRunBefore: z.boolean().optional(),
-  enableDyadPro: z.boolean().optional(),
+  enableCodexPro: z.boolean().optional(),
   experiments: ExperimentsSchema.optional(),
   lastShownReleaseNotesVersion: z.string().optional(),
   maxChatTurnsInContext: z.number().optional(),
@@ -180,7 +180,7 @@ export const UserSettingsSchema = z.object({
   // DEPRECATED.
   ////////////////////////////////
   enableProSaverMode: z.boolean().optional(),
-  dyadProBudget: DyadProBudgetSchema.optional(),
+  codexProBudget: CodexProBudgetSchema.optional(),
   runtimeMode: RuntimeModeSchema.optional(),
 });
 

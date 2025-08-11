@@ -436,7 +436,7 @@ export async function extractCodebase({
 }> {
   const settings = readSettings();
   const isSmartContextEnabled =
-    settings?.enableDyadPro && settings?.enableProSmartFilesContextMode;
+    settings?.enableCodexPro && settings?.enableProSmartFilesContextMode;
 
   try {
     await fsAsync.access(appPath);

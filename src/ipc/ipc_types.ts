@@ -126,7 +126,7 @@ export interface SystemDebugInfo {
   telemetryId: string;
   telemetryConsent: string;
   telemetryUrl: string;
-  dyadVersion: string;
+  codexVersion: string;
   platform: string;
   architecture: string;
   logs: string;
@@ -392,3 +392,16 @@ export interface RevertVersionParams {
 export type RevertVersionResponse =
   | { successMessage: string }
   | { warningMessage: string };
+
+export interface UpdateCheckResult {
+  stable: {
+    version: string;
+    releaseNotes: string;
+    downloadUrl: string;
+  };
+  beta: {
+    version: string;
+    releaseNotes: string;
+    downloadUrl: string;
+  };
+}

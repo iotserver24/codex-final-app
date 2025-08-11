@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Info } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
-import { IpcClient } from "@/ipc/ipc_client";
+
 import { hasCodexProKey } from "@/lib/schemas";
 
 export function ProModeSelector() {
@@ -33,12 +33,12 @@ export function ProModeSelector() {
 
   const toggleProEnabled = () => {
     updateSettings({
-      enableDyadPro: !settings?.enableDyadPro,
+      enableCodexPro: !settings?.enableCodexPro,
     });
   };
 
   const hasProKey = settings ? hasCodexProKey(settings) : false;
-  const proModeTogglable = hasProKey && Boolean(settings?.enableDyadPro);
+  const proModeTogglable = hasProKey && Boolean(settings?.enableCodexPro);
 
   return (
     <Popover>
@@ -66,28 +66,20 @@ export function ProModeSelector() {
             </h4>
             <div className="h-px bg-gradient-to-r from-primary/50 via-primary/20 to-transparent" />
           </div>
-          {!hasProKey && (
-            <div className="text-sm text-center text-muted-foreground">
-              <a
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary shadow-sm transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                onClick={() => {
-                  IpcClient.getInstance().openExternalUrl(
-                    "https://dyad.sh/pro#ai",
-                  );
-                }}
-              >
-                Unlock Pro modes
-              </a>
+          <div className="text-sm text-center text-muted-foreground">
+            <div className="inline-flex items-center justify-center gap-2 rounded-md border border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20 px-3 py-2 text-sm font-medium text-green-700 dark:text-green-300">
+              <Sparkles className="h-4 w-4" />
+              CodeX Pro is now FREE!
             </div>
-          )}
+          </div>
           <div className="flex flex-col gap-5">
             <SelectorRow
               id="pro-enabled"
               label="Enable codeX Pro"
-              description="Use codeX Pro AI credits"
-              tooltip="Uses codeX Pro AI credits for the main AI model and Pro modes."
+              description="Free client-side Pro features"
+              tooltip="Enables advanced Pro features like Smart Context and Turbo Edits."
               isTogglable={hasProKey}
-              settingEnabled={Boolean(settings?.enableDyadPro)}
+              settingEnabled={Boolean(settings?.enableCodexPro)}
               toggle={toggleProEnabled}
             />
             <SelectorRow

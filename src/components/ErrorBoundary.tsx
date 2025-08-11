@@ -40,7 +40,7 @@ export function ErrorBoundary({ error }: ErrorComponentProps) {
 ${error?.stack ? `\n\`\`\`\n${error.stack.slice(0, 1000)}\n\`\`\`` : ""}
 
 ## System Information
-- Dyad Version: ${debugInfo.dyadVersion}
+- CodeX Version: ${debugInfo.codexVersion}
 - Platform: ${debugInfo.platform}
 - Architecture: ${debugInfo.architecture}
 - Node Version: ${debugInfo.nodeVersion || "Not available"}
