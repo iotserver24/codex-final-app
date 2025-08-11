@@ -21,25 +21,65 @@ jobs:
     steps:
       - name: Github checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
       - name: Use Node.js
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
         with:
           node-version: 20
-      - run: npm ci
+          cache: "npm"
+
+      # Platform-specific setup
+      - name: Setup Linux dependencies
+        if: matrix.os.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3
+
+      - name: Setup macOS dependencies
+        if: matrix.os.name == 'macos'
+        run: |
+          xcode-select --install || true
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Show environment info for debugging
+      - name: Show environment info
+        run: |
+          echo "=== Environment Info ==="
+          echo "Platform: ${{ matrix.os.name }}"
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
 
       # Build and package (without code signing)
       - name: Build and package
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: npm run make
+        timeout-minutes: 30
+
+      # List build outputs for debugging
+      - name: List build outputs
+        run: |
+          echo "=== Build outputs ==="
+          ls -la out/ || echo "out/ directory not found"
+          find . -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" || echo "No installers found"
 
       # Upload artifacts for manual release
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: codex-${{ matrix.os.name }}-${{ github.run_number }}
-          path: out/
+          path: |
+            out/
+            out/make/
+            out/codex-*/
           retention-days: 30
+          if-no-files-found: warn
 
   # Optional: Create a draft release with all artifacts
   create-release:
@@ -52,6 +92,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
+
+      - name: List downloaded artifacts
+        run: |
+          echo "=== Downloaded artifacts ==="
+          find artifacts/ -type f -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" || echo "No installers found in artifacts"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -70,5 +115,10 @@ jobs:
             - Linux: Download the Linux artifact
 
             **Note**: These builds are not code-signed and may show security warnings.
+
+            ### Build Info:
+            - Build Number: ${{ github.run_number }}
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
