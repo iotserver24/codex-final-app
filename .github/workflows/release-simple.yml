@@ -11,10 +11,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [
+        os:
+          [
             { name: "windows", image: "windows-latest" },
             { name: "linux", image: "ubuntu-22.04" },
-            { name: "macos", image: "macos-15" },
+            { name: "macos", image: "macos-14" },
           ]
     runs-on: ${{ matrix.os.image }}
     steps:
@@ -25,13 +26,13 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
-        
+
       # Build and package (without code signing)
       - name: Build and package
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: npm run make
-        
+
       # Upload artifacts for manual release
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -51,7 +52,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
-          
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -60,14 +61,14 @@ jobs:
           name: "CodeX v${{ github.run_number }} - Draft Release"
           body: |
             ## CodeX v${{ github.run_number }}
-            
+
             This is a draft release with unsigned builds for testing purposes.
-            
+
             ### Downloads:
             - Windows: Download the Windows artifact
-            - macOS: Download the macOS artifact  
+            - macOS: Download the macOS artifact
             - Linux: Download the Linux artifact
-            
+
             **Note**: These builds are not code-signed and may show security warnings.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
