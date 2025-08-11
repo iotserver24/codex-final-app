@@ -75,7 +75,7 @@ export async function getModelClient(
     );
 
     // Use the regular provider but with Pro features enabled
-    const regularClient = getRegularModelClient(
+    const regularClientBundle = getRegularModelClient(
       model,
       settings,
       providerConfig,
@@ -88,7 +88,7 @@ export async function getModelClient(
     }
 
     return {
-      modelClient: regularClient,
+      modelClient: regularClientBundle.modelClient,
       isEngineEnabled,
     };
   }
@@ -124,7 +124,8 @@ export async function getModelClient(
       "No API keys available for any model supported by the 'auto' provider.",
     );
   }
-  return getRegularModelClient(model, settings, providerConfig);
+  const regularBundle = getRegularModelClient(model, settings, providerConfig);
+  return { modelClient: regularBundle.modelClient };
 }
 
 function getRegularModelClient(

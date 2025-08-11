@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { PostHog } from "posthog-js";
+
 import React from "react";
 import { CustomErrorToast } from "../components/CustomErrorToast";
 import { InputRequestToast } from "../components/InputRequestToast";
@@ -114,28 +114,21 @@ export const showInputRequest = (
 export const showExtraFilesToast = ({
   files,
   error,
-  posthog,
 }: {
   files: string[];
   error?: string;
-  posthog: PostHog;
 }) => {
   if (error) {
     showError(
       `Error committing files ${files.join(", ")} changed outside of CodeX: ${error}`,
     );
-    posthog.capture("extra-files:error", {
-      files: files,
-      error,
-    });
+    // Telemetry tracking disabled
   } else {
     showWarning(
       `Files changed outside of CodeX have automatically been committed:
     \n\n${files.join("\n")}`,
     );
-    posthog.capture("extra-files:warning", {
-      files: files,
-    });
+    // Telemetry tracking disabled
   }
 };
 

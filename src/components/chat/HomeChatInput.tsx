@@ -10,7 +10,7 @@ import { useAttachments } from "@/hooks/useAttachments";
 import { AttachmentsList } from "./AttachmentsList";
 import { DragDropOverlay } from "./DragDropOverlay";
 import { FileAttachmentDropdown } from "./FileAttachmentDropdown";
-import { usePostHog } from "posthog-js/react";
+
 import { HomeSubmitOptions } from "@/pages/home";
 import { ChatInputControls } from "../ChatInputControls";
 export function HomeChatInput({
@@ -18,7 +18,6 @@ export function HomeChatInput({
 }: {
   onSubmit: (options?: HomeSubmitOptions) => void;
 }) {
-  const posthog = usePostHog();
   const [inputValue, setInputValue] = useAtom(homeChatInputValueAtom);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings } = useSettings();
@@ -70,7 +69,7 @@ export function HomeChatInput({
 
     // Clear attachments as part of submission process
     clearAttachments();
-    posthog.capture("chat:home_submit");
+    // Telemetry tracking disabled
   };
 
   if (!settings) {

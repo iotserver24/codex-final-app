@@ -43,7 +43,7 @@ import type { Message } from "@/ipc/ipc_types";
 import { isPreviewOpenAtom } from "@/atoms/viewAtoms";
 import { useRunApp } from "@/hooks/useRunApp";
 import { AutoApproveSwitch } from "../AutoApproveSwitch";
-import { usePostHog } from "posthog-js/react";
+
 import { CodeHighlight } from "./CodeHighlight";
 import { TokenBar } from "./TokenBar";
 import {
@@ -165,7 +165,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
       selectedComponent,
     });
     clearAttachments();
-    posthog.capture("chat:submit");
+    // Telemetry tracking disabled
   };
 
   const handleCancel = () => {
@@ -186,7 +186,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
       `Approving proposal for chatId: ${chatId}, messageId: ${messageId}`,
     );
     setIsApproving(true);
-    posthog.capture("chat:approve");
+    // Telemetry tracking disabled
     try {
       const result = await IpcClient.getInstance().approveProposal({
         chatId,
@@ -223,7 +223,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
       `Rejecting proposal for chatId: ${chatId}, messageId: ${messageId}`,
     );
     setIsRejecting(true);
-    posthog.capture("chat:reject");
+    // Telemetry tracking disabled
     try {
       await IpcClient.getInstance().rejectProposal({
         chatId,
@@ -494,7 +494,7 @@ function RebuildButton() {
   const onClick = useCallback(async () => {
     if (!selectedAppId) return;
 
-    posthog.capture("action:rebuild");
+    // Telemetry tracking disabled
     await restartApp({ removeNodeModules: true });
   }, [selectedAppId, posthog, restartApp]);
 
@@ -513,7 +513,7 @@ function RestartButton() {
   const onClick = useCallback(async () => {
     if (!selectedAppId) return;
 
-    posthog.capture("action:restart");
+    // Telemetry tracking disabled
     await restartApp();
   }, [selectedAppId, posthog, restartApp]);
 
@@ -532,7 +532,7 @@ function RefreshButton() {
   const posthog = usePostHog();
 
   const onClick = useCallback(() => {
-    posthog.capture("action:refresh");
+    // Telemetry tracking disabled
     refreshAppIframe();
   }, [posthog, refreshAppIframe]);
 

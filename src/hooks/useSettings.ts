@@ -3,7 +3,7 @@ import { useAtom } from "jotai";
 import { userSettingsAtom, envVarsAtom } from "@/atoms/appAtoms";
 import { IpcClient } from "@/ipc/ipc_client";
 import { type UserSettings } from "@/lib/schemas";
-import { usePostHog } from "posthog-js/react";
+
 import { useAppVersion } from "./useAppVersion";
 
 const TELEMETRY_CONSENT_KEY = "dyadTelemetryConsent";
@@ -20,7 +20,6 @@ export function getTelemetryUserId(): string | null {
 let isInitialLoad = false;
 
 export function useSettings() {
-  const posthog = usePostHog();
   const [settings, setSettingsAtom] = useAtom(userSettingsAtom);
   const [envVars, setEnvVarsAtom] = useAtom(envVarsAtom);
   const [loading, setLoading] = useState(true);
@@ -35,12 +34,9 @@ export function useSettings() {
         ipcClient.getUserSettings(),
         ipcClient.getEnvVars(),
       ]);
-      processSettingsForTelemetry(userSettings);
+      // Telemetry tracking disabled
       if (!isInitialLoad && appVersion) {
-        posthog.capture("app:initial-load", {
-          isPro: Boolean(userSettings.providerSettings?.auto?.apiKey?.value),
-          appVersion,
-        });
+        // App load tracking disabled - telemetry removed
         isInitialLoad = true;
       }
       setSettingsAtom(userSettings);

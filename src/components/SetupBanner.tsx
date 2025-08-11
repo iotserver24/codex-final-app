@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NodeSystemInfo } from "@/ipc/ipc_types";
-import { usePostHog } from "posthog-js/react";
+
 import { useLanguageModelProviders } from "@/hooks/useLanguageModelProviders";
 type NodeInstallStep =
   | "install"
@@ -32,7 +32,6 @@ type NodeInstallStep =
   | "finished-checking";
 
 export function SetupBanner() {
-  const posthog = usePostHog();
   const navigate = useNavigate();
   const { isAnyProviderSetup, isLoading: loading } =
     useLanguageModelProviders();
@@ -59,7 +58,7 @@ export function SetupBanner() {
   }, [checkNode]);
 
   const handleAiSetupClick = () => {
-    posthog.capture("setup-flow:ai-provider-setup:google:click");
+    // Telemetry tracking disabled
     navigate({
       to: providerSettingsRoute.id,
       params: { provider: "google" },
@@ -67,20 +66,20 @@ export function SetupBanner() {
   };
 
   const handleOtherProvidersClick = () => {
-    posthog.capture("setup-flow:ai-provider-setup:other:click");
+    // Telemetry tracking disabled
     navigate({
       to: settingsRoute.id,
     });
   };
 
   const handleNodeInstallClick = useCallback(async () => {
-    posthog.capture("setup-flow:start-node-install-click");
+    // Telemetry tracking disabled
     setNodeInstallStep("waiting-for-continue");
     IpcClient.getInstance().openExternalUrl(nodeSystemInfo!.nodeDownloadUrl);
   }, [nodeSystemInfo, setNodeInstallStep]);
 
   const finishNodeInstall = useCallback(async () => {
-    posthog.capture("setup-flow:continue-node-install-click");
+    // Telemetry tracking disabled
     setNodeInstallStep("continue-processing");
     await IpcClient.getInstance().reloadEnvPath();
     await checkNode();
