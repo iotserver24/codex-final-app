@@ -119,9 +119,19 @@ export async function getModelClient(
         );
       }
     }
-    // If no models have API keys, throw an error
-    throw new Error(
-      "No API keys available for any model supported by the 'auto' provider.",
+
+    // No cloud API keys were found; fall back to free CodeX provider
+    logger.warn(
+      "No cloud API keys found for auto provider. Falling back to free CodeX provider.",
+    );
+    return await getModelClient(
+      {
+        provider: "codex",
+        // Choose a sensible default free model (fast, lightweight)
+        name: "openai-fast",
+      },
+      settings,
+      files,
     );
   }
   const regularBundle = getRegularModelClient(model, settings, providerConfig);
