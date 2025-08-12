@@ -7,7 +7,7 @@ import {
   Smartphone,
   TabletSmartphone,
   Loader2,
-  ExternalLink,
+  // ExternalLink,
   Copy,
 } from "lucide-react";
 import {
@@ -130,7 +130,8 @@ export function CapacitorControls({ appId }: CapacitorControlsProps) {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Mobile Development
-            <Button
+            {/* Help button temporarily disabled - new documentation coming soon */}
+            {/* <Button
               variant="ghost"
               size="sm"
               onClick={() => {
@@ -143,7 +144,7 @@ export function CapacitorControls({ appId }: CapacitorControlsProps) {
             >
               Need help?
               <ExternalLink className="h-3 w-3" />
-            </Button>
+            </Button> */}
           </CardTitle>
           <CardDescription>
             Sync and open your Capacitor mobile projects

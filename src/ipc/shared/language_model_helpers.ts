@@ -22,6 +22,46 @@ export interface ModelOption {
 
 export const MODEL_OPTIONS: Record<string, ModelOption[]> = {
   openai: [
+    // https://platform.openai.com/docs/models/gpt-5
+    {
+      name: "gpt-5",
+      displayName: "GPT-5",
+      description: "OpenAI's most advanced model",
+      maxOutputTokens: 32_768,
+      contextWindow: 1_047_576,
+    },
+    // https://platform.openai.com/docs/models/gpt-5-mini
+    {
+      name: "gpt-5-mini",
+      displayName: "GPT-5 Mini",
+      description: "OpenAI's balanced GPT-5 model",
+      maxOutputTokens: 32_768,
+      contextWindow: 1_047_576,
+    },
+    // https://platform.openai.com/docs/models/gpt-5-nano
+    {
+      name: "gpt-5-nano",
+      displayName: "GPT-5 Nano",
+      description: "OpenAI's lightweight GPT-5 model",
+      maxOutputTokens: 32_768,
+      contextWindow: 1_047_576,
+    },
+    // https://platform.openai.com/docs/models/gpt-5-chat-latest
+    {
+      name: "gpt-5-chat-latest",
+      displayName: "GPT-5 Chat",
+      description: "Latest GPT-5 chat model",
+      maxOutputTokens: 32_768,
+      contextWindow: 1_047_576,
+    },
+    // https://platform.openai.com/docs/models/gpt-4o
+    {
+      name: "gpt-4o",
+      displayName: "GPT-4o",
+      description: "OpenAI's GPT-4o model",
+      maxOutputTokens: 32_768,
+      contextWindow: 1_047_576,
+    },
     // https://platform.openai.com/docs/models/gpt-4.1
     {
       name: "gpt-4.1",
@@ -35,6 +75,14 @@ export const MODEL_OPTIONS: Record<string, ModelOption[]> = {
       name: "gpt-4.1-mini",
       displayName: "GPT 4.1 Mini",
       description: "OpenAI's lightweight, but intelligent model",
+      maxOutputTokens: 32_768,
+      contextWindow: 1_047_576,
+    },
+    // https://platform.openai.com/docs/models/gpt-4.1-nano
+    {
+      name: "gpt-4.1-nano",
+      displayName: "GPT 4.1 Nano",
+      description: "OpenAI's most lightweight model",
       maxOutputTokens: 32_768,
       contextWindow: 1_047_576,
     },
@@ -388,9 +436,10 @@ export const CLOUD_PROVIDERS: Record<
     gatewayPrefix: "openrouter/",
   },
   auto: {
-    displayName: "Dyad",
-    websiteUrl: "https://academy.dyad.sh/settings",
-    gatewayPrefix: "dyad/",
+    displayName: "CodeX Auto",
+    websiteUrl:
+      "https://codex.anishkumar.tech/docs/guides/ai-models/pro-modes#smart-context",
+    gatewayPrefix: "codex/",
   },
   codex: {
     displayName: "codeX",

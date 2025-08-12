@@ -29,9 +29,7 @@ function getKeyButtonText({
   isDyad: boolean;
 }) {
   if (isDyad) {
-    return isConfigured
-      ? "Manage Dyad Pro Subscription"
-      : "Setup Dyad Pro Subscription";
+    return "Ready"; // CodeX Auto is always ready
   }
   return isConfigured ? "Manage API Keys" : "Setup API Key";
 }
@@ -68,7 +66,7 @@ export function ProviderSettingsHeader({
       <div className="mb-6">
         <div className="flex items-center mb-1">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mr-3">
-            Configure {providerDisplayName}
+            {isDyad ? providerDisplayName : `Configure ${providerDisplayName}`}
           </h1>
           {isLoading ? (
             <Skeleton className="h-6 w-6 rounded-full" />
@@ -84,9 +82,11 @@ export function ProviderSettingsHeader({
           <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
             {isLoading
               ? "Loading..."
-              : isConfigured
-                ? "Setup Complete"
-                : "Not Setup"}
+              : isDyad
+                ? "Ready"
+                : isConfigured
+                  ? "Setup Complete"
+                  : "Not Setup"}
           </span>
         </div>
         {!isLoading && hasFreeTier && (
@@ -97,7 +97,7 @@ export function ProviderSettingsHeader({
         )}
       </div>
 
-      {providerWebsiteUrl && !isLoading && !isCodeX && (
+      {providerWebsiteUrl && !isLoading && !isCodeX && !isDyad && (
         <Button
           onClick={handleGetApiKeyClick}
           className="mb-4 bg-(--background-lightest) cursor-pointer py-5"

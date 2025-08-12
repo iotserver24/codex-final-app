@@ -3,7 +3,7 @@ import log from "electron-log";
 import { db } from "../../db";
 import { apps } from "../../db/schema";
 import { eq } from "drizzle-orm";
-import { getDyadAppPath } from "../../paths/paths";
+import { getAppPath } from "../../paths/paths";
 import fs from "node:fs";
 import path from "node:path";
 import { simpleSpawn } from "../utils/simpleSpawn";
@@ -39,7 +39,7 @@ export function registerCapacitorHandlers() {
     "is-capacitor",
     async (_, { appId }: { appId: number }): Promise<boolean> => {
       const app = await getApp(appId);
-      const appPath = getDyadAppPath(app.path);
+      const appPath = getAppPath(app.path);
       return isCapacitorInstalled(appPath);
     },
   );
@@ -48,7 +48,7 @@ export function registerCapacitorHandlers() {
     "sync-capacitor",
     async (_, { appId }: { appId: number }): Promise<void> => {
       const app = await getApp(appId);
-      const appPath = getDyadAppPath(app.path);
+      const appPath = getAppPath(app.path);
 
       if (!isCapacitorInstalled(appPath)) {
         throw new Error("Capacitor is not installed in this app");
@@ -76,7 +76,7 @@ export function registerCapacitorHandlers() {
 
   handle("open-ios", async (_, { appId }: { appId: number }): Promise<void> => {
     const app = await getApp(appId);
-    const appPath = getDyadAppPath(app.path);
+    const appPath = getAppPath(app.path);
 
     if (!isCapacitorInstalled(appPath)) {
       throw new Error("Capacitor is not installed in this app");
@@ -100,7 +100,7 @@ export function registerCapacitorHandlers() {
     "open-android",
     async (_, { appId }: { appId: number }): Promise<void> => {
       const app = await getApp(appId);
-      const appPath = getDyadAppPath(app.path);
+      const appPath = getAppPath(app.path);
 
       if (!isCapacitorInstalled(appPath)) {
         throw new Error("Capacitor is not installed in this app");

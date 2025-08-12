@@ -9,8 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {} from "@/components/ui/accordion";
 
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { showError } from "@/lib/toast";
+// import { showError } from "@/lib/toast";
 import { UserSettings } from "@/lib/schemas";
 
 import { ProviderSettingsHeader } from "./ProviderSettingsHeader";
@@ -42,7 +41,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
   const supportsCustomModels =
     providerData?.type === "custom" || providerData?.type === "cloud";
 
-  const isDyad = provider === "auto";
+  const isCodeXAuto = provider === "auto";
   const isCodeX = provider === "codex";
 
   const [apiKeyInput, setApiKeyInput] = useState("");
@@ -50,15 +49,15 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Use fetched data (or defaults for Dyad)
-  const providerDisplayName = isDyad
-    ? "Dyad"
+  // Use fetched data (or defaults for CodeX Auto)
+  const providerDisplayName = isCodeXAuto
+    ? "CodeX Auto"
     : (providerData?.name ?? "Unknown Provider");
-  const providerWebsiteUrl = isDyad
-    ? "https://academy.dyad.sh/settings"
+  const providerWebsiteUrl = isCodeXAuto
+    ? "https://codex.anishkumar.tech/docs/guides/ai-models/pro-modes#smart-context"
     : providerData?.websiteUrl;
-  const hasFreeTier = isDyad ? false : providerData?.hasFreeTier;
-  const envVarName = isDyad ? undefined : providerData?.envVarName;
+  const hasFreeTier = isCodeXAuto ? false : providerData?.hasFreeTier;
+  const envVarName = isCodeXAuto ? undefined : providerData?.envVarName;
 
   // Use provider ID (which is the 'provider' prop)
   const userApiKey = settings?.providerSettings?.[provider]?.apiKey?.value;
@@ -71,7 +70,9 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
   const hasEnvKey = !!(envVarName && envVars[envVarName]);
 
   // codeX is always configured since it uses hardcoded token
-  const isConfigured = isCodeX ? true : isValidUserKey || hasEnvKey;
+  // CodeX Auto is always configured since it doesn't need API keys
+  const isConfigured =
+    isCodeX || isCodeXAuto ? true : isValidUserKey || hasEnvKey;
 
   // --- Save Handler ---
   const handleSaveKey = async () => {
@@ -93,7 +94,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
           },
         },
       };
-      if (isDyad) {
+      if (isCodeXAuto) {
         settingsUpdate.enableCodexPro = true;
       }
       await updateSettings(settingsUpdate);
@@ -125,20 +126,6 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
     } catch (error: any) {
       console.error("Error deleting API key:", error);
       setSaveError(error.message || "Failed to delete API key.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // --- Toggle codeX Pro Handler ---
-  const handleToggleDyadPro = async (enabled: boolean) => {
-    setIsSaving(true);
-    try {
-      await updateSettings({
-        enableCodexPro: enabled,
-      });
-    } catch (error: any) {
-      showError(`Error toggling codeX Pro: ${error}`);
     } finally {
       setIsSaving(false);
     }
@@ -197,7 +184,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
   }
 
   // Handle case where provider is not found (e.g., invalid ID in URL)
-  if (!providerData && !isDyad) {
+  if (!providerData && !isCodeXAuto) {
     return (
       <div className="min-h-screen px-8 py-4">
         <div className="max-w-4xl mx-auto">
@@ -234,7 +221,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
           isLoading={settingsLoading}
           hasFreeTier={hasFreeTier}
           providerWebsiteUrl={providerWebsiteUrl}
-          isDyad={isDyad}
+          isDyad={isCodeXAuto}
           isCodeX={isCodeX}
           onBackClick={() => router.history.back()}
         />
@@ -260,6 +247,16 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
               models available.
             </p>
           </div>
+        ) : isCodeXAuto ? (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h3 className="text-lg font-medium text-blue-800 dark:text-blue-200 mb-2">
+              ✅ CodeX Auto Ready
+            </h3>
+            <p className="text-blue-700 dark:text-blue-300">
+              CodeX Auto is configured and ready to use. It automatically
+              selects the best model for your tasks.
+            </p>
+          </div>
         ) : (
           <ApiKeyConfiguration
             provider={provider}
@@ -273,24 +270,8 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
             onApiKeyInputChange={setApiKeyInput}
             onSaveKey={handleSaveKey}
             onDeleteKey={handleDeleteKey}
-            isDyad={isDyad}
+            isDyad={isCodeXAuto}
           />
-        )}
-
-        {isDyad && !settingsLoading && (
-          <div className="mt-6 flex items-center justify-between p-4 bg-(--background-lightest) rounded-lg border">
-            <div>
-              <h3 className="font-medium">Enable codeX Pro</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Toggle to enable codeX Pro
-              </p>
-            </div>
-            <Switch
-              checked={settings?.enableCodexPro}
-              onCheckedChange={handleToggleDyadPro}
-              disabled={isSaving}
-            />
-          </div>
         )}
 
         {/* Conditionally render CustomModelsSection */}

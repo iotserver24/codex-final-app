@@ -9,7 +9,7 @@ import {
   SUPABASE_AVAILABLE_SYSTEM_PROMPT,
   SUPABASE_NOT_AVAILABLE_SYSTEM_PROMPT,
 } from "../../prompts/supabase_prompt";
-import { getDyadAppPath } from "../../paths/paths";
+import { getAppPath } from "../../paths/paths";
 import log from "electron-log";
 import { extractCodebase } from "../../utils/codebase";
 import { getSupabaseContext } from "../../supabase_admin/supabase_context";
@@ -55,7 +55,7 @@ export function registerTokenCountHandlers() {
       const settings = readSettings();
       // Count system prompt tokens
       let systemPrompt = constructSystemPrompt({
-        aiRules: await readAiRules(getDyadAppPath(chat.app.path)),
+        aiRules: await readAiRules(getAppPath(chat.app.path)),
         chatMode: settings.selectedChatMode,
       });
       let supabaseContext = "";
@@ -79,7 +79,7 @@ export function registerTokenCountHandlers() {
       let codebaseTokens = 0;
 
       if (chat.app) {
-        const appPath = getDyadAppPath(chat.app.path);
+        const appPath = getAppPath(chat.app.path);
         codebaseInfo = (
           await extractCodebase({
             appPath,

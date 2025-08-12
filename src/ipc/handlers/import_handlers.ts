@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import { createLoggedHandler } from "./safe_handle";
 import log from "electron-log";
-import { getDyadAppPath } from "../../paths/paths";
+import { getAppPath } from "../../paths/paths";
 import { apps } from "@/db/schema";
 import { db } from "@/db";
 import { chats } from "@/db/schema";
@@ -48,7 +48,7 @@ export function registerImportHandlers() {
   // Handler for checking if an app name is already taken
   handle("check-app-name", async (_, { appName }: { appName: string }) => {
     // Check filesystem
-    const appPath = getDyadAppPath(appName);
+    const appPath = getAppPath(appName);
     try {
       await fs.access(appPath);
       return { exists: true };
@@ -78,7 +78,7 @@ export function registerImportHandlers() {
         throw new Error("Source folder does not exist");
       }
 
-      const destPath = getDyadAppPath(appName);
+      const destPath = getAppPath(appName);
 
       // Check if the app already exists
       const errorMessage = "An app with this name already exists";
@@ -115,9 +115,9 @@ export function registerImportHandlers() {
         });
 
         // Create initial commit
-        await gitCommit({
+        const _commitHash = await gitCommit({
           path: destPath,
-          message: "Init Dyad app",
+          message: "Init CodeX app",
         });
       }
 

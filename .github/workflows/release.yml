@@ -1,0 +1,258 @@
+name: Build and Release CodeX
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.5)'
+        required: true
+        default: '1.0.5'
+
+permissions:
+  contents: write
+
+jobs:
+  # All build jobs run in parallel simultaneously
+  build-linux:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        # This ensures the job runs independently
+        build: [linux]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for Linux
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: npm run make
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds
+          path: |
+            out/make/deb/x64/*.deb
+            out/make/rpm/x64/*.rpm
+            out/make/zip/linux/x64/*.zip
+          retention-days: 30
+
+  build-macos:
+    runs-on: macos-14
+    strategy:
+      matrix:
+        build: [macos]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install macOS dependencies
+        run: |
+          xcode-select --install || true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for macOS
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: npm run make
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-builds
+          path: |
+            out/make/zip/darwin/arm64/*.zip
+            out/make/zip/darwin/x64/*.zip
+          retention-days: 30
+
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        build: [windows]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for Windows
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: npm run make
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-builds
+          path: |
+            out/make/squirrel.windows/x64/*.exe
+            out/make/zip/win32/x64/*.zip
+          retention-days: 30
+
+  # Release job waits for ALL builds to complete
+  create-release:
+    needs: [build-linux, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: always() # Run even if some builds fail
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=${{ github.event.inputs.version || '1.0.5' }}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-builds
+          path: artifacts/linux
+        continue-on-error: true
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-builds
+          path: artifacts/macos
+        continue-on-error: true
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-builds
+          path: artifacts/windows
+        continue-on-error: true
+
+      - name: List all artifacts
+        run: |
+          echo "=== All downloaded artifacts ==="
+          find artifacts/ -type f -name "*.exe" -o -name "*.deb" -o -name "*.rpm" -o -name "*.zip" -o -name "*.dmg" || echo "No artifacts found"
+          echo "=== Artifact details ==="
+          ls -la artifacts/linux/ || echo "No Linux artifacts"
+          ls -la artifacts/macos/ || echo "No macOS artifacts"
+          ls -la artifacts/windows/ || echo "No Windows artifacts"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: CodeX v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/linux/*.deb
+            artifacts/linux/*.rpm
+            artifacts/linux/*.zip
+            artifacts/macos/*.zip
+            artifacts/windows/*.exe
+            artifacts/windows/*.zip
+          body: |
+            ## CodeX v${{ steps.version.outputs.version }}
+
+            ### 🚀 What's New
+            - AI-powered code generation and editing
+            - 40+ AI models support including GPT-5, Claude, and free models
+            - Vercel integration for one-click deployment
+            - Built-in terminal and development tools
+            - Cross-platform support (Windows, macOS, Linux)
+
+            ### 📦 Downloads
+            **Windows:**
+            - Installer: Download the `.exe` file for easy installation
+            - Portable: Download the `.zip` file for portable use
+
+            **macOS:**
+            - Download the `.zip` file and extract to Applications
+
+            **Linux:**
+            - Debian/Ubuntu: Use the `.deb` package
+            - Red Hat/Fedora: Use the `.rpm` package
+            - Other: Use the `.zip` file
+
+            ### 🔧 Installation
+            1. Download the appropriate file for your platform
+            2. Run the installer or extract the zip file
+            3. Launch CodeX and start coding with AI!
+
+            ### ⚠️ Note
+            These builds are not code-signed and may show security warnings. This is normal for open-source applications.
+
+            ### 🐛 Bug Reports
+            If you encounter any issues, please report them on our [GitHub Issues](https://github.com/iotserver24/codex/issues) page.
+
+            ### 📚 Documentation
+            Visit our [documentation](https://codex.anishkumar.tech/docs) for detailed guides and tutorials.
+
+            ---
+            *Built with ❤️ by the CodeX team*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Optional: Update version in package.json
+  update-version:
+    needs: [create-release]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Update version in package.json
+        run: |
+          VERSION=${{ github.event.inputs.version || '1.0.5' }}
+          npm version $VERSION --no-git-tag-version
+          echo "Updated package.json to version $VERSION"
+
+      - name: Commit and push version update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json
+          git commit -m "Bump version to ${{ github.event.inputs.version || '1.0.5' }}"
+          git push
