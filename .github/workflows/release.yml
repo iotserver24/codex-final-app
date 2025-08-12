@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 1.0.5)'
+        description: 'Version to release (e.g., 1.0.4)'
         required: true
-        default: '1.0.5'
+        default: '1.0.4'
 
 permissions:
   contents: write
@@ -138,7 +138,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.0.5' }}
+            VERSION=${{ github.event.inputs.version || '1.0.4' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -245,7 +245,7 @@ jobs:
 
       - name: Update version in package.json
         run: |
-          VERSION=${{ github.event.inputs.version || '1.0.5' }}
+          VERSION=${{ github.event.inputs.version || '1.0.4' }}
           npm version $VERSION --no-git-tag-version
           echo "Updated package.json to version $VERSION"
 
@@ -254,5 +254,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add package.json
-          git commit -m "Bump version to ${{ github.event.inputs.version || '1.0.5' }}"
+          git commit -m "Bump version to ${{ github.event.inputs.version || '1.0.4' }}"
           git push
