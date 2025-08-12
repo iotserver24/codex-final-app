@@ -49,6 +49,12 @@ const ignore = (file: string) => {
 };
 
 const isEndToEndTestBuild = process.env.E2E_TEST_BUILD === "true";
+// Sign/notarize only if all Apple credentials are present
+const hasAppleCreds = Boolean(
+  process.env.APPLE_TEAM_ID &&
+    process.env.APPLE_ID &&
+    process.env.APPLE_PASSWORD,
+);
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -60,21 +66,24 @@ const config: ForgeConfig = {
     ],
     icon: "./assets/icon/logo",
 
-    osxSign: isEndToEndTestBuild
-      ? undefined
-      : {
-          identity: process.env.APPLE_TEAM_ID,
-        },
-    osxNotarize: isEndToEndTestBuild
-      ? undefined
-      : {
-          appleId: process.env.APPLE_ID!,
-          appleIdPassword: process.env.APPLE_PASSWORD!,
-          teamId: process.env.APPLE_TEAM_ID!,
-        },
+    // In CI without Apple creds, do not attempt to sign/notarize
+    osxSign:
+      isEndToEndTestBuild || !hasAppleCreds
+        ? undefined
+        : {
+            identity: process.env.APPLE_TEAM_ID,
+          },
+    osxNotarize:
+      isEndToEndTestBuild || !hasAppleCreds
+        ? undefined
+        : {
+            appleId: process.env.APPLE_ID!,
+            appleIdPassword: process.env.APPLE_PASSWORD!,
+            teamId: process.env.APPLE_TEAM_ID!,
+          },
     asar: true,
     ignore,
-    // ignore: [/node_modules\/(?!(better-sqlite3|bindings|file-uri-to-path)\/)/],
+    // ignore: [/node_modules\/(?! (better-sqlite3|bindings|file-uri-to-path)\/)/],
   },
   rebuildConfig: {
     extraModules: ["better-sqlite3"],
