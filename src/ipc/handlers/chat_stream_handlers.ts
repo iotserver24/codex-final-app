@@ -379,7 +379,7 @@ ${componentSnippet}
             }
           : validateChatContext(updatedChat.app.chatContext);
 
-        const { formattedOutput: codebaseInfo, files } = await extractCodebase({
+        const { formattedOutput: codebaseInfo } = await extractCodebase({
           appPath,
           chatContext,
         });
@@ -394,7 +394,6 @@ ${componentSnippet}
         const { modelClient, isEngineEnabled } = await getModelClient(
           settings.selectedModel,
           settings,
-          files,
         );
 
         // Prepare message history for the AI
@@ -795,16 +794,16 @@ ${problemReport.problems
                   writeTags,
                 });
 
-                const { formattedOutput: codebaseInfo, files } =
-                  await extractCodebase({
+                const { formattedOutput: codebaseInfo } = await extractCodebase(
+                  {
                     appPath,
                     chatContext,
                     virtualFileSystem,
-                  });
+                  },
+                );
                 const { modelClient } = await getModelClient(
                   settings.selectedModel,
                   settings,
-                  files,
                 );
 
                 const { fullStream } = await simpleStreamText({

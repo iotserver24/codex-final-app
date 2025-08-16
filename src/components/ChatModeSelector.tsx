@@ -31,6 +31,8 @@ export function ChatModeSelector() {
         return "Ask";
       case "designer":
         return "Designer";
+      case "agentic":
+        return "Agentic";
       default:
         return "Build";
     }
@@ -77,6 +79,14 @@ export function ChatModeSelector() {
             <span className="font-medium">Designer</span>
             <span className="text-xs text-muted-foreground">
               Design-focused mode; pick any model
+            </span>
+          </div>
+        </SelectItem>
+        <SelectItem value="agentic">
+          <div className="flex flex-col items-start">
+            <span className="font-medium">Agentic</span>
+            <span className="text-xs text-muted-foreground">
+              Continuous iteration and refinement
             </span>
           </div>
         </SelectItem>
