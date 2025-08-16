@@ -37,14 +37,19 @@ if (started) {
 }
 
 // https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app#main-process-mainjs
+// Register both legacy "dyad" and new "codex" URL schemes for deep links
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient("dyad", process.execPath, [
       path.resolve(process.argv[1]),
     ]);
+    app.setAsDefaultProtocolClient("codex", process.execPath, [
+      path.resolve(process.argv[1]),
+    ]);
   }
 } else {
   app.setAsDefaultProtocolClient("dyad");
+  app.setAsDefaultProtocolClient("codex");
 }
 
 export async function onReady() {
@@ -202,10 +207,10 @@ function handleDeepLinkReturn(url: string) {
     "hostname",
     parsed.hostname,
   );
-  if (parsed.protocol !== "dyad:") {
+  if (parsed.protocol !== "dyad:" && parsed.protocol !== "codex:") {
     dialog.showErrorBox(
       "Invalid Protocol",
-      `Expected dyad://, got ${parsed.protocol}. Full URL: ${url}`,
+      `Expected dyad:// or codex://, got ${parsed.protocol}. Full URL: ${url}`,
     );
     return;
   }
@@ -227,14 +232,25 @@ function handleDeepLinkReturn(url: string) {
     });
     return;
   }
-  if (parsed.hostname === "supabase-oauth-return") {
-    const token = parsed.searchParams.get("token");
-    const refreshToken = parsed.searchParams.get("refreshToken");
-    const expiresIn = Number(parsed.searchParams.get("expiresIn"));
+  if (
+    parsed.hostname === "supabase-oauth-return" ||
+    parsed.hostname === "supabase-connect-return"
+  ) {
+    // Support multiple parameter conventions
+    const token =
+      parsed.searchParams.get("token") ||
+      parsed.searchParams.get("access_token");
+    const refreshToken =
+      parsed.searchParams.get("refreshToken") ||
+      parsed.searchParams.get("refresh_token");
+    const expiresInRaw =
+      parsed.searchParams.get("expiresIn") ||
+      parsed.searchParams.get("expires_in");
+    const expiresIn = Number(expiresInRaw);
     if (!token || !refreshToken || !expiresIn) {
       dialog.showErrorBox(
         "Invalid URL",
-        "Expected token, refreshToken, and expiresIn",
+        "Expected token/access_token, refreshToken/refresh_token, and expiresIn/expires_in",
       );
       return;
     }

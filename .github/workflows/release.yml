@@ -9,7 +9,7 @@ on:
       version:
         description: 'Version to release (e.g., 1.0.4)'
         required: true
-        default: '1.0.4'
+        default: '1.0.5'
 
 permissions:
   contents: write
@@ -138,7 +138,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.0.4' }}
+            VERSION=${{ github.event.inputs.version || '1.0.5' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -192,7 +192,7 @@ jobs:
 
             ### 🚀 What's New
             - AI-powered code generation and editing
-            - 40+ AI models support including GPT-5, Claude, and free models
+            - 50+ AI models support including GPT-5, Claude, and free models
             - Vercel integration for one-click deployment
             - Built-in terminal and development tools
             - Cross-platform support (Windows, macOS, Linux)
@@ -245,7 +245,7 @@ jobs:
 
       - name: Update version in package.json
         run: |
-          VERSION=${{ github.event.inputs.version || '1.0.4' }}
+          VERSION=${{ github.event.inputs.version || '1.0.5' }}
           npm version $VERSION --no-git-tag-version
           echo "Updated package.json to version $VERSION"
 
@@ -254,5 +254,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add package.json
-          git commit -m "Bump version to ${{ github.event.inputs.version || '1.0.4' }}"
+          git commit -m "Bump version to ${{ github.event.inputs.version || '1.0.5' }}"
           git push

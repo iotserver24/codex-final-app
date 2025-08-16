@@ -14,12 +14,11 @@ import log from "electron-log";
 import { extractCodebase } from "../../utils/codebase";
 import { getSupabaseContext } from "../../supabase_admin/supabase_context";
 
-import { TokenCountParams } from "../ipc_types";
-import { TokenCountResult } from "../ipc_types";
+import { TokenCountParams, TokenCountResult } from "../ipc_types";
 import { estimateTokens, getContextWindow } from "../utils/token_utils";
 import { createLoggedHandler } from "./safe_handle";
 import { validateChatContext } from "../utils/context_paths_utils";
-import { readSettings } from "@/main/settings";
+import { readSettings } from "../../main/settings";
 
 const logger = log.scope("token_count_handlers");
 
@@ -58,13 +57,26 @@ export function registerTokenCountHandlers() {
         aiRules: await readAiRules(getAppPath(chat.app.path)),
         chatMode: settings.selectedChatMode,
       });
+      // Designer provider removed; no extra prompt prefix
       let supabaseContext = "";
 
       if (chat.app?.supabaseProjectId) {
         systemPrompt += "\n\n" + SUPABASE_AVAILABLE_SYSTEM_PROMPT;
-        supabaseContext = await getSupabaseContext({
-          supabaseProjectId: chat.app.supabaseProjectId,
-        });
+        try {
+          supabaseContext = await getSupabaseContext({
+            supabaseProjectId: chat.app.supabaseProjectId,
+          });
+        } catch (error) {
+          logger.warn(
+            `Failed to get Supabase context for project ${chat.app.supabaseProjectId}:`,
+            error,
+          );
+          // Fall back to not available prompt if Supabase context fails
+          systemPrompt = systemPrompt.replace(
+            SUPABASE_AVAILABLE_SYSTEM_PROMPT,
+            SUPABASE_NOT_AVAILABLE_SYSTEM_PROMPT,
+          );
+        }
       } else if (
         // Neon projects don't need Supabase.
         !chat.app?.neonProjectId

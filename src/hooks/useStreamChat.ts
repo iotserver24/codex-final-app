@@ -49,7 +49,7 @@ export function useStreamChat({
   const { refetchUserBudget } = useUserBudgetInfo();
   const { checkProblems } = useCheckProblems(selectedAppId);
   const { settings } = useSettings();
-  const posthog = usePostHog();
+  const _posthog = usePostHog();
   let chatId: number | undefined;
 
   if (hasChatId) {
@@ -109,7 +109,6 @@ export function useStreamChat({
               showExtraFilesToast({
                 files: response.extraFiles,
                 error: response.extraFilesError,
-                posthog,
               });
             }
             refreshProposal(chatId);

@@ -40,7 +40,7 @@ export function ReleaseChannelSelector() {
         action: {
           label: "Restart CodeX",
           onClick: () => {
-            IpcClient.getInstance().restartDyad();
+            IpcClient.getInstance().restartCodex();
           },
         },
       });

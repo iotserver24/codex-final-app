@@ -183,6 +183,7 @@ async function executeAppLocalNode({
           onStarted: (proxyUrl) => {
             safeSend(event.sender, "app:output", {
               type: "stdout",
+              // Keep internal tag for parsing, but also include a user-facing alias
               message: `[dyad-proxy-server]started=[${proxyUrl}] original=[${urlMatch[1]}]`,
               appId,
             });

@@ -68,7 +68,7 @@ import { useCheckProblems } from "@/hooks/useCheckProblems";
 const showTokenBarAtom = atom(false);
 
 export function ChatInput({ chatId }: { chatId?: number }) {
-  const posthog = usePostHog();
+  const _posthog = usePostHog();
   const [inputValue, setInputValue] = useAtom(chatInputValueAtom);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings } = useSettings();
@@ -196,7 +196,6 @@ export function ChatInput({ chatId }: { chatId?: number }) {
         showExtraFilesToast({
           files: result.extraFiles,
           error: result.extraFilesError,
-          posthog,
         });
       }
     } catch (err) {

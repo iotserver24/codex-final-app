@@ -25,13 +25,13 @@ export function useRunApp() {
   const setPreviewErrorMessage = useSetAtom(previewErrorMessageAtom);
 
   const processProxyServerOutput = (output: AppOutput) => {
-    const matchesProxyServerStart = output.message.includes(
-      "[dyad-proxy-server]started=[",
-    );
+    const matchesProxyServerStart =
+      output.message.includes("[dyad-proxy-server]started=[") ||
+      output.message.includes("[codex-proxy]started=[");
     if (matchesProxyServerStart) {
       // Extract both proxy URL and original URL using regex
       const proxyUrlMatch = output.message.match(
-        /\[dyad-proxy-server\]started=\[(.*?)\]/,
+        /\[(?:dyad-proxy-server|codex-proxy)\]started=\[(.*?)\]/,
       );
       const originalUrlMatch = output.message.match(/original=\[(.*?)\]/);
 
@@ -65,8 +65,19 @@ export function useRunApp() {
         return; // Don't add to regular output
       }
 
-      // Add to regular app output
-      setAppOutput((prev) => [...prev, output]);
+      // Add to regular app output (rename dyad-proxy tag for display only)
+      const displayOutput: AppOutput = output.message.includes(
+        "[dyad-proxy-server]started=[",
+      )
+        ? {
+            ...output,
+            message: output.message.replace(
+              /\[dyad-proxy-server\]/g,
+              "[codex-proxy]",
+            ),
+          }
+        : output;
+      setAppOutput((prev) => [...prev, displayOutput]);
 
       // Process proxy server output
       processProxyServerOutput(output);

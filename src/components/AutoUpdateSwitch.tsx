@@ -24,7 +24,7 @@ export function AutoUpdateSwitch() {
             action: {
               label: "Restart CodeX",
               onClick: () => {
-                IpcClient.getInstance().restartDyad();
+                IpcClient.getInstance().restartCodex();
               },
             },
           });

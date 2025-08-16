@@ -445,17 +445,29 @@ ${componentSnippet}
           aiRules: await readAiRules(getAppPath(updatedChat.app.path)),
           chatMode: settings.selectedChatMode,
         });
+        // Designer provider removed; no extra prompt prefix
         if (
           updatedChat.app?.supabaseProjectId &&
           settings.supabase?.accessToken?.value
         ) {
-          systemPrompt +=
-            "\n\n" +
-            SUPABASE_AVAILABLE_SYSTEM_PROMPT +
-            "\n\n" +
-            (await getSupabaseContext({
-              supabaseProjectId: updatedChat.app.supabaseProjectId,
-            }));
+          systemPrompt += "\n\n" + SUPABASE_AVAILABLE_SYSTEM_PROMPT;
+          try {
+            systemPrompt +=
+              "\n\n" +
+              (await getSupabaseContext({
+                supabaseProjectId: updatedChat.app.supabaseProjectId,
+              }));
+          } catch (error) {
+            logger.warn(
+              `Failed to get Supabase context for project ${updatedChat.app.supabaseProjectId}:`,
+              error,
+            );
+            // Fall back to not available prompt if Supabase context fails
+            systemPrompt = systemPrompt.replace(
+              SUPABASE_AVAILABLE_SYSTEM_PROMPT,
+              SUPABASE_NOT_AVAILABLE_SYSTEM_PROMPT,
+            );
+          }
         } else if (
           // Neon projects don't need Supabase.
           !updatedChat.app?.neonProjectId

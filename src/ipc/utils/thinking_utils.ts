@@ -23,6 +23,7 @@ export function getExtraProviderOptions(
   if (!providerId) {
     return {};
   }
+  // Enable thinking only if provider supports it explicitly
   if (PROVIDERS_THAT_SUPPORT_THINKING.includes(providerId)) {
     const budgetTokens = getThinkingBudgetTokens(settings?.thinkingBudget);
     return {

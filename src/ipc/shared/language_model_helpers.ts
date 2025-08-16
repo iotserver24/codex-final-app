@@ -212,12 +212,26 @@ export const MODEL_OPTIONS: Record<string, ModelOption[]> = {
   ],
   codex: [
     {
+      name: "claude",
+      displayName: "Claude 3.5 Haiku",
+      description: "Claude 3.5 Haiku (Bedrock)",
+      maxOutputTokens: 8_000,
+      contextWindow: 32_000,
+    },
+    {
       name: "deepseek-reasoning",
       displayName: "DeepSeek R1 0528",
-      description: "DeepSeek R1 0528 (Vertex AI)",
+      description: "DeepSeek R1 0528 (Bedrock)",
       tag: "Reasoning",
       maxOutputTokens: 10_000,
       contextWindow: 100_000,
+    },
+    {
+      name: "gemini",
+      displayName: "Gemini 2.5 Flash Lite",
+      description: "Gemini 2.5 Flash Lite (api.navy)",
+      maxOutputTokens: 8_000,
+      contextWindow: 32_000,
     },
     {
       name: "glm",
@@ -313,6 +327,14 @@ export const MODEL_OPTIONS: Record<string, ModelOption[]> = {
       contextWindow: 128_000,
     },
     {
+      name: "openai-reasoning",
+      displayName: "OpenAI o3",
+      description: "OpenAI o3 (api.navy)",
+      tag: "Reasoning",
+      maxOutputTokens: 8_000,
+      contextWindow: 32_000,
+    },
+    {
       name: "openai-roblox",
       displayName: "GPT-4.1 Nano (Roblox)",
       description: "OpenAI GPT-4.1 Nano",
@@ -328,10 +350,25 @@ export const MODEL_OPTIONS: Record<string, ModelOption[]> = {
       contextWindow: 64_000,
     },
     {
+      name: "roblox-rp",
+      displayName: "Roblox RP Multi-Model",
+      description: "Roblox RP Multi-Model (Random Bedrock Selection)",
+      maxOutputTokens: 8_000,
+      contextWindow: 32_000,
+    },
+    {
       name: "bidara",
       displayName: "BIDARA",
       description:
         "BIDARA (Biomimetic Designer and Research Assistant by NASA)",
+      tag: "Community",
+      maxOutputTokens: 8_000,
+      contextWindow: 32_000,
+    },
+    {
+      name: "elixposearch",
+      displayName: "Elixpo Search",
+      description: "Elixpo Search",
       tag: "Community",
       maxOutputTokens: 8_000,
       contextWindow: 32_000,
@@ -393,6 +430,7 @@ export const MODEL_OPTIONS: Record<string, ModelOption[]> = {
       contextWindow: 32_000,
     },
   ],
+  // designer provider removed
 };
 
 export const PROVIDER_TO_ENV_VAR: Record<string, string> = {
@@ -444,7 +482,13 @@ export const CLOUD_PROVIDERS: Record<
   codex: {
     displayName: "codeX",
     hasFreeTier: true,
-    websiteUrl: "https://text.pollinations.ai/openai",
+    websiteUrl: "https://codex.anishkumar.tech",
+    gatewayPrefix: "codex/",
+  },
+  designer: {
+    displayName: "Designer",
+    hasFreeTier: true,
+    websiteUrl: "https://codex.anishkumar.tech",
     gatewayPrefix: "codex/",
   },
 };

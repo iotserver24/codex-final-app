@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { GitHubConnector } from "@/components/GitHubConnector";
-// import { SupabaseConnector } from "@/components/SupabaseConnector";
+import { SupabaseConnector } from "@/components/SupabaseConnector";
 import { showError } from "@/lib/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
@@ -345,8 +345,7 @@ export default function AppDetailsPage() {
           <div className="border border-gray-200 rounded-md p-4">
             <GitHubConnector appId={appId} folderName={selectedApp.path} />
           </div>
-          {/* Supabase integration coming in future updates */}
-          {/* {appId && <SupabaseConnector appId={appId} />} */}
+          {appId && <SupabaseConnector appId={appId} />}
           {appId && <CapacitorControls appId={appId} />}
           <AppUpgrades appId={appId} />
         </div>

@@ -451,7 +451,7 @@ export const constructSystemPrompt = ({
   chatMode = "build",
 }: {
   aiRules: string | undefined;
-  chatMode?: "build" | "ask";
+  chatMode?: "build" | "ask" | "designer";
 }) => {
   const systemPrompt =
     chatMode === "ask" ? ASK_MODE_SYSTEM_PROMPT : BUILD_SYSTEM_PROMPT;

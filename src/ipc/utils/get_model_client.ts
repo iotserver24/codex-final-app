@@ -38,16 +38,10 @@ export interface ModelClient {
   builtinProviderId?: string;
 }
 
-interface File {
-  path: string;
-  content: string;
-}
-
 const logger = log.scope("getModelClient");
 export async function getModelClient(
   model: LargeLanguageModel,
   settings: UserSettings,
-  files?: File[],
 ): Promise<{
   modelClient: ModelClient;
   isEngineEnabled?: boolean;
@@ -115,7 +109,6 @@ export async function getModelClient(
             name: autoModel.name,
           },
           settings,
-          files,
         );
       }
     }
@@ -131,7 +124,6 @@ export async function getModelClient(
         name: "openai-fast",
       },
       settings,
-      files,
     );
   }
   const regularBundle = getRegularModelClient(model, settings, providerConfig);
@@ -259,6 +251,7 @@ function getRegularModelClient(
         backupModelClients: [],
       };
     }
+    // designer provider removed
     default: {
       // Handle custom providers
       if (providerConfig.type === "custom") {

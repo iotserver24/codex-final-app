@@ -70,7 +70,7 @@ export type ProviderSetting = z.infer<typeof ProviderSettingSchema>;
 export const RuntimeModeSchema = z.enum(["web-sandbox", "local-node", "unset"]);
 export type RuntimeMode = z.infer<typeof RuntimeModeSchema>;
 
-export const ChatModeSchema = z.enum(["build", "ask"]);
+export const ChatModeSchema = z.enum(["build", "ask", "designer"]);
 export type ChatMode = z.infer<typeof ChatModeSchema>;
 
 export const GitHubSecretsSchema = z.object({

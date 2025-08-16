@@ -243,7 +243,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
               ✅ codeX Provider Ready
             </h3>
             <p className="text-green-700 dark:text-green-300">
-              The codeX provider is configured and ready to use with 23 AI
+              The codeX provider is configured and ready to use with 29 AI
               models available.
             </p>
           </div>
