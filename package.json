@@ -4,7 +4,6 @@
   "version": "1.0.5",
   "description": "Codex - AI-powered code editor and application builder",
   "main": ".vite/build/main.js",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/iotserver24/codex.git"
