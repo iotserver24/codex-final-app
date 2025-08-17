@@ -39,7 +39,7 @@ export function registerCapacitorHandlers() {
     "is-capacitor",
     async (_, { appId }: { appId: number }): Promise<boolean> => {
       const app = await getApp(appId);
-      const appPath = getDyadAppPath(app.path);
+      const appPath = getAppPath(app.path);
 
       // check for the required Node.js version before running any commands
       const currentNodeVersion = process.version;
