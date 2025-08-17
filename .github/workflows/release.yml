@@ -36,7 +36,6 @@ jobs:
         run: |
           npm config set fund false
           npm config set audit false
-          npm config set optional true
           npm config set legacy-peer-deps false
 
       - name: Install Linux dependencies
@@ -55,8 +54,6 @@ jobs:
           rm -rf node_modules package-lock.json
           # Clear npm cache
           npm cache clean --force
-          # Set npm to install optional dependencies
-          npm config set optional true
           # Reinstall dependencies with explicit optional dependency handling
           npm install --include=optional
           # Try to explicitly install the problematic optional dependency
@@ -78,8 +75,8 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
           # Explicitly disable RPM building on Ubuntu
           BUILD_RPM: "false"
-          # Disable DEB building in CI to avoid compatibility issues
-          BUILD_DEB: "false"
+          # Enable DEB building in CI now that we've fixed the configuration
+          BUILD_DEB: "true"
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
           # Ensure we're building for the correct platform
@@ -102,7 +99,7 @@ jobs:
             echo "First build attempt failed, trying with fresh dependencies..."
             rm -rf node_modules package-lock.json
             npm cache clean --force
-            npm install --no-optional
+            npm install --include=optional
             npm install @rollup/rollup-linux-x64-gnu --save-optional || echo "Could not install optional rollup dependency, continuing..."
             NODE_ENV=production npm run make:linux
           }
@@ -113,6 +110,7 @@ jobs:
           name: linux-builds
           path: |
             out/make/zip/linux/x64/*.zip
+            out/make/deb/x64/*.deb
           retention-days: 30
 
   build-macos:
@@ -243,7 +241,7 @@ jobs:
       - name: List all artifacts
         run: |
           echo "=== All downloaded artifacts ==="
-          find artifacts/ -type f -name "*.exe" -o -name "*.zip" -o -name "*.dmg" || echo "No artifacts found"
+          find artifacts/ -type f -name "*.exe" -o -name "*.zip" -o -name "*.dmg" -o -name "*.deb" || echo "No artifacts found"
           echo "=== Artifact details ==="
           ls -la artifacts/linux/ || echo "No Linux artifacts"
           ls -la artifacts/macos/ || echo "No macOS artifacts"
@@ -258,6 +256,7 @@ jobs:
           prerelease: false
           files: |
             artifacts/linux/*.zip
+            artifacts/linux/*.deb
             artifacts/macos/*.zip
             artifacts/windows/*.exe
             artifacts/windows/*.zip
@@ -280,7 +279,8 @@ jobs:
             - Download the `.zip` file and extract to Applications
 
             **Linux:**
-            - Download the `.zip` file and extract to your preferred location
+            - **DEB Package**: Download the `.deb` file for easy installation on Debian/Ubuntu systems
+            - **Portable**: Download the `.zip` file and extract to your preferred location
             - Run the executable from the extracted folder
 
             ### 🔧 Installation
