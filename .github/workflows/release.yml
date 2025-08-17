@@ -47,6 +47,8 @@ jobs:
           BUILD_RPM: "false"
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          # Ensure we're on Linux platform
+          ELECTRON_FORGE_PLATFORM: "linux"
         run: npm run make
 
       - name: Upload Linux artifacts
@@ -100,6 +102,8 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          # Ensure we're on macOS platform
+          ELECTRON_FORGE_PLATFORM: "darwin"
         run: npm run make
 
       - name: Upload macOS artifacts
@@ -132,6 +136,8 @@ jobs:
       - name: Build for Windows
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
+          # Ensure we're on Windows platform
+          ELECTRON_FORGE_PLATFORM: "win32"
         run: npm run make
 
       - name: Upload Windows artifacts

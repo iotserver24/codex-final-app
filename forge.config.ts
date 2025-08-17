@@ -90,22 +90,28 @@ const config: ForgeConfig = {
     force: true,
   },
   makers: [
-    new MakerSquirrel({
-      // Only sign if certificate is available
-      ...(process.env.SM_CODE_SIGNING_CERT_SHA1_HASH && {
-        signWithParams: `/sha1 ${process.env.SM_CODE_SIGNING_CERT_SHA1_HASH} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
-      }),
-    }),
-    new MakerZIP({}, ["darwin"]),
-    // RPM maker only for Red Hat-based systems
-    ...(process.platform === "linux" && process.env.BUILD_RPM === "true"
-      ? [new MakerRpm({})]
-      : []),
-    new MakerDeb({
-      options: {
-        mimeType: ["x-scheme-handler/codex"],
+    new MakerSquirrel(
+      {
+        // Only sign if certificate is available
+        ...(process.env.SM_CODE_SIGNING_CERT_SHA1_HASH && {
+          signWithParams: `/sha1 ${process.env.SM_CODE_SIGNING_CERT_SHA1_HASH} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
+        }),
       },
-    }),
+      ["win32"],
+    ),
+    new MakerZIP({}, ["darwin"]),
+    // Linux makers
+    ...(process.platform === "linux"
+      ? [
+          new MakerDeb({
+            options: {
+              mimeType: ["x-scheme-handler/codex"],
+            },
+          }),
+          // RPM maker only for Red Hat-based systems
+          ...(process.env.BUILD_RPM === "true" ? [new MakerRpm({})] : []),
+        ]
+      : []),
   ],
   publishers: [
     {
