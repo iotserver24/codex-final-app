@@ -125,6 +125,8 @@ const config: ForgeConfig = {
         section: "devel",
         priority: "optional",
       },
+      // Explicitly set platform to ensure it works on Linux
+      platforms: ["linux"],
     }),
     // RPM maker only for Red Hat-based systems
     ...(process.env.BUILD_RPM === "true" ? [new MakerRpm({})] : []),

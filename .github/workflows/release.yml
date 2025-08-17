@@ -58,6 +58,8 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
           # Ensure we're building for the correct platform
           FORGE_PLATFORM: "linux"
+          # Suppress Vite CJS deprecation warning
+          VITE_CJS_IGNORE_WARNING: "true"
         run: |
           echo "Starting Linux build..."
           echo "Current directory: $(pwd)"
@@ -69,7 +71,8 @@ jobs:
             # This is a simple check - the actual implementation might need to be more sophisticated
             grep -q "makers: \[\]" forge.config.ts || echo "RPM maker might be enabled, continuing anyway"
           fi
-          npm run make:linux
+          # Use a more specific make command for Linux
+          NODE_ENV=production npm run make:linux
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4

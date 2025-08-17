@@ -4,6 +4,7 @@
   "version": "1.0.5",
   "description": "Codex - AI-powered code editor and application builder",
   "main": ".vite/build/main.js",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/iotserver24/codex.git"
@@ -28,7 +29,7 @@
     "build:linux": "node scripts/build-release.js linux",
     "make:windows": "npm run clean && electron-forge make --platform win32",
     "make:macos": "npm run clean && electron-forge make --platform darwin",
-    "make:linux": "npm run clean && electron-forge make --platform linux",
+    "make:linux": "npm run clean && VITE_CJS_IGNORE_WARNING=true electron-forge make --platform linux",
     "reinstall": "rimraf node_modules package-lock.json && npm install",
     "ts": "npm run ts:main && npm run ts:workers",
     "ts:main": "npx tsc -p tsconfig.app.json --noEmit",
