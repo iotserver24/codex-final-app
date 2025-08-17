@@ -26,7 +26,10 @@ export function ChatErrorBox({
 
   // Important, this needs to come after the "free quota tier" check
   // because it also includes this URL in the error message
-  if (error.includes("https://ai.google.dev/gemini-api/docs/rate-limits")) {
+  if (
+    error.includes("Resource has been exhausted") ||
+    error.includes("https://ai.google.dev/gemini-api/docs/rate-limits")
+  ) {
     return (
       <ChatErrorContainer onDismiss={onDismiss}>
         {error}

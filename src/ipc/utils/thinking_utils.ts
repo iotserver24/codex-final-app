@@ -23,22 +23,11 @@ export function getExtraProviderOptions(
   if (!providerId) {
     return {};
   }
-
-  // Enable thinking for agentic mode regardless of provider
-  if (settings.selectedChatMode === "agentic") {
-    const budgetTokens = getThinkingBudgetTokens(settings?.thinkingBudget);
+  if (providerId === "openai") {
     return {
-      thinking: {
-        type: "enabled",
-        include_thoughts: true,
-        // -1 means dynamic thinking where model determines.
-        // budget_tokens: 128, // minimum for Gemini Pro is 128
-        budget_tokens: budgetTokens,
-      },
+      reasoning_effort: "medium",
     };
   }
-
-  // Enable thinking only if provider supports it explicitly
   if (PROVIDERS_THAT_SUPPORT_THINKING.includes(providerId)) {
     const budgetTokens = getThinkingBudgetTokens(settings?.thinkingBudget);
     return {

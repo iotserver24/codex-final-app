@@ -85,16 +85,21 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
 
       // Create a formatted issue body with the debug info
       const issueBody = `
-## Bug Description
+<!-- 
+⚠️ IMPORTANT: All sections marked as required must be completed in English.
+Issues that do not meet these requirements will be closed and may need to be resubmitted.
+-->
+
+## Bug Description (required)
 <!-- Please describe the issue you're experiencing -->
 
-## Steps to Reproduce
+## Steps to Reproduce (required)
 <!-- Please list the steps to reproduce the issue -->
 
-## Expected Behavior
+## Expected Behavior (required)
 <!-- What did you expect to happen? -->
 
-## Actual Behavior
+## Actual Behavior (required)
 <!-- What actually happened? -->
 
 ## System Information
@@ -192,16 +197,20 @@ ${debugInfo.logs.slice(-3_500) || "No logs available"}
   const handleOpenGitHubIssue = () => {
     // Create a GitHub issue with the session ID
     const issueBody = `
-## Support Request
+<!-- 
+⚠️ IMPORTANT: All sections marked as required must be completed in English.
+Issues that do not meet these requirements will be closed and may need to be resubmitted.
+-->
+
 Session ID: ${sessionId}
 
-## Issue Description
+## Issue Description (required)
 <!-- Please describe the issue you're experiencing -->
 
-## Expected Behavior
+## Expected Behavior (required)
 <!-- What did you expect to happen? -->
 
-## Actual Behavior
+## Actual Behavior (required)
 <!-- What actually happened? -->
 `;
 
@@ -297,8 +306,8 @@ Session ID: ${sessionId}
               <span>{sessionId}</span>
             </div>
             <p className="text-center text-sm">
-              Please open a GitHub issue so we can follow-up with you on this
-              issue.
+              You must open a GitHub issue for us to investigate. Without a
+              linked issue, your report will not be reviewed.
             </p>
           </div>
           <DialogFooter>
