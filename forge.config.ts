@@ -134,8 +134,6 @@ const config: ForgeConfig = {
               section: "devel",
               priority: "optional",
             },
-            // Explicitly set platform to ensure it works on Linux
-            platforms: ["linux"],
           }),
         ]
       : []),
