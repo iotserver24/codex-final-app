@@ -8,6 +8,12 @@ import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import { AutoUnpackNativesPlugin } from "@electron-forge/plugin-auto-unpack-natives";
 
+// Environment variables for build configuration:
+// - BUILD_DEB: Set to "false" to disable deb package creation (useful in CI)
+// - BUILD_RPM: Set to "true" to enable rpm package creation
+// - SM_CODE_SIGNING_CERT_SHA1_HASH: Windows code signing certificate hash
+// - APPLE_TEAM_ID, APPLE_ID, APPLE_PASSWORD: macOS code signing credentials
+
 // Based on https://github.com/electron/forge/blob/6b2d547a7216c30fde1e1fddd1118eee5d872945/packages/plugin/vite/src/VitePlugin.ts#L124
 const ignore = (file: string) => {
   if (!file) return false;
@@ -97,37 +103,42 @@ const config: ForgeConfig = {
       }),
     }),
     new MakerZIP({}),
-    // DEB maker with more robust configuration
-    new MakerDeb({
-      options: {
-        mimeType: ["x-scheme-handler/codex"],
-        maintainer: "CodeX Team <iotserver24@gmail.com>",
-        homepage: "https://github.com/iotserver24/codex",
-        categories: ["Development"],
-        // Add more specific options for better compatibility
-        depends: [
-          "libgtk-3-0",
-          "libnotify4",
-          "libnss3",
-          "libxss1",
-          "libxtst6",
-          "xdg-utils",
-          "libatspi2.0-0",
-          "libdrm2",
-          "libxkbcommon0",
-          "libxcomposite1",
-          "libxdamage1",
-          "libxfixes3",
-          "libxrandr2",
-          "libgbm1",
-          "libasound2",
-        ],
-        section: "devel",
-        priority: "optional",
-      },
-      // Explicitly set platform to ensure it works on Linux
-      platforms: ["linux"],
-    }),
+    // DEB maker with more robust configuration - only enable if not in CI or explicitly enabled
+    // Set BUILD_DEB=false in CI to avoid compatibility issues with deb maker
+    ...(process.env.BUILD_DEB !== "false"
+      ? [
+          new MakerDeb({
+            options: {
+              mimeType: ["x-scheme-handler/codex"],
+              maintainer: "CodeX Team <iotserver24@gmail.com>",
+              homepage: "https://github.com/iotserver24/codex",
+              categories: ["Development"],
+              // Add more specific options for better compatibility
+              depends: [
+                "libgtk-3-0",
+                "libnotify4",
+                "libnss3",
+                "libxss1",
+                "libxtst6",
+                "xdg-utils",
+                "libatspi2.0-0",
+                "libdrm2",
+                "libxkbcommon0",
+                "libxcomposite1",
+                "libxdamage1",
+                "libxfixes3",
+                "libxrandr2",
+                "libgbm1",
+                "libasound2",
+              ],
+              section: "devel",
+              priority: "optional",
+            },
+            // Explicitly set platform to ensure it works on Linux
+            platforms: ["linux"],
+          }),
+        ]
+      : []),
     // RPM maker only for Red Hat-based systems
     ...(process.env.BUILD_RPM === "true" ? [new MakerRpm({})] : []),
   ],

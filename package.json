@@ -46,6 +46,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "extract-codebase": "ts-node scripts/extract-codebase.ts",
+    "test:forge-config": "node scripts/test-forge-config.js",
     "prepare": "husky install",
     "pre:e2e": "cross-env E2E_TEST_BUILD=true npm run package",
     "e2e": "playwright test",
