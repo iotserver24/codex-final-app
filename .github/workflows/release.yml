@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., 1.0.4)"
+        description: "Version to release (e.g., 1.0.6)"
         required: true
-        default: "1.0.5"
+        default: "1.0.6"
 
 permissions:
   contents: write
@@ -18,6 +18,7 @@ jobs:
   # All build jobs run in parallel simultaneously
   build-linux:
     runs-on: ubuntu-22.04
+    timeout-minutes: 30
     strategy:
       matrix:
         # This ensures the job runs independently
@@ -36,7 +37,6 @@ jobs:
         run: |
           npm config set fund false
           npm config set audit false
-          npm config set optional true
           npm config set legacy-peer-deps false
 
       - name: Install Linux dependencies
@@ -46,21 +46,16 @@ jobs:
           # Skip rpm-build installation since we're disabling RPM package creation
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          echo "Installing dependencies with optimized settings..."
+          npm ci --no-audit --no-fund --prefer-offline --progress=false
+          echo "Dependencies installed successfully"
 
       - name: Fix Rollup optional dependencies issue
         run: |
           echo "Fixing Rollup optional dependencies issue..."
-          # Remove node_modules and package-lock.json to fix the rollup issue
-          rm -rf node_modules package-lock.json
-          # Clear npm cache
-          npm cache clean --force
-          # Set npm to install optional dependencies
-          npm config set optional true
-          # Reinstall dependencies with explicit optional dependency handling
-          npm install --include=optional
-          # Try to explicitly install the problematic optional dependency
-          npm install @rollup/rollup-linux-x64-gnu --save-optional || echo "Could not install optional rollup dependency, will try alternative approach"
+          # Try to explicitly install the problematic optional dependency without full reinstall
+          npm install @rollup/rollup-linux-x64-gnu --save-optional --no-audit --no-fund || echo "Could not install optional rollup dependency, will try alternative approach"
           # Verify rollup installation
           echo "Verifying rollup installation..."
           npm list @rollup/rollup-linux-x64-gnu || echo "Optional dependency not found, continuing with fallback..."
@@ -78,8 +73,8 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
           # Explicitly disable RPM building on Ubuntu
           BUILD_RPM: "false"
-          # Disable DEB building in CI to avoid compatibility issues
-          BUILD_DEB: "false"
+          # Enable DEB building in CI now that we've fixed the configuration
+          BUILD_DEB: "true"
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
           # Ensure we're building for the correct platform
@@ -102,8 +97,8 @@ jobs:
             echo "First build attempt failed, trying with fresh dependencies..."
             rm -rf node_modules package-lock.json
             npm cache clean --force
-            npm install --no-optional
-            npm install @rollup/rollup-linux-x64-gnu --save-optional || echo "Could not install optional rollup dependency, continuing..."
+            npm install --include=optional --no-audit --no-fund --prefer-offline
+            npm install @rollup/rollup-linux-x64-gnu --save-optional --no-audit --no-fund || echo "Could not install optional rollup dependency, continuing..."
             NODE_ENV=production npm run make:linux
           }
 
@@ -113,10 +108,12 @@ jobs:
           name: linux-builds
           path: |
             out/make/zip/linux/x64/*.zip
+            out/make/deb/x64/*.deb
           retention-days: 30
 
   build-macos:
     runs-on: macos-14
+    timeout-minutes: 30
     strategy:
       matrix:
         build: [macos]
@@ -142,7 +139,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci
+          echo "Installing dependencies with optimized settings..."
+          npm ci --no-audit --no-fund --prefer-offline --progress=false
+          echo "Dependencies installed successfully"
 
       - name: Fix macOS dependencies
         run: |
@@ -169,6 +168,7 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         build: [windows]
@@ -183,7 +183,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          echo "Installing dependencies with optimized settings..."
+          npm ci --no-audit --no-fund --prefer-offline --progress=false
+          echo "Dependencies installed successfully"
 
       - name: Build for Windows
         env:
@@ -214,7 +217,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.0.5' }}
+            VERSION=${{ github.event.inputs.version || '1.0.6' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -243,7 +246,7 @@ jobs:
       - name: List all artifacts
         run: |
           echo "=== All downloaded artifacts ==="
-          find artifacts/ -type f -name "*.exe" -o -name "*.zip" -o -name "*.dmg" || echo "No artifacts found"
+          find artifacts/ -type f -name "*.exe" -o -name "*.zip" -o -name "*.dmg" -o -name "*.deb" || echo "No artifacts found"
           echo "=== Artifact details ==="
           ls -la artifacts/linux/ || echo "No Linux artifacts"
           ls -la artifacts/macos/ || echo "No macOS artifacts"
@@ -258,6 +261,7 @@ jobs:
           prerelease: false
           files: |
             artifacts/linux/*.zip
+            artifacts/linux/*.deb
             artifacts/macos/*.zip
             artifacts/windows/*.exe
             artifacts/windows/*.zip
@@ -280,7 +284,8 @@ jobs:
             - Download the `.zip` file and extract to Applications
 
             **Linux:**
-            - Download the `.zip` file and extract to your preferred location
+            - **DEB Package**: Download the `.deb` file for easy installation on Debian/Ubuntu systems
+            - **Portable**: Download the `.zip` file and extract to your preferred location
             - Run the executable from the extracted folder
 
             ### 🔧 Installation
@@ -318,14 +323,26 @@ jobs:
 
       - name: Update version in package.json
         run: |
-          VERSION=${{ github.event.inputs.version || '1.0.5' }}
-          npm version $VERSION --no-git-tag-version
-          echo "Updated package.json to version $VERSION"
+          VERSION=${{ github.event.inputs.version || '1.0.6' }}
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            npm version $VERSION --no-git-tag-version
+            echo "Updated package.json from $CURRENT_VERSION to $VERSION"
+          else
+            echo "Version is already $VERSION, no update needed"
+          fi
 
       - name: Commit and push version update
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add package.json
-          git commit -m "Bump version to ${{ github.event.inputs.version || '1.0.5' }}"
-          git push
+          VERSION=${{ github.event.inputs.version || '1.0.6' }}
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add package.json
+            git commit -m "Bump version to $VERSION"
+            git push
+            echo "Committed and pushed version update to $VERSION"
+          else
+            echo "No version change needed, skipping commit"
+          fi
