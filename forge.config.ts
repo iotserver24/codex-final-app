@@ -97,15 +97,15 @@ const config: ForgeConfig = {
       }),
     }),
     new MakerZIP({}, ["darwin"]),
-    new MakerRpm({}, ["linux"]),
-    new MakerDeb(
-      {
-        options: {
-          mimeType: ["x-scheme-handler/codex"],
-        },
+    // RPM maker only for Red Hat-based systems
+    ...(process.platform === "linux" && process.env.BUILD_RPM === "true"
+      ? [new MakerRpm({})]
+      : []),
+    new MakerDeb({
+      options: {
+        mimeType: ["x-scheme-handler/codex"],
       },
-      ["linux"],
-    ),
+    }),
   ],
   publishers: [
     {
