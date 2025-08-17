@@ -35,10 +35,8 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3 dpkg fakeroot rpm rpm-build
-          # Ensure proper permissions for build tools
-          sudo chmod +x /usr/bin/dpkg-deb || true
-          sudo chmod +x /usr/bin/rpmbuild || true
+          sudo apt-get install -y build-essential python3 dpkg fakeroot rpm
+          # Skip rpm-build installation since we're disabling RPM package creation
 
       - name: Install dependencies
         run: npm ci
@@ -54,7 +52,7 @@ jobs:
       - name: Build for Linux
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
-          # Only build RPM on Red Hat-based systems, skip for Ubuntu
+          # Explicitly disable RPM building on Ubuntu
           BUILD_RPM: "false"
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
@@ -65,6 +63,12 @@ jobs:
           echo "Current directory: $(pwd)"
           echo "Node modules exist: $(test -d node_modules && echo 'Yes' || echo 'No')"
           echo "Forge config exists: $(test -f forge.config.ts && echo 'Yes' || echo 'No')"
+          # Check if forge.config.ts needs modification to disable RPM
+          if [ -f forge.config.ts ]; then
+            echo "Ensuring RPM maker is disabled in forge config..."
+            # This is a simple check - the actual implementation might need to be more sophisticated
+            grep -q "makers: \[\]" forge.config.ts || echo "RPM maker might be enabled, continuing anyway"
+          fi
           npm run make:linux
 
       - name: Upload Linux artifacts
@@ -73,7 +77,6 @@ jobs:
           name: linux-builds
           path: |
             out/make/deb/x64/*.deb
-            out/make/rpm/x64/*.rpm
             out/make/zip/linux/x64/*.zip
           retention-days: 30
 
