@@ -54,6 +54,8 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
           # Explicitly disable RPM building on Ubuntu
           BUILD_RPM: "false"
+          # Disable DEB building in CI to avoid compatibility issues
+          BUILD_DEB: "false"
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
           # Ensure we're building for the correct platform
@@ -76,7 +78,6 @@ jobs:
         with:
           name: linux-builds
           path: |
-            out/make/deb/x64/*.deb
             out/make/zip/linux/x64/*.zip
           retention-days: 30
 
@@ -208,7 +209,7 @@ jobs:
       - name: List all artifacts
         run: |
           echo "=== All downloaded artifacts ==="
-          find artifacts/ -type f -name "*.exe" -o -name "*.deb" -o -name "*.rpm" -o -name "*.zip" -o -name "*.dmg" || echo "No artifacts found"
+          find artifacts/ -type f -name "*.exe" -o -name "*.zip" -o -name "*.dmg" || echo "No artifacts found"
           echo "=== Artifact details ==="
           ls -la artifacts/linux/ || echo "No Linux artifacts"
           ls -la artifacts/macos/ || echo "No macOS artifacts"
@@ -222,8 +223,6 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/linux/*.deb
-            artifacts/linux/*.rpm
             artifacts/linux/*.zip
             artifacts/macos/*.zip
             artifacts/windows/*.exe
@@ -247,9 +246,8 @@ jobs:
             - Download the `.zip` file and extract to Applications
 
             **Linux:**
-            - Debian/Ubuntu: Use the `.deb` package
-            - Red Hat/Fedora: Use the `.rpm` package
-            - Other: Use the `.zip` file
+            - Download the `.zip` file and extract to your preferred location
+            - Run the executable from the extracted folder
 
             ### 🔧 Installation
             1. Download the appropriate file for your platform
