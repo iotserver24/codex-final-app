@@ -41,7 +41,9 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3 dpkg fakeroot rpm rpm-build
+          sudo apt-get install -y build-essential python3 dpkg fakeroot rpm
+          # Try to install rpm-build if available, but don't fail if not
+          sudo apt-get install -y rpm-build || echo "rpm-build not available, continuing without it"
 
       - name: Install dependencies
         run: |
@@ -88,14 +90,18 @@ jobs:
           echo "Node modules exist: $(test -d node_modules && echo 'Yes' || echo 'No')"
           echo "Forge config exists: $(test -f forge.config.ts && echo 'Yes' || echo 'No')"
           
-          # Use a more specific make command for Linux with architecture
+          # Try to build with RPM first, but fall back to DEB only if RPM fails
+          echo "Attempting build with both DEB and RPM..."
           NODE_ENV=production npx electron-forge make --platform linux --arch ${{ matrix.architecture }} || {
-            echo "First build attempt failed, trying with fresh dependencies..."
-            rm -rf node_modules package-lock.json
-            npm cache clean --force
-            npm install --include=optional --no-audit --no-fund --prefer-offline
-            npm install @rollup/rollup-linux-x64-gnu --save-optional --no-audit --no-fund || echo "Could not install optional rollup dependency, continuing..."
-            NODE_ENV=production npx electron-forge make --platform linux --arch ${{ matrix.architecture }}
+            echo "Build with RPM failed, trying DEB only..."
+            BUILD_RPM="false" NODE_ENV=production npx electron-forge make --platform linux --arch ${{ matrix.architecture }} || {
+              echo "First build attempt failed, trying with fresh dependencies..."
+              rm -rf node_modules package-lock.json
+              npm cache clean --force
+              npm install --include=optional --no-audit --no-fund --prefer-offline
+              npm install @rollup/rollup-linux-x64-gnu --save-optional --no-audit --no-fund || echo "Could not install optional rollup dependency, continuing..."
+              NODE_ENV=production npx electron-forge make --platform linux --arch ${{ matrix.architecture }}
+            }
           }
 
       - name: List build outputs
@@ -114,6 +120,7 @@ jobs:
             out/make/deb/${{ matrix.architecture }}/*.deb
             out/make/rpm/${{ matrix.architecture }}/*.rpm
           retention-days: 30
+          if-no-files-found: warn
 
   # Linux-only release job
   create-linux-release:
@@ -159,16 +166,16 @@ jobs:
           # Linux artifacts with proper architecture naming
           if [ -d "artifacts/linux-builds-x64" ]; then
             echo "Processing x64 artifacts..."
-            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
-            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
-            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \;
+            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.deb" \; || echo "No DEB files found for x64"
+            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \; || echo "No ZIP files found for x64"
+            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \; || echo "No RPM files found for x64"
           fi
           
           if [ -d "artifacts/linux-builds-arm64" ]; then
             echo "Processing ARM64 artifacts..."
-            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \;
-            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \;
-            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
+            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \; || echo "No DEB files found for ARM64"
+            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \; || echo "No ZIP files found for ARM64"
+            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \; || echo "No RPM files found for ARM64"
           fi
           
           echo "Renamed artifacts:"
