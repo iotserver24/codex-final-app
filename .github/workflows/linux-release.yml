@@ -1,0 +1,242 @@
+name: Linux Release - CodeX
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 1.0.6)"
+        required: true
+        default: "1.0.6"
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        # Build for both x64 and ARM64 architectures
+        architecture: [x64, arm64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          
+      - name: Configure npm for better optional dependency handling
+        run: |
+          npm config set fund false
+          npm config set audit false
+          npm config set legacy-peer-deps false
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3 dpkg fakeroot rpm rpm-build
+
+      - name: Install dependencies
+        run: |
+          echo "Installing dependencies with optimized settings..."
+          npm ci --no-audit --no-fund --prefer-offline --progress=false
+          echo "Dependencies installed successfully"
+
+      - name: Fix Rollup optional dependencies issue
+        run: |
+          echo "Fixing Rollup optional dependencies issue..."
+          # Try to explicitly install the problematic optional dependency without full reinstall
+          npm install @rollup/rollup-linux-x64-gnu --save-optional --no-audit --no-fund || echo "Could not install optional rollup dependency, will try alternative approach"
+          # Verify rollup installation
+          echo "Verifying rollup installation..."
+          npm list @rollup/rollup-linux-x64-gnu || echo "Optional dependency not found, continuing with fallback..."
+
+      - name: Verify build environment
+        run: |
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Platform: $(uname -a)"
+          echo "Architecture: $(arch)"
+          echo "Target architecture: ${{ matrix.architecture }}"
+          echo "Available disk space: $(df -h .)"
+          echo "RPM version: $(rpm --version || echo 'RPM not available')"
+          echo "DPKG version: $(dpkg --version | head -1 || echo 'DPKG not available')"
+
+      - name: Build for Linux
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          # Enable both DEB and RPM building
+          BUILD_DEB: "true"
+          BUILD_RPM: "true"
+          # Disable code signing for CI builds
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          # Ensure we're building for the correct platform and architecture
+          FORGE_PLATFORM: "linux"
+          FORGE_ARCH: "${{ matrix.architecture }}"
+          # Suppress Vite CJS deprecation warning
+          VITE_CJS_IGNORE_WARNING: "true"
+        run: |
+          echo "Starting Linux build for ${{ matrix.architecture }}..."
+          echo "Current directory: $(pwd)"
+          echo "Node modules exist: $(test -d node_modules && echo 'Yes' || echo 'No')"
+          echo "Forge config exists: $(test -f forge.config.ts && echo 'Yes' || echo 'No')"
+          
+          # Use a more specific make command for Linux with architecture
+          NODE_ENV=production npx electron-forge make --platform linux --arch ${{ matrix.architecture }} || {
+            echo "First build attempt failed, trying with fresh dependencies..."
+            rm -rf node_modules package-lock.json
+            npm cache clean --force
+            npm install --include=optional --no-audit --no-fund --prefer-offline
+            npm install @rollup/rollup-linux-x64-gnu --save-optional --no-audit --no-fund || echo "Could not install optional rollup dependency, continuing..."
+            NODE_ENV=production npx electron-forge make --platform linux --arch ${{ matrix.architecture }}
+          }
+
+      - name: List build outputs
+        run: |
+          echo "=== Build outputs for ${{ matrix.architecture }} ==="
+          find out/ -name "*${{ matrix.architecture }}*" -type f | head -20
+          echo "=== All build outputs ==="
+          find out/ -type f | head -20
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds-${{ matrix.architecture }}
+          path: |
+            out/make/zip/linux/${{ matrix.architecture }}/*.zip
+            out/make/deb/${{ matrix.architecture }}/*.deb
+            out/make/rpm/${{ matrix.architecture }}/*.rpm
+          retention-days: 30
+
+  # Linux-only release job
+  create-linux-release:
+    needs: [build-linux]
+    runs-on: ubuntu-latest
+    if: always() # Run even if some builds fail
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=${{ github.event.inputs.version || '1.0.6' }}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+        continue-on-error: true
+
+      - name: List all artifacts
+        run: |
+          echo "=== All downloaded artifacts ==="
+          find artifacts/ -type f -name "*.zip" -o -name "*.deb" -o -name "*.rpm" || echo "No artifacts found"
+          echo "=== Artifact details ==="
+          ls -la artifacts/ || echo "No artifacts"
+
+      - name: Rename artifacts with descriptive names
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Renaming artifacts for version $VERSION..."
+          
+          # Create a new directory for renamed artifacts
+          mkdir -p renamed-artifacts
+          
+          # Linux artifacts with proper architecture naming
+          if [ -d "artifacts/linux-builds-x64" ]; then
+            echo "Processing x64 artifacts..."
+            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
+            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
+            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \;
+          fi
+          
+          if [ -d "artifacts/linux-builds-arm64" ]; then
+            echo "Processing ARM64 artifacts..."
+            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \;
+            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \;
+            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
+          fi
+          
+          echo "Renamed artifacts:"
+          ls -la renamed-artifacts/
+
+      - name: Create Linux Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}-linux
+          name: CodeX v${{ steps.version.outputs.version }} - Linux
+          draft: false
+          prerelease: false
+          files: |
+            renamed-artifacts/*.zip
+            renamed-artifacts/*.deb
+            renamed-artifacts/*.rpm
+          body: |
+            ## CodeX v${{ steps.version.outputs.version }} - Linux Release
+
+            ### 🚀 What's New
+            - AI-powered code generation and editing
+            - 28+ AI models support including GPT-5, Claude, and free models
+            - Vercel integration for one-click deployment
+            - Built-in terminal and development tools
+            - Cross-platform support (Windows, macOS, Linux)
+
+            ### 📦 Linux Downloads
+
+            **Debian/Ubuntu:**
+            - **Linux (x64) DEB**: Download the `.deb` package for Debian/Ubuntu 64-bit systems
+            - **Linux (ARM64) DEB**: Download the `.deb` package for Debian/Ubuntu ARM64 systems
+
+            **Red Hat/Fedora:**
+            - **Linux (x64) RPM**: Download the `.rpm` package for Red Hat/Fedora 64-bit systems
+            - **Linux (ARM64) RPM**: Download the `.rpm` package for Red Hat/Fedora ARM64 systems
+
+            **Portable:**
+            - **Linux (x64) ZIP**: Download the `.zip` file for 64-bit Linux systems
+            - **Linux (ARM64) ZIP**: Download the `.zip` file for ARM64 Linux systems
+
+            ### 🔧 Installation
+
+            **For Debian/Ubuntu (.deb):**
+            ```bash
+            sudo dpkg -i CodeX-${{ steps.version.outputs.version }}-Linux-*.deb
+            ```
+
+            **For Red Hat/Fedora (.rpm):**
+            ```bash
+            sudo rpm -i CodeX-${{ steps.version.outputs.version }}-Linux-*.rpm
+            ```
+
+            **For Portable (.zip):**
+            ```bash
+            unzip CodeX-${{ steps.version.outputs.version }}-Linux-*.zip
+            ./CodeX
+            ```
+
+            ### ⚠️ Note
+            These builds are not code-signed and may show security warnings. This is normal for open-source applications.
+
+            ### 🐛 Bug Reports
+            If you encounter any issues, please report them on our [GitHub Issues](https://github.com/iotserver24/codex/issues) page.
+
+            ### 📚 Documentation
+            Visit our [documentation](https://codex.anishkumar.tech/docs) for detailed guides and tutorials.
+
+            ---
+            *Built with ❤️ by the CodeX team*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

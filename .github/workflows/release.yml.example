@@ -72,10 +72,9 @@ jobs:
       - name: Build for Linux
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
-          # Explicitly disable RPM building on Ubuntu
-          BUILD_RPM: "false"
-          # Enable DEB building in CI now that we've fixed the configuration
+          # Enable both DEB and RPM building
           BUILD_DEB: "true"
+          BUILD_RPM: "true"
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
           # Ensure we're building for the correct platform and architecture
@@ -111,6 +110,7 @@ jobs:
           path: |
             out/make/zip/linux/${{ matrix.architecture }}/*.zip
             out/make/deb/${{ matrix.architecture }}/*.deb
+            out/make/rpm/${{ matrix.architecture }}/*.rpm
           retention-days: 30
 
   build-macos:
@@ -265,11 +265,13 @@ jobs:
           if [ -d "artifacts/linux-builds-x64" ]; then
             find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
             find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
+            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \;
           fi
           
           if [ -d "artifacts/linux-builds-arm64" ]; then
             find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \;
             find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \;
+            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
           fi
           
           # macOS artifacts
@@ -309,6 +311,7 @@ jobs:
           files: |
             renamed-artifacts/*.zip
             renamed-artifacts/*.deb
+            renamed-artifacts/*.rpm
             renamed-artifacts/*.exe
           body: |
             ## CodeX v${{ steps.version.outputs.version }}
