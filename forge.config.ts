@@ -1,7 +1,7 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
-
+import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
@@ -97,16 +97,35 @@ const config: ForgeConfig = {
       }),
     }),
     new MakerZIP({}),
-    // Temporarily disable deb maker to debug the issue
-    // new MakerDeb({
-    //   options: {
-    //     mimeType: ["x-scheme-handler/codex"],
-    //     // Add more robust configuration for CI environments
-    //     maintainer: "CodeX Team <iotserver24@gmail.com>",
-    //     homepage: "https://github.com/iotserver24/codex",
-    //     categories: ["Development"],
-    //   },
-    // }),
+    // DEB maker with more robust configuration
+    new MakerDeb({
+      options: {
+        mimeType: ["x-scheme-handler/codex"],
+        maintainer: "CodeX Team <iotserver24@gmail.com>",
+        homepage: "https://github.com/iotserver24/codex",
+        categories: ["Development"],
+        // Add more specific options for better compatibility
+        depends: [
+          "libgtk-3-0",
+          "libnotify4",
+          "libnss3",
+          "libxss1",
+          "libxtst6",
+          "xdg-utils",
+          "libatspi2.0-0",
+          "libdrm2",
+          "libxkbcommon0",
+          "libxcomposite1",
+          "libxdamage1",
+          "libxfixes3",
+          "libxrandr2",
+          "libgbm1",
+          "libasound2",
+        ],
+        section: "devel",
+        priority: "optional",
+      },
+    }),
     // RPM maker only for Red Hat-based systems
     ...(process.env.BUILD_RPM === "true" ? [new MakerRpm({})] : []),
   ],
