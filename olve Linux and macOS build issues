@@ -1,0 +1,186 @@
+[1mdiff --git a/.github/workflows/release.yml b/.github/workflows/release.yml[m
+[1mindex 112598f..35b09b1 100644[m
+[1m--- a/.github/workflows/release.yml[m
+[1m+++ b/.github/workflows/release.yml[m
+[36m@@ -43,6 +43,8 @@[m [mjobs:[m
+       - name: Build for Linux[m
+         env:[m
+           NODE_OPTIONS: "--max-old-space-size=4096"[m
+[32m+[m[32m          # Only build RPM on Red Hat-based systems, skip for Ubuntu[m
+[32m+[m[32m          BUILD_RPM: "false"[m
+         run: npm run make[m
+ [m
+       - name: Upload Linux artifacts[m
+[36m@@ -75,7 +77,10 @@[m [mjobs:[m
+           xcode-select --install || true[m
+ [m
+       - name: Install dependencies[m
+[31m-        run: npm ci[m
+[32m+[m[32m        run: |[m
+[32m+[m[32m          npm ci[m
+[32m+[m[32m          # Fix optional dependencies for macOS[m
+[32m+[m[32m          npm run fix:deps || true[m
+ [m
+       - name: Build for macOS[m
+         env:[m
+[1mdiff --git a/BUILD_TROUBLESHOOTING.md b/BUILD_TROUBLESHOOTING.md[m
+[1mindex 2a62ec4..1e60289 100644[m
+[1m--- a/BUILD_TROUBLESHOOTING.md[m
+[1m+++ b/BUILD_TROUBLESHOOTING.md[m
+[36m@@ -2,111 +2,88 @@[m
+ [m
+ This guide helps resolve common build issues when building CodeX for different platforms.[m
+ [m
+[31m-## Platform-Specific Build Issues[m
+[32m+[m[32m## Common Issues[m
+ [m
+[31m-### macOS (ARM64) Build Issues[m
+[32m+[m[32m### macOS Build Issues[m
+ [m
+[31m-**Problem:** `Cannot find module @rollup/rollup-darwin-arm64`[m
+[32m+[m[32m#### Issue: `Cannot find module @rollup/rollup-darwin-arm64`[m
+ [m
+[31m-This is a known npm bug with optional dependencies. The error message suggests:[m
+[31m-[m
+[31m-> npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.[m
+[32m+[m[32mThis is a known npm bug with optional dependencies. The error message suggests removing `package-lock.json` and `node_modules` and running `npm i` again.[m
+ [m
+ **Solution:**[m
+[31m-[m
+ ```bash[m
+[31m-# Use the provided reinstall script[m
+[31m-npm run reinstall[m
+[32m+[m[32m# Run the automated fix script[m
+[32m+[m[32mnpm run fix:deps[m
+ [m
+ # Or manually:[m
+ rm -rf node_modules package-lock.json[m
+[32m+[m[32mnpm cache clean --force[m
+ npm install[m
+[31m-npm run make:macos[m
+ ```[m
+ [m
+ ### Linux Build Issues[m
+ [m
+[31m-**Problem:** `Cannot make for linux and target rpm: the maker declared that it cannot run on linux.`[m
+[32m+[m[32m#### Issue: `Cannot make for linux and target rpm: the maker declared that it cannot run on linux`[m
+ [m
+[31m-This happens when the RPM maker is not properly configured for Linux-only builds.[m
+[32m+[m[32mRPM packages are typically built on Red Hat-based systems, not all Linux distributions.[m
+ [m
+ **Solution:**[m
+[31m-The forge configuration has been updated to specify Linux-only targets for RPM and DEB makers.[m
+[31m-[m
+[31m-**Use platform-specific build commands:**[m
+[32m+[m[32m- The RPM maker is now conditionally included only when `BUILD_RPM=true` environment variable is set[m
+[32m+[m[32m- For Ubuntu/Debian systems, only DEB packages will be built[m
+[32m+[m[32m- For Red Hat-based systems, set `BUILD_RPM=true` to build RPM packages[m
+ [m
+[31m-```bash[m
+[31m-npm run make:linux[m
+[31m-```[m
+[32m+[m[32m### Windows Build Issues[m
+ [m
+[31m-## Available Build Commands[m
+[32m+[m[32mWindows builds should work out of the box. If you encounter issues:[m
+ [m
+[31m-### Platform-Specific Builds[m
+[32m+[m[32m1. Ensure you have the latest Node.js version (20+)[m
+[32m+[m[32m2. Run `npm run clean` before building[m
+[32m+[m[32m3. Check that all dependencies are properly installed[m
+ [m
+[31m-- `npm run make:windows` - Build for Windows only[m
+[31m-- `npm run make:macos` - Build for macOS only[m
+[31m-- `npm run make:linux` - Build for Linux only[m
+[32m+[m[32m## Build Scripts[m
+ [m
+[31m-### Cross-Platform Build Script[m
+[32m+[m[32m### Available Scripts[m
+ [m
+[31m-- `npm run build:windows` - Build for Windows using the build script[m
+[31m-- `npm run build:macos` - Build for macOS using the build script (includes dependency fix)[m
+[31m-- `npm run build:linux` - Build for Linux using the build script[m
+[32m+[m[32m- `npm run make` - Build for current platform[m
+[32m+[m[32m- `npm run build:windows` - Build for Windows[m
+[32m+[m[32m- `npm run build:macos` - Build for macOS[m[41m  [m
+[32m+[m[32m- `npm run build:linux` - Build for Linux[m
+[32m+[m[32m- `npm run fix:deps` - Fix dependency issues (especially for macOS)[m
+ [m
+[31m-### Utility Commands[m
+[32m+[m[32m### Cross-Platform Building[m
+ [m
+[31m-- `npm run reinstall` - Remove node_modules and package-lock.json, then reinstall (fixes npm optional dependencies issues)[m
+[31m-- `npm run make:fix-deps` - Reinstall dependencies and then run make[m
+[32m+[m[32mFor cross-platform builds, use GitHub Actions which automatically builds for all platforms:[m
+ [m
+[31m-## Recommended Build Process[m
+[31m-[m
+[31m-### For Development (Current Platform Only)[m
+[31m-[m
+[31m-```bash[m
+[31m-npm run make[m
+[31m-```[m
+[32m+[m[32m1. Push to `main` branch or create a tag[m
+[32m+[m[32m2. GitHub Actions will build for Windows, macOS, and Linux[m
+[32m+[m[32m3. Download the artifacts from the Actions tab[m
+ [m
+[31m-### For Specific Platform[m
+[32m+[m[32m## Environment Variables[m
+ [m
+[31m-```bash[m
+[31m-# Windows[m
+[31m-npm run build:windows[m
+[31m-[m
+[31m-# macOS (with automatic dependency fix)[m
+[31m-npm run build:macos[m
+[31m-[m
+[31m-# Linux[m
+[31m-npm run build:linux[m
+[31m-```[m
+[31m-[m
+[31m-### If You Encounter Dependency Issues[m
+[31m-[m
+[31m-```bash[m
+[31m-npm run reinstall[m
+[31m-npm run make[m
+[31m-```[m
+[32m+[m[32m- `BUILD_RPM` - Set to "true" to enable RPM package building on Linux[m
+[32m+[m[32m- `NODE_OPTIONS` - Set to "--max-old-space-size=4096" for builds with high memory usage[m
+ [m
+[31m-## CI/CD Considerations[m
+[32m+[m[32m## Platform-Specific Notes[m
+ [m
+[31m-For GitHub Actions or other CI environments:[m
+[32m+[m[32m### macOS[m
+[32m+[m[32m- Requires Xcode Command Line Tools[m
+[32m+[m[32m- May need to run `npm run fix:deps` for optional dependency issues[m
+[32m+[m[32m- Builds both Intel (x64) and Apple Silicon (arm64) versions[m
+ [m
+[31m-1. **macOS runners** should use `npm run build:macos` which automatically handles the dependency reinstall[m
+[31m-2. **Linux runners** should use `npm run build:linux`[m
+[31m-3. **Windows runners** should use `npm run build:windows`[m
+[32m+[m[32m### Linux[m
+[32m+[m[32m- Requires build-essential and python3[m
+[32m+[m[32m- DEB packages built by default[m
+[32m+[m[32m- RPM packages only built when `BUILD_RPM=true`[m
+ [m
+[31m-## Troubleshooting Steps[m
+[32m+[m[32m### Windows[m
+[32m+[m[32m- Requires Visual Studio Build Tools[m
+[32m+[m[32m- Builds both installer (.exe) and portable (.zip) versions[m
+ [m
+[31m-1. **Clean build:** `npm run clean`[m
+[31m-2. **Reinstall dependencies:** `npm run reinstall`[m
+[31m-3. **Try platform-specific build:** `npm run make:[platform]`[m
+[31m-4. **Check forge configuration:** Ensure makers are properly configured for target platforms[m
+[31m-5. **Verify Node.js version:** Ensure you're using Node.js 20+ as specified in package.json[m
+[32m+[m[32m## Getting Help[m
+ [m
+[31m-## Common Error Messages and Solutions[m
+[32m+[m[32mIf you encounter build issues not covered here:[m
+ [m
+[31m-| Error                                            | Platform | Solution                             |[m
+[31m-| ------------------------------------------------ | -------- | ------------------------------------ |[m
+[31m-| `Cannot find module @rollup/rollup-darwin-arm64` | macOS    | `npm run reinstall`                  |[m
+[31m-| `Cannot make for linux and target rpm`           | Linux    | Use `npm run make:linux`             |[m
+[31m-| `Cannot find module 'typescript'`     

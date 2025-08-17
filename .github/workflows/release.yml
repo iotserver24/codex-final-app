@@ -43,6 +43,8 @@ jobs:
       - name: Build for Linux
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
+          # Only build RPM on Red Hat-based systems, skip for Ubuntu
+          BUILD_RPM: "false"
         run: npm run make
 
       - name: Upload Linux artifacts
@@ -75,7 +77,10 @@ jobs:
           xcode-select --install || true
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          # Fix optional dependencies for macOS
+          npm run fix:deps || true
 
       - name: Build for macOS
         env:

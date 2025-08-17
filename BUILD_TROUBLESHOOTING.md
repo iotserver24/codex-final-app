@@ -2,111 +2,93 @@
 
 This guide helps resolve common build issues when building CodeX for different platforms.
 
-## Platform-Specific Build Issues
+## Common Issues
 
-### macOS (ARM64) Build Issues
+### macOS Build Issues
 
-**Problem:** `Cannot find module @rollup/rollup-darwin-arm64`
+#### Issue: `Cannot find module @rollup/rollup-darwin-arm64`
 
-This is a known npm bug with optional dependencies. The error message suggests:
-
-> npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.
+This is a known npm bug with optional dependencies. The error message suggests removing `package-lock.json` and `node_modules` and running `npm i` again.
 
 **Solution:**
 
 ```bash
-# Use the provided reinstall script
-npm run reinstall
+# Run the automated fix script
+npm run fix:deps
 
 # Or manually:
 rm -rf node_modules package-lock.json
+npm cache clean --force
 npm install
-npm run make:macos
 ```
 
 ### Linux Build Issues
 
-**Problem:** `Cannot make for linux and target rpm: the maker declared that it cannot run on linux.`
+#### Issue: `Cannot make for linux and target rpm: the maker declared that it cannot run on linux`
 
-This happens when the RPM maker is not properly configured for Linux-only builds.
+RPM packages are typically built on Red Hat-based systems, not all Linux distributions.
 
 **Solution:**
-The forge configuration has been updated to specify Linux-only targets for RPM and DEB makers.
 
-**Use platform-specific build commands:**
+- The RPM maker is now conditionally included only when `BUILD_RPM=true` environment variable is set
+- For Ubuntu/Debian systems, only DEB packages will be built
+- For Red Hat-based systems, set `BUILD_RPM=true` to build RPM packages
 
-```bash
-npm run make:linux
-```
+### Windows Build Issues
 
-## Available Build Commands
+Windows builds should work out of the box. If you encounter issues:
 
-### Platform-Specific Builds
+1. Ensure you have the latest Node.js version (20+)
+2. Run `npm run clean` before building
+3. Check that all dependencies are properly installed
 
-- `npm run make:windows` - Build for Windows only
-- `npm run make:macos` - Build for macOS only
-- `npm run make:linux` - Build for Linux only
+## Build Scripts
 
-### Cross-Platform Build Script
+### Available Scripts
 
-- `npm run build:windows` - Build for Windows using the build script
-- `npm run build:macos` - Build for macOS using the build script (includes dependency fix)
-- `npm run build:linux` - Build for Linux using the build script
+- `npm run make` - Build for current platform
+- `npm run build:windows` - Build for Windows
+- `npm run build:macos` - Build for macOS
+- `npm run build:linux` - Build for Linux
+- `npm run fix:deps` - Fix dependency issues (especially for macOS)
 
-### Utility Commands
+### Cross-Platform Building
 
-- `npm run reinstall` - Remove node_modules and package-lock.json, then reinstall (fixes npm optional dependencies issues)
-- `npm run make:fix-deps` - Reinstall dependencies and then run make
+For cross-platform builds, use GitHub Actions which automatically builds for all platforms:
 
-## Recommended Build Process
+1. Push to `main` branch or create a tag
+2. GitHub Actions will build for Windows, macOS, and Linux
+3. Download the artifacts from the Actions tab
 
-### For Development (Current Platform Only)
+## Environment Variables
 
-```bash
-npm run make
-```
+- `BUILD_RPM` - Set to "true" to enable RPM package building on Linux
+- `NODE_OPTIONS` - Set to "--max-old-space-size=4096" for builds with high memory usage
 
-### For Specific Platform
+## Platform-Specific Notes
 
-```bash
-# Windows
-npm run build:windows
+### macOS
 
-# macOS (with automatic dependency fix)
-npm run build:macos
+- Requires Xcode Command Line Tools
+- May need to run `npm run fix:deps` for optional dependency issues
+- Builds both Intel (x64) and Apple Silicon (arm64) versions
 
-# Linux
-npm run build:linux
-```
+### Linux
 
-### If You Encounter Dependency Issues
+- Requires build-essential and python3
+- DEB packages built by default
+- RPM packages only built when `BUILD_RPM=true`
 
-```bash
-npm run reinstall
-npm run make
-```
+### Windows
 
-## CI/CD Considerations
+- Requires Visual Studio Build Tools
+- Builds both installer (.exe) and portable (.zip) versions
 
-For GitHub Actions or other CI environments:
+## Getting Help
 
-1. **macOS runners** should use `npm run build:macos` which automatically handles the dependency reinstall
-2. **Linux runners** should use `npm run build:linux`
-3. **Windows runners** should use `npm run build:windows`
+If you encounter build issues not covered here:
 
-## Troubleshooting Steps
-
-1. **Clean build:** `npm run clean`
-2. **Reinstall dependencies:** `npm run reinstall`
-3. **Try platform-specific build:** `npm run make:[platform]`
-4. **Check forge configuration:** Ensure makers are properly configured for target platforms
-5. **Verify Node.js version:** Ensure you're using Node.js 20+ as specified in package.json
-
-## Common Error Messages and Solutions
-
-| Error                                            | Platform | Solution                             |
-| ------------------------------------------------ | -------- | ------------------------------------ |
-| `Cannot find module @rollup/rollup-darwin-arm64` | macOS    | `npm run reinstall`                  |
-| `Cannot make for linux and target rpm`           | Linux    | Use `npm run make:linux`             |
-| `Cannot find module 'typescript'`                | Any      | `npm run reinstall`                  |
-| Build timeout                                    | Any      | Use platform-specific build commands |
+1. Check the GitHub Actions logs for the latest successful builds
+2. Ensure you're using the same Node.js version (20.x)
+3. Try running `npm run fix:deps` first
+4. Open an issue with the complete error message and your platform details
