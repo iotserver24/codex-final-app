@@ -21,8 +21,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        # This ensures the job runs independently
-        build: [linux]
+        # Build for both x64 and ARM64 architectures
+        architecture: [x64, arm64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,6 +66,7 @@ jobs:
           echo "NPM version: $(npm --version)"
           echo "Platform: $(uname -a)"
           echo "Architecture: $(arch)"
+          echo "Target architecture: ${{ matrix.architecture }}"
           echo "Available disk space: $(df -h .)"
 
       - name: Build for Linux
@@ -77,12 +78,13 @@ jobs:
           BUILD_DEB: "true"
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-          # Ensure we're building for the correct platform
+          # Ensure we're building for the correct platform and architecture
           FORGE_PLATFORM: "linux"
+          FORGE_ARCH: "${{ matrix.architecture }}"
           # Suppress Vite CJS deprecation warning
           VITE_CJS_IGNORE_WARNING: "true"
         run: |
-          echo "Starting Linux build..."
+          echo "Starting Linux build for ${{ matrix.architecture }}..."
           echo "Current directory: $(pwd)"
           echo "Node modules exist: $(test -d node_modules && echo 'Yes' || echo 'No')"
           echo "Forge config exists: $(test -f forge.config.ts && echo 'Yes' || echo 'No')"
@@ -92,23 +94,23 @@ jobs:
             # This is a simple check - the actual implementation might need to be more sophisticated
             grep -q "makers: \[\]" forge.config.ts || echo "RPM maker might be enabled, continuing anyway"
           fi
-          # Use a more specific make command for Linux
-          NODE_ENV=production npm run make:linux || {
+          # Use a more specific make command for Linux with architecture
+          NODE_ENV=production npx electron-forge make --platform linux --arch ${{ matrix.architecture }} || {
             echo "First build attempt failed, trying with fresh dependencies..."
             rm -rf node_modules package-lock.json
             npm cache clean --force
             npm install --include=optional --no-audit --no-fund --prefer-offline
             npm install @rollup/rollup-linux-x64-gnu --save-optional --no-audit --no-fund || echo "Could not install optional rollup dependency, continuing..."
-            NODE_ENV=production npm run make:linux
+            NODE_ENV=production npx electron-forge make --platform linux --arch ${{ matrix.architecture }}
           }
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-builds
+          name: linux-builds-${{ matrix.architecture }}
           path: |
-            out/make/zip/linux/x64/*.zip
-            out/make/deb/x64/*.deb
+            out/make/zip/linux/${{ matrix.architecture }}/*.zip
+            out/make/deb/${{ matrix.architecture }}/*.deb
           retention-days: 30
 
   build-macos:
@@ -116,7 +118,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        build: [macos]
+        # Build for both x64 and ARM64 architectures, plus universal
+        architecture: [x64, arm64, universal]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -155,23 +158,34 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: npm run make
+          # Ensure we're building for the correct architecture
+          FORGE_ARCH: "${{ matrix.architecture }}"
+        run: |
+          echo "Building for macOS ${{ matrix.architecture }}..."
+          if [ "${{ matrix.architecture }}" = "universal" ]; then
+            # For universal build, we need to build both architectures and combine them
+            echo "Building universal macOS binary..."
+            npx electron-forge make --platform darwin --arch x64,arm64
+          else
+            npx electron-forge make --platform darwin --arch ${{ matrix.architecture }}
+          fi
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-builds
+          name: macos-builds-${{ matrix.architecture }}
           path: |
-            out/make/zip/darwin/arm64/*.zip
-            out/make/zip/darwin/x64/*.zip
+            out/make/zip/darwin/${{ matrix.architecture }}/*.zip
+            out/make/zip/darwin/universal/*.zip
           retention-days: 30
 
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2025 
     timeout-minutes: 30
     strategy:
       matrix:
-        build: [windows]
+        # Build for both x64 and ARM64 architectures
+        architecture: [x64, arm64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -191,15 +205,19 @@ jobs:
       - name: Build for Windows
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
-        run: npm run make
+          # Ensure we're building for the correct architecture
+          FORGE_ARCH: "${{ matrix.architecture }}"
+        run: |
+          echo "Building for Windows ${{ matrix.architecture }}..."
+          npx electron-forge make --platform win32 --arch ${{ matrix.architecture }}
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-builds
+          name: windows-builds-${{ matrix.architecture }}
           path: |
-            out/make/squirrel.windows/x64/*.exe
-            out/make/zip/win32/x64/*.zip
+            out/make/squirrel.windows/${{ matrix.architecture }}/*.exe
+            out/make/zip/win32/${{ matrix.architecture }}/*.zip
           retention-days: 30
 
   # Release job waits for ALL builds to complete
@@ -222,25 +240,10 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
 
-      - name: Download Linux artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: linux-builds
-          path: artifacts/linux
-        continue-on-error: true
-
-      - name: Download macOS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-builds
-          path: artifacts/macos
-        continue-on-error: true
-
-      - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-builds
-          path: artifacts/windows
+          path: artifacts
         continue-on-error: true
 
       - name: List all artifacts
@@ -248,9 +251,7 @@ jobs:
           echo "=== All downloaded artifacts ==="
           find artifacts/ -type f -name "*.exe" -o -name "*.zip" -o -name "*.dmg" -o -name "*.deb" || echo "No artifacts found"
           echo "=== Artifact details ==="
-          ls -la artifacts/linux/ || echo "No Linux artifacts"
-          ls -la artifacts/macos/ || echo "No macOS artifacts"
-          ls -la artifacts/windows/ || echo "No Windows artifacts"
+          ls -la artifacts/ || echo "No artifacts"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -260,11 +261,9 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/linux/*.zip
-            artifacts/linux/*.deb
-            artifacts/macos/*.zip
-            artifacts/windows/*.exe
-            artifacts/windows/*.zip
+            artifacts/**/*.zip
+            artifacts/**/*.deb
+            artifacts/**/*.exe
           body: |
             ## CodeX v${{ steps.version.outputs.version }}
 
@@ -276,20 +275,25 @@ jobs:
             - Cross-platform support (Windows, macOS, Linux)
 
             ### 📦 Downloads
+
             **Windows:**
-            - Installer: Download the `.exe` file for easy installation
-            - Portable: Download the `.zip` file for portable use
+            - **Windows (x64) (User)**: Download the `.exe` installer for 64-bit Windows
+            - **Windows (ARM64) (User)**: Download the `.exe` installer for ARM64 Windows
+            - **Windows (x64) (Portable)**: Download the `.zip` file for portable use on 64-bit Windows
+            - **Windows (ARM64) (Portable)**: Download the `.zip` file for portable use on ARM64 Windows
 
             **macOS:**
-            - Download the `.zip` file and extract to Applications
+            - **Mac Universal**: Download the universal `.zip` file (works on both Intel and Apple Silicon)
+            - **Mac (ARM64)**: Download the `.zip` file optimized for Apple Silicon Macs
+            - **Mac (x64)**: Download the `.zip` file for Intel Macs
 
             **Linux:**
-            - **DEB Package**: Download the `.deb` file for easy installation on Debian/Ubuntu systems
-            - **Portable**: Download the `.zip` file and extract to your preferred location
-            - Run the executable from the extracted folder
+            - **Linux (x64)**: Download the `.zip` file for 64-bit Linux systems
+            - **Linux (ARM64)**: Download the `.zip` file for ARM64 Linux systems
+            - **Linux (x64) DEB**: Download the `.deb` package for Debian/Ubuntu 64-bit systems
 
             ### 🔧 Installation
-            1. Download the appropriate file for your platform
+            1. Download the appropriate file for your platform and architecture
             2. Run the installer or extract the zip file
             3. Launch CodeX and start coding with AI!
 

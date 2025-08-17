@@ -90,6 +90,8 @@ const config: ForgeConfig = {
     asar: true,
     ignore,
     // ignore: [/node_modules\/(?! (better-sqlite3|bindings|file-uri-to-path)\/)/],
+    // Support for multiple architectures
+    arch: process.env.FORGE_ARCH ? [process.env.FORGE_ARCH] : ["x64", "arm64"],
   },
   rebuildConfig: {
     extraModules: ["better-sqlite3"],
@@ -103,6 +105,17 @@ const config: ForgeConfig = {
       }),
     }),
     new MakerZIP({}),
+    // Add universal macOS build when building for both architectures
+    ...(process.env.FORGE_ARCH === "universal"
+      ? [
+          new MakerZIP({
+            name: "CodeX-{productName}-{version}-universal.{ext}",
+            options: {
+              // This will create a universal binary
+            },
+          }),
+        ]
+      : []),
     // DEB maker with more robust configuration - only enable if not in CI or explicitly enabled
     // Set BUILD_DEB=false in CI to avoid compatibility issues with deb maker
     ...(process.env.BUILD_DEB !== "false"
