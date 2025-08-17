@@ -97,19 +97,22 @@ const config: ForgeConfig = {
       }),
     }),
     new MakerZIP({}, ["darwin"]),
-    new MakerRpm({}),
-    new MakerDeb({
-      options: {
-        mimeType: ["x-scheme-handler/codex"],
+    new MakerRpm({}, ["linux"]),
+    new MakerDeb(
+      {
+        options: {
+          mimeType: ["x-scheme-handler/codex"],
+        },
       },
-    }),
+      ["linux"],
+    ),
   ],
   publishers: [
     {
       name: "@electron-forge/publisher-github",
       config: {
         repository: {
-          owner: "codex-sh",
+          owner: "iotserver24",
           name: "codex",
         },
         draft: true,

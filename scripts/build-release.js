@@ -99,18 +99,32 @@ try {
   } else {
     logStep(`Building for ${platform}`);
 
-    // Set platform-specific environment variables
-    const env = { ...process.env };
-
-    if (platform === "windows") {
-      env.ELECTRON_FORGE_PLATFORM = "win32";
-    } else if (platform === "macos") {
-      env.ELECTRON_FORGE_PLATFORM = "darwin";
+    // Handle platform-specific issues
+    if (platform === "macos") {
+      logInfo(
+        "macOS build detected - checking for npm optional dependencies issue...",
+      );
+      try {
+        // Try the build first
+        execSync("npm run make:macos", { stdio: "inherit" });
+      } catch {
+        logWarning(
+          "macOS build failed, likely due to npm optional dependencies issue",
+        );
+        logInfo("Attempting to fix by reinstalling dependencies...");
+        execSync("npm run reinstall", { stdio: "inherit" });
+        logInfo("Retrying macOS build...");
+        execSync("npm run make:macos", { stdio: "inherit" });
+      }
     } else if (platform === "linux") {
-      env.ELECTRON_FORGE_PLATFORM = "linux";
+      logInfo("Linux build detected - using platform-specific make command...");
+      execSync("npm run make:linux", { stdio: "inherit" });
+    } else if (platform === "windows") {
+      logInfo(
+        "Windows build detected - using platform-specific make command...",
+      );
+      execSync("npm run make:windows", { stdio: "inherit" });
     }
-
-    execSync("npm run make", { stdio: "inherit", env });
   }
 
   logSuccess("Build completed successfully!");
