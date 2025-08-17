@@ -35,26 +35,60 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3 dpkg fakeroot
+          sudo apt-get install -y build-essential python3 dpkg fakeroot dpkg-dev rpm rpm-build
+          # Additional dependencies that might be needed for deb packaging
+          sudo apt-get install -y lintian devscripts
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          # Clear npm cache and install dependencies
+          npm cache clean --force
+          npm ci
+          
+          # Verify Electron Forge dependencies are installed
+          echo "Checking Electron Forge dependencies..."
+          ls -la node_modules/@electron-forge/ || echo "Electron Forge modules not found"
 
       - name: Build for Linux
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           # Only build RPM on Red Hat-based systems, skip for Ubuntu
           BUILD_RPM: "false"
+
           # Disable code signing for CI builds
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: npm run make
+          # Force Electron to use system libraries
+          ELECTRON_FORCE_DOWNLOAD: "1"
+        run: |
+          # Debug: Check what's available
+          echo "Checking system tools..."
+          which dpkg || echo "dpkg not found"
+          which fakeroot || echo "fakeroot not found"
+          which rpm || echo "rpm not found"
+          
+          # Check Electron Forge version and configuration
+          echo "Electron Forge version:"
+          npx electron-forge --version
+          
+          # Check if we can list makers
+          echo "Available makers:"
+          npx electron-forge list-makes || echo "Could not list makers"
+          
+          # Run the build with more verbose output
+          npm run make || {
+            echo "Build failed, trying to get more information..."
+            echo "Current directory: $(pwd)"
+            echo "Node version: $(node --version)"
+            echo "NPM version: $(npm --version)"
+            echo "Electron Forge version: $(npx electron-forge --version)"
+            exit 1
+          }
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-builds
           path: |
-            out/make/deb/x64/*.deb
             out/make/rpm/x64/*.rpm
             out/make/zip/linux/x64/*.zip
           retention-days: 30
@@ -201,7 +235,6 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/linux/*.deb
             artifacts/linux/*.rpm
             artifacts/linux/*.zip
             artifacts/macos/*.zip
@@ -226,9 +259,9 @@ jobs:
             - Download the `.zip` file and extract to Applications
 
             **Linux:**
-            - Debian/Ubuntu: Use the `.deb` package
             - Red Hat/Fedora: Use the `.rpm` package
             - Other: Use the `.zip` file
+            - *Note: .deb packages temporarily unavailable*
 
             ### 🔧 Installation
             1. Download the appropriate file for your platform
