@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., 1.0.4)"
+        description: "Version to release (e.g., 1.0.6)"
         required: true
-        default: "1.0.5"
+        default: "1.0.6"
 
 permissions:
   contents: write
@@ -212,7 +212,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.0.5' }}
+            VERSION=${{ github.event.inputs.version || '1.0.6' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -318,14 +318,26 @@ jobs:
 
       - name: Update version in package.json
         run: |
-          VERSION=${{ github.event.inputs.version || '1.0.5' }}
-          npm version $VERSION --no-git-tag-version
-          echo "Updated package.json to version $VERSION"
+          VERSION=${{ github.event.inputs.version || '1.0.6' }}
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            npm version $VERSION --no-git-tag-version
+            echo "Updated package.json from $CURRENT_VERSION to $VERSION"
+          else
+            echo "Version is already $VERSION, no update needed"
+          fi
 
       - name: Commit and push version update
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add package.json
-          git commit -m "Bump version to ${{ github.event.inputs.version || '1.0.5' }}"
-          git push
+          VERSION=${{ github.event.inputs.version || '1.0.6' }}
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add package.json
+            git commit -m "Bump version to $VERSION"
+            git push
+            echo "Committed and pushed version update to $VERSION"
+          else
+            echo "No version change needed, skipping commit"
+          fi
