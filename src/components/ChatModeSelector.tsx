@@ -17,9 +17,16 @@ import { cn } from "@/lib/utils";
 export function ChatModeSelector() {
   const { settings, updateSettings } = useSettings();
 
-  const selectedMode = settings?.selectedChatMode || "build";
+  const selectedMode =
+    settings?.selectedChatMode === "agentic"
+      ? "build"
+      : settings?.selectedChatMode || "build";
 
   const handleModeChange = (value: string) => {
+    // Prevent selecting agentic mode (coming soon)
+    if (value === "agentic") {
+      return;
+    }
     updateSettings({ selectedChatMode: value as ChatMode });
   };
 
@@ -32,7 +39,7 @@ export function ChatModeSelector() {
       case "designer":
         return "Designer";
       case "agentic":
-        return "Agentic";
+        return "Agentic (Coming Soon)";
       default:
         return "Build";
     }
@@ -76,15 +83,29 @@ export function ChatModeSelector() {
         </SelectItem>
         <SelectItem value="designer">
           <div className="flex flex-col items-start">
-            <span className="font-medium">Designer</span>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Designer</span>
+              <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-1.5 py-0.5 rounded-full font-medium">
+                Beta
+              </span>
+            </div>
             <span className="text-xs text-muted-foreground">
               Design-focused mode; pick any model
             </span>
           </div>
         </SelectItem>
-        <SelectItem value="agentic">
+        <SelectItem
+          value="agentic"
+          disabled
+          className="opacity-50 cursor-not-allowed"
+        >
           <div className="flex flex-col items-start">
-            <span className="font-medium">Agentic</span>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Agentic</span>
+              <span className="text-xs bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 px-1.5 py-0.5 rounded-full font-medium">
+                Coming Soon
+              </span>
+            </div>
             <span className="text-xs text-muted-foreground">
               Continuous iteration and refinement
             </span>
