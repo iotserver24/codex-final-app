@@ -261,7 +261,7 @@ jobs:
           # Create a new directory for renamed artifacts
           mkdir -p renamed-artifacts
           
-          # Linux artifacts - include all formats (zip, deb, rpm)
+          # Linux artifacts
           if [ -d "artifacts/linux-builds-x64" ]; then
             find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
             find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
@@ -274,12 +274,20 @@ jobs:
             find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
           fi
           
-          # macOS artifacts - ONLY zip format
+          # macOS artifacts
+          if [ -d "artifacts/macos-builds-x64" ]; then
+            find artifacts/macos-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-macOS-x64.zip" \;
+          fi
+          
+          if [ -d "artifacts/macos-builds-arm64" ]; then
+            find artifacts/macos-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-macOS-ARM64.zip" \;
+          fi
+          
           if [ -d "artifacts/macos-builds-universal" ]; then
             find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-macOS-Universal.zip" \;
           fi
           
-          # Windows artifacts - include all formats (exe, zip)
+          # Windows artifacts
           if [ -d "artifacts/windows-builds-x64" ]; then
             find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-x64-Setup.exe" \;
             find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-x64-Portable.zip" \;
@@ -325,12 +333,13 @@ jobs:
 
             **macOS:**
             - **Mac Universal**: Download the universal `.zip` file (works on both Intel and Apple Silicon)
+            - **Mac (ARM64)**: Download the `.zip` file optimized for Apple Silicon Macs
+            - **Mac (x64)**: Download the `.zip` file for Intel Macs
 
             **Linux:**
             - **Linux (x64)**: Download the `.zip` file for 64-bit Linux systems
             - **Linux (ARM64)**: Download the `.zip` file for ARM64 Linux systems
             - **Linux (x64) DEB**: Download the `.deb` package for Debian/Ubuntu 64-bit systems
-            - **Linux (x64) RPM**: Download the `.rpm` package for Red Hat/Fedora 64-bit systems
 
             ### 🔧 Installation
             1. Download the appropriate file for your platform and architecture
@@ -350,132 +359,6 @@ jobs:
             *Built with ❤️ by the CodeX team*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Upload to target repository
-  upload-to-target-repo:
-    needs: [create-release]
-    runs-on: ubuntu-latest
-    if: always() # Run even if some builds fail
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Determine version
-        id: version
-        run: |
-          if [[ $GITHUB_REF == refs/tags/v* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          else
-            VERSION=${{ github.event.inputs.version || '1.0.6' }}
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Using version: $VERSION"
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-        continue-on-error: true
-
-      - name: Prepare artifacts for target repo
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          echo "Preparing artifacts for target repository version $VERSION..."
-          
-          # Create a new directory for target repo artifacts
-          mkdir -p target-repo-artifacts
-          
-          # Linux artifacts - include all formats (zip, deb, rpm)
-          if [ -d "artifacts/linux-builds-x64" ]; then
-            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
-            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
-            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \;
-          fi
-          
-          if [ -d "artifacts/linux-builds-arm64" ]; then
-            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \;
-            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \;
-            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
-          fi
-          
-          # macOS artifacts - ONLY zip format
-          if [ -d "artifacts/macos-builds-universal" ]; then
-            find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-macOS-Universal.zip" \;
-          fi
-          
-          # Windows artifacts - include all formats (exe, zip)
-          if [ -d "artifacts/windows-builds-x64" ]; then
-            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-x64-Setup.exe" \;
-            find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-x64-Portable.zip" \;
-          fi
-          
-          if [ -d "artifacts/windows-builds-arm64" ]; then
-            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-ARM64-Setup.exe" \;
-            find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-ARM64-Portable.zip" \;
-          fi
-          
-          echo "Target repo artifacts:"
-          ls -la target-repo-artifacts/
-
-      - name: Create Release in Target Repository
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: CodeX v${{ steps.version.outputs.version }}
-          draft: false
-          prerelease: false
-          files: |
-            target-repo-artifacts/*.zip
-            target-repo-artifacts/*.deb
-            target-repo-artifacts/*.rpm
-            target-repo-artifacts/*.exe
-          body: |
-            ## CodeX v${{ steps.version.outputs.version }}
-
-            ### 🚀 What's New
-            - AI-powered code generation and editing
-            - 50+ AI models support including GPT-5, Claude, and free models
-            - Vercel integration for one-click deployment
-            - Built-in terminal and development tools
-            - Cross-platform support (Windows, macOS, Linux)
-
-            ### 📦 Downloads
-
-            **Windows:**
-            - **Windows (x64) (User)**: Download the `.exe` installer for 64-bit Windows
-            - **Windows (ARM64) (User)**: Download the `.exe` installer for ARM64 Windows
-            - **Windows (x64) (Portable)**: Download the `.zip` file for portable use on 64-bit Windows
-            - **Windows (ARM64) (Portable)**: Download the `.zip` file for portable use on ARM64 Windows
-
-            **macOS:**
-            - **Mac Universal**: Download the universal `.zip` file (works on both Intel and Apple Silicon)
-
-            **Linux:**
-            - **Linux (x64)**: Download the `.zip` file for 64-bit Linux systems
-            - **Linux (ARM64)**: Download the `.zip` file for ARM64 Linux systems
-            - **Linux (x64) DEB**: Download the `.deb` package for Debian/Ubuntu 64-bit systems
-            - **Linux (x64) RPM**: Download the `.rpm` package for Red Hat/Fedora 64-bit systems
-
-            ### 🔧 Installation
-            1. Download the appropriate file for your platform and architecture
-            2. Run the installer or extract the zip file
-            3. Launch CodeX and start coding with AI!
-
-            ### ⚠️ Note
-            These builds are not code-signed and may show security warnings. This is normal for open-source applications.
-
-            ### 🐛 Bug Reports
-            If you encounter any issues, please report them on our [GitHub Issues](https://github.com/iotserver24/codex/issues) page.
-
-            ### 📚 Documentation
-            Visit our [documentation](https://codex.anishkumar.tech/docs) for detailed guides and tutorials.
-
-            ---
-            *Built with ❤️ by the CodeX team*
-        env:
-          # GITHUB_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: iotserver24/codex
 
   # Optional: Update version in package.json
   update-version:

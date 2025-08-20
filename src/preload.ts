@@ -107,6 +107,7 @@ const validInvokeChannels = [
   "get-templates",
   "portal:migrate-create",
   "check-for-updates",
+  "prompt:enhance",
   // Test-only channels
   // These should ALWAYS be guarded with IS_TEST_BUILD in the main process.
   // We can't detect with IS_TEST_BUILD in the preload script because

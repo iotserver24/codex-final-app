@@ -39,6 +39,16 @@ export interface ChatResponseEnd {
   extraFilesError?: string;
 }
 
+// --- Prompt Enhancement ---
+export interface EnhancePromptParams {
+  chatId?: number;
+  input: string;
+}
+
+export interface EnhancePromptResult {
+  text: string;
+}
+
 export interface ChatProblemsEvent {
   chatId: number;
   appId: number;

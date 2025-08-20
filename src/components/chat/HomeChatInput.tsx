@@ -113,7 +113,7 @@ export function HomeChatInput({
             )}
           </div>
           <div className="px-2 pb-2">
-            <ChatInputControls />
+            <ChatInputControls value={inputValue} onChange={setInputValue} />
           </div>
         </div>
       </div>

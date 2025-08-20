@@ -61,7 +61,7 @@ import type {
 } from "./ipc_types";
 import type { Template } from "../shared/templates";
 import type { AppChatContext, ProposalResult } from "@/lib/schemas";
-import { showError } from "@/lib/toast";
+import { showError } from "../lib/toast";
 
 export interface ChatStreamCallbacks {
   onUpdate: (messages: Message[]) => void;
@@ -951,6 +951,14 @@ export class IpcClient {
     Record<string, LanguageModel[]>
   > {
     return this.ipcRenderer.invoke("get-language-models-by-providers");
+  }
+
+  // Enhance a prompt (one-shot, non-streaming)
+  public async enhancePrompt(params: {
+    chatId?: number;
+    input: string;
+  }): Promise<{ text: string }> {
+    return this.ipcRenderer.invoke("prompt:enhance", params);
   }
 
   public async createCustomLanguageModelProvider({

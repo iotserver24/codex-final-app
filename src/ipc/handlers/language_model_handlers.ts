@@ -308,4 +308,53 @@ export function registerLanguageModelHandlers() {
       return getLanguageModelsByProviders();
     },
   );
+
+  // One-shot prompt enhancement (no DB writes, no streaming)
+  handle(
+    "prompt:enhance",
+    async (
+      _event: IpcMainInvokeEvent,
+      params: { chatId: number; input: string },
+    ): Promise<{ text: string }> => {
+      const { input } = params || ({} as any);
+      if (!input || typeof input !== "string" || !input.trim()) {
+        throw new Error("input is required");
+      }
+
+      // Build an instruction that forces the model to output ONLY the enhanced prompt text
+      const instruction = [
+        "Rewrite and enhance the following prompt for a coding copilot.",
+        "Keep the original intent, improve clarity and specificity, be concise.",
+        "CRITICAL: Output ONLY the enhanced prompt text — no quotes, no code fences, no prefixes, no explanations.",
+        "",
+      ].join("\n");
+
+      const fullPrompt = `${instruction}\n${input}`;
+      const url = `https://text.pollinations.ai/${encodeURIComponent(fullPrompt)}`;
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(
+          `Enhancement API error: ${res.status} ${res.statusText}`,
+        );
+      }
+      let text = (await res.text()).trim();
+
+      // Light sanitation: strip accidental surrounding quotes or code fences
+      if (text.startsWith("```") && text.endsWith("```")) {
+        text = text.slice(3, -3).trim();
+      }
+      if (
+        (text.startsWith('"') && text.endsWith('"')) ||
+        (text.startsWith("'") && text.endsWith("'"))
+      ) {
+        text = text.slice(1, -1).trim();
+      }
+      // Remove a possible leading label like "Enhanced prompt:" if present
+      const labelMatch = /^(enhanced\s*prompt\s*:\s*)/i;
+      text = text.replace(labelMatch, "").trim();
+
+      return { text };
+    },
+  );
 }
