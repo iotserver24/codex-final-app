@@ -206,11 +206,16 @@ jobs:
         run: |
           echo "Creating self-signed certificate for Windows builds..."
           
-          # Create certificates directory
-          mkdir -p certificates
+          # Create certificates directory (ignore if exists)
+          if (!(Test-Path "certificates")) { New-Item -ItemType Directory -Path "certificates" }
           
           # Create self-signed certificate using PowerShell
           powershell -Command "& {
+            # Ensure certificates directory exists
+            if (!(Test-Path 'certificates')) { 
+              New-Item -ItemType Directory -Path 'certificates' -Force 
+            }
+            
             $cert = New-SelfSignedCertificate `
               -Type Custom `
               -Subject 'CN=CodeX Development Certificate' `
