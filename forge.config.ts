@@ -99,9 +99,19 @@ const config: ForgeConfig = {
   },
   makers: [
     new MakerSquirrel({
-      // Only sign if certificate is available
+      // Code signing configuration - supports both self-signed and commercial certificates
       ...(process.env.SM_CODE_SIGNING_CERT_SHA1_HASH && {
         signWithParams: `/sha1 ${process.env.SM_CODE_SIGNING_CERT_SHA1_HASH} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
+      }),
+      // Additional options to reduce SmartScreen warnings
+      setupIcon: "./assets/icon/logo.ico",
+      iconUrl:
+        "https://raw.githubusercontent.com/iotserver24/codex/main/assets/icon/logo.ico",
+      loadingGif: "./assets/icon/logo.png",
+      // Disable auto-updates for self-signed builds
+      ...(process.env.SELF_SIGNED === "true" && {
+        noMsi: true,
+        noDelta: true,
       }),
     }),
     new MakerZIP({}),

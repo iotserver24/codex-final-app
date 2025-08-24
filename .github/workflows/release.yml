@@ -202,13 +202,57 @@ jobs:
           npm ci --no-audit --no-fund --prefer-offline --progress=false
           echo "Dependencies installed successfully"
 
+      - name: Create self-signed certificate for code signing
+        run: |
+          echo "Creating self-signed certificate for Windows builds..."
+          
+          # Create certificates directory
+          mkdir -p certificates
+          
+          # Create self-signed certificate using PowerShell
+          powershell -Command "& {
+            $cert = New-SelfSignedCertificate `
+              -Type Custom `
+              -Subject 'CN=CodeX Development Certificate' `
+              -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3') `
+              -KeyUsage DigitalSignature `
+              -KeyAlgorithm RSA `
+              -KeyLength 2048 `
+              -NotBefore (Get-Date) `
+              -NotAfter (Get-Date).AddYears(3) `
+              -CertStoreLocation 'Cert:\CurrentUser\My'
+            
+            # Export to PFX file
+            $pfxPath = 'certificates\codex-certificate.pfx'
+            $cert | Export-PfxCertificate -FilePath $pfxPath -Password (ConvertTo-SecureString -String 'password123' -Force -AsPlainText)
+            
+            # Get thumbprint
+            $thumbprint = $cert.Thumbprint
+            Write-Host 'Certificate created successfully!'
+            Write-Host \"Certificate Thumbprint: $thumbprint\"
+            Write-Host \"PFX File: $pfxPath\"
+            
+            # Set environment variable for the build
+            echo \"SM_CODE_SIGNING_CERT_SHA1_HASH=$thumbprint\" >> $env:GITHUB_ENV
+            echo \"CERTIFICATE_PATH=$pfxPath\" >> $env:GITHUB_ENV
+            echo \"CERTIFICATE_PASSWORD=password123\" >> $env:GITHUB_ENV
+            echo \"SELF_SIGNED=true\" >> $env:GITHUB_ENV
+          }"
+
       - name: Build for Windows
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           # Ensure we're building for the correct architecture
           FORGE_ARCH: "${{ matrix.architecture }}"
+          # Code signing environment variables (set by previous step)
+          SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ env.SM_CODE_SIGNING_CERT_SHA1_HASH }}
+          CERTIFICATE_PATH: ${{ env.CERTIFICATE_PATH }}
+          CERTIFICATE_PASSWORD: ${{ env.CERTIFICATE_PASSWORD }}
+          SELF_SIGNED: ${{ env.SELF_SIGNED }}
         run: |
-          echo "Building for Windows ${{ matrix.architecture }}..."
+          echo "Building for Windows ${{ matrix.architecture }} with code signing..."
+          echo "Certificate thumbprint: $env:SM_CODE_SIGNING_CERT_SHA1_HASH"
+          echo "Certificate path: $env:CERTIFICATE_PATH"
           npx electron-forge make --platform win32 --arch ${{ matrix.architecture }}
 
       - name: Upload Windows artifacts
@@ -338,7 +382,7 @@ jobs:
             3. Launch CodeX and start coding with AI!
 
             ### ⚠️ Note
-            These builds are not code-signed and may show security warnings. This is normal for open-source applications.
+            These builds are code-signed with a self-signed certificate. Windows may show a security warning, but it will display "CodeX Development Certificate" instead of "Unknown Publisher". This is normal for open-source applications and users can safely click "Run anyway" to install.
 
             ### 🐛 Bug Reports
             If you encounter any issues, please report them on our [GitHub Issues](https://github.com/iotserver24/codex/issues) page.
@@ -462,7 +506,7 @@ jobs:
             3. Launch CodeX and start coding with AI!
 
             ### ⚠️ Note
-            These builds are not code-signed and may show security warnings. This is normal for open-source applications.
+            These builds are code-signed with a self-signed certificate. Windows may show a security warning, but it will display "CodeX Development Certificate" instead of "Unknown Publisher". This is normal for open-source applications and users can safely click "Run anyway" to install.
 
             ### 🐛 Bug Reports
             If you encounter any issues, please report them on our [GitHub Issues](https://github.com/iotserver24/codex/issues) page.
