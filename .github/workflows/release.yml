@@ -175,8 +175,10 @@ jobs:
         with:
           name: macos-builds-${{ matrix.architecture }}
           path: |
-            out/make/zip/darwin/${{ matrix.architecture }}/*.zip
-            out/make/zip/darwin/universal/*.zip
+            # The "universal" build step above generates separate x64 and arm64 zips.
+            # Collect both so downstream steps can package a single Universal asset name.
+            out/make/zip/darwin/x64/*.zip
+            out/make/zip/darwin/arm64/*.zip
           retention-days: 30
 
   build-windows:
