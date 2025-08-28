@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { useDeepLink } from "@/contexts/DeepLinkContext";
 import { useEffect, useState } from "react";
 import { CodexProSuccessDialog } from "@/components/CodexProSuccessDialog";
-import { useTheme } from "@/contexts/ThemeContext";
 import { IpcClient } from "@/ipc/ipc_client";
 
 import { PreviewHeader } from "@/components/preview_panel/PreviewHeader";
@@ -107,7 +106,6 @@ export const TitleBar = () => {
 };
 
 function WindowsControls() {
-  const { isDarkMode } = useTheme();
   const ipcClient = IpcClient.getInstance();
 
   const minimizeWindow = () => {
@@ -125,7 +123,7 @@ function WindowsControls() {
   return (
     <div className="ml-auto flex no-app-region-drag">
       <button
-        className="w-10 h-10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        className="w-10 h-10 flex items-center justify-center hover:bg-sidebar-accent transition-colors text-sidebar-foreground"
         onClick={minimizeWindow}
         aria-label="Minimize"
       >
@@ -136,15 +134,11 @@ function WindowsControls() {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <rect
-            width="12"
-            height="1"
-            fill={isDarkMode ? "#ffffff" : "#000000"}
-          />
+          <rect width="12" height="1" fill="currentColor" />
         </svg>
       </button>
       <button
-        className="w-10 h-10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        className="w-10 h-10 flex items-center justify-center hover:bg-sidebar-accent transition-colors text-sidebar-foreground"
         onClick={maximizeWindow}
         aria-label="Maximize"
       >
@@ -155,17 +149,11 @@ function WindowsControls() {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <rect
-            x="0.5"
-            y="0.5"
-            width="11"
-            height="11"
-            stroke={isDarkMode ? "#ffffff" : "#000000"}
-          />
+          <rect x="0.5" y="0.5" width="11" height="11" stroke="currentColor" />
         </svg>
       </button>
       <button
-        className="w-10 h-10 flex items-center justify-center hover:bg-red-500 transition-colors"
+        className="w-10 h-10 flex items-center justify-center hover:bg-red-500 transition-colors text-sidebar-foreground"
         onClick={closeWindow}
         aria-label="Close"
       >
@@ -178,7 +166,7 @@ function WindowsControls() {
         >
           <path
             d="M1 1L11 11M1 11L11 1"
-            stroke={isDarkMode ? "#ffffff" : "#000000"}
+            stroke="currentColor"
             strokeWidth="1.5"
           />
         </svg>

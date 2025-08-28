@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-          
+
       - name: Configure npm for better optional dependency handling
         run: |
           npm config set fund false
@@ -89,7 +89,7 @@ jobs:
           echo "Current directory: $(pwd)"
           echo "Node modules exist: $(test -d node_modules && echo 'Yes' || echo 'No')"
           echo "Forge config exists: $(test -f forge.config.ts && echo 'Yes' || echo 'No')"
-          
+
           # Try to build with RPM first, but fall back to DEB only if RPM fails
           echo "Attempting build with both DEB and RPM..."
           NODE_ENV=production npx electron-forge make --platform linux --arch ${{ matrix.architecture }} || {
@@ -159,10 +159,10 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           echo "Renaming artifacts for version $VERSION..."
-          
+
           # Create a new directory for renamed artifacts
           mkdir -p renamed-artifacts
-          
+
           # Linux artifacts with proper architecture naming
           if [ -d "artifacts/linux-builds-x64" ]; then
             echo "Processing x64 artifacts..."
@@ -170,14 +170,14 @@ jobs:
             find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \; || echo "No ZIP files found for x64"
             find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \; || echo "No RPM files found for x64"
           fi
-          
+
           if [ -d "artifacts/linux-builds-arm64" ]; then
             echo "Processing ARM64 artifacts..."
             find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \; || echo "No DEB files found for ARM64"
             find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \; || echo "No ZIP files found for ARM64"
             find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \; || echo "No RPM files found for ARM64"
           fi
-          
+
           echo "Renamed artifacts:"
           ls -la renamed-artifacts/
 

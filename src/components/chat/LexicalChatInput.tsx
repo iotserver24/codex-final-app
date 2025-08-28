@@ -205,6 +205,8 @@ interface LexicalChatInputProps {
   placeholder?: string;
   disabled?: boolean;
   excludeCurrentApp: boolean;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
 function onError(error: Error) {
@@ -219,6 +221,8 @@ export function LexicalChatInput({
   excludeCurrentApp,
   placeholder = "Ask Dyad to build...",
   disabled = false,
+  className,
+  style,
 }: LexicalChatInputProps) {
   const { apps } = useLoadApps();
   const [shouldClear, setShouldClear] = useState(false);
@@ -320,7 +324,7 @@ export function LexicalChatInput({
         <PlainTextPlugin
           contentEditable={
             <ContentEditable
-              className="flex-1 p-2 focus:outline-none overflow-y-auto min-h-[40px] max-h-[200px] resize-none"
+              className={`flex-1 p-2 focus:outline-none overflow-y-auto min-h-[40px] max-h-[200px] resize-none text-foreground ${className || ""}`}
               aria-placeholder={placeholder}
               placeholder={
                 <div className="absolute top-2 left-2 text-muted-foreground pointer-events-none select-none">
@@ -328,6 +332,7 @@ export function LexicalChatInput({
                 </div>
               }
               onPaste={onPaste}
+              style={style}
             />
           }
           ErrorBoundary={LexicalErrorBoundary}

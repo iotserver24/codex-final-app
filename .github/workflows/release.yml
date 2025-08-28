@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-          
+
       - name: Configure npm for better optional dependency handling
         run: |
           npm config set fund false
@@ -180,7 +180,7 @@ jobs:
           retention-days: 30
 
   build-windows:
-    runs-on: windows-2025 
+    runs-on: windows-2025
     timeout-minutes: 30
     strategy:
       matrix:
@@ -206,7 +206,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Creating self-signed certificate for Windows builds..."
-          
+
           # Ensure certificates directory exists
           if (!(Test-Path "certificates")) { 
             New-Item -ItemType Directory -Path "certificates" -Force 
@@ -214,7 +214,7 @@ jobs:
           } else {
             Write-Host "Certificates directory already exists"
           }
-          
+
           # Create self-signed certificate
           Write-Host "Creating certificate..."
           $cert = New-SelfSignedCertificate `
@@ -227,24 +227,24 @@ jobs:
             -NotBefore (Get-Date) `
             -NotAfter (Get-Date).AddYears(3) `
             -CertStoreLocation "Cert:\CurrentUser\My"
-          
+
           # Export to PFX file
           $pfxPath = "certificates\codex-certificate.pfx"
           $password = ConvertTo-SecureString -String "password123" -Force -AsPlainText
           $cert | Export-PfxCertificate -FilePath $pfxPath -Password $password
-          
+
           # Get thumbprint
           $thumbprint = $cert.Thumbprint
           Write-Host "Certificate created successfully!"
           Write-Host "Certificate Thumbprint: $thumbprint"
           Write-Host "PFX File: $pfxPath"
-          
+
           # Set environment variables for the build
           echo "SM_CODE_SIGNING_CERT_SHA1_HASH=$thumbprint" >> $env:GITHUB_ENV
           echo "CERTIFICATE_PATH=$pfxPath" >> $env:GITHUB_ENV
           echo "CERTIFICATE_PASSWORD=password123" >> $env:GITHUB_ENV
           echo "SELF_SIGNED=true" >> $env:GITHUB_ENV
-          
+
           Write-Host "Environment variables set for code signing"
 
       - name: Build for Windows
@@ -309,39 +309,39 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           echo "Renaming artifacts for version $VERSION..."
-          
+
           # Create a new directory for renamed artifacts
           mkdir -p renamed-artifacts
-          
+
           # Linux artifacts - include all formats (zip, deb, rpm)
           if [ -d "artifacts/linux-builds-x64" ]; then
             find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
             find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
             find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \;
           fi
-          
+
           if [ -d "artifacts/linux-builds-arm64" ]; then
             find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \;
             find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \;
             find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
           fi
-          
+
           # macOS artifacts - ONLY zip format
           if [ -d "artifacts/macos-builds-universal" ]; then
             find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-macOS-Universal.zip" \;
           fi
-          
+
           # Windows artifacts - include all formats (exe, zip)
           if [ -d "artifacts/windows-builds-x64" ]; then
             find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-x64-Setup.exe" \;
             find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-x64-Portable.zip" \;
           fi
-          
+
           if [ -d "artifacts/windows-builds-arm64" ]; then
             find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-ARM64-Setup.exe" \;
             find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-ARM64-Portable.zip" \;
           fi
-          
+
           echo "Renamed artifacts:"
           ls -la renamed-artifacts/
 
@@ -433,39 +433,39 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           echo "Preparing artifacts for target repository version $VERSION..."
-          
+
           # Create a new directory for target repo artifacts
           mkdir -p target-repo-artifacts
-          
+
           # Linux artifacts - include all formats (zip, deb, rpm)
           if [ -d "artifacts/linux-builds-x64" ]; then
             find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
             find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
             find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \;
           fi
-          
+
           if [ -d "artifacts/linux-builds-arm64" ]; then
             find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \;
             find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \;
             find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
           fi
-          
+
           # macOS artifacts - ONLY zip format
           if [ -d "artifacts/macos-builds-universal" ]; then
             find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-macOS-Universal.zip" \;
           fi
-          
+
           # Windows artifacts - include all formats (exe, zip)
           if [ -d "artifacts/windows-builds-x64" ]; then
             find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-x64-Setup.exe" \;
             find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-x64-Portable.zip" \;
           fi
-          
+
           if [ -d "artifacts/windows-builds-arm64" ]; then
             find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-ARM64-Setup.exe" \;
             find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-ARM64-Portable.zip" \;
           fi
-          
+
           echo "Target repo artifacts:"
           ls -la target-repo-artifacts/
 

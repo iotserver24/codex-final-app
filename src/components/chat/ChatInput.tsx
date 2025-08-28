@@ -246,7 +246,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
       )}
       <div className="p-4" data-testid="chat-input-container">
         <div
-          className={`relative flex flex-col border border-border rounded-lg bg-(--background-lighter) shadow-sm ${
+          className={`relative flex flex-col border border-border rounded-lg bg-card shadow-sm ${
             isDraggingOver ? "ring-2 ring-blue-500 border-blue-500" : ""
           }`}
           onDragOver={handleDragOver}
@@ -292,7 +292,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
               onSubmit={handleSubmit}
               onPaste={handlePaste}
               placeholder="Ask codeX to build..."
-              className="flex-1 p-2 focus:outline-none overflow-y-auto min-h-[40px] max-h-[200px]"
+              className="text-foreground"
               style={{ resize: "none" }}
               excludeCurrentApp={true}
             />
@@ -300,7 +300,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
             {isStreaming ? (
               <button
                 onClick={handleCancel}
-                className="px-2 py-2 mt-1 mr-1 hover:bg-(--background-darkest) text-(--sidebar-accent-fg) rounded-lg"
+                className="px-2 py-2 mt-1 mr-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 title="Cancel generation"
               >
                 <StopCircleIcon size={20} />
@@ -309,7 +309,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
               <button
                 onClick={handleSubmit}
                 disabled={!inputValue.trim() && attachments.length === 0}
-                className="px-2 py-2 mt-1 mr-1 hover:bg-(--background-darkest) text-(--sidebar-accent-fg) rounded-lg disabled:opacity-50"
+                className="px-2 py-2 mt-1 mr-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50"
                 title="Send message"
               >
                 <SendHorizontalIcon size={20} />

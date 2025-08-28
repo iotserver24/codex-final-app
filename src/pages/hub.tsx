@@ -6,7 +6,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useTemplates } from "@/hooks/useTemplates";
 import { TemplateCard } from "@/components/TemplateCard";
 import { CreateAppDialog } from "@/components/CreateAppDialog";
-import { NeonConnector } from "@/components/NeonConnector";
+// import { NeonConnector } from "@/components/NeonConnector";
 
 const HubPage: React.FC = () => {
   const router = useRouter();
@@ -90,7 +90,7 @@ const HubPage: React.FC = () => {
           </section>
         )}
 
-        <BackendSection />
+        {/* BackendSection is temporarily disabled */}
       </div>
 
       <CreateAppDialog
@@ -102,23 +102,6 @@ const HubPage: React.FC = () => {
   );
 };
 
-function BackendSection() {
-  return (
-    <div className="">
-      <header className="mb-4 text-left">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Backend Services
-        </h1>
-        <p className="text-md text-gray-600 dark:text-gray-400">
-          Connect to backend services for your projects.
-        </p>
-      </header>
-
-      <div className="grid grid-cols-1 gap-6">
-        <NeonConnector />
-      </div>
-    </div>
-  );
-}
+// NOTE: BackendSection kept for potential future use; currently not exported or rendered
 
 export default HubPage;

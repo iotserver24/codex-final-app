@@ -1,6 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "system" | "light" | "dark";
+type Theme =
+  | "system"
+  | "light"
+  | "dark"
+  | "retro-future-tech"
+  | "urban-mysteries"
+  | "micro-adventures"
+  | "ai-art-experiments"
+  | "digital-magic";
 
 interface ThemeContextType {
   theme: Theme;
@@ -28,8 +36,40 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const isDark =
         theme === "dark" || (theme === "system" && mediaQuery.matches);
 
+      // Reset light/dark classes
       root.classList.remove("light", "dark");
       root.classList.add(isDark ? "dark" : "light");
+
+      // Reset any previously applied themed classes
+      root.classList.remove(
+        "theme-retro-future-tech",
+        "theme-urban-mysteries",
+        "theme-micro-adventures",
+        "theme-ai-art-experiments",
+        "theme-digital-magic",
+      );
+
+      // Apply theme-specific class for custom palettes
+      switch (theme) {
+        case "retro-future-tech":
+          root.classList.add("theme-retro-future-tech");
+          break;
+        case "urban-mysteries":
+          root.classList.add("theme-urban-mysteries");
+          break;
+        case "micro-adventures":
+          root.classList.add("theme-micro-adventures");
+          break;
+        case "ai-art-experiments":
+          root.classList.add("theme-ai-art-experiments");
+          break;
+        case "digital-magic":
+          root.classList.add("theme-digital-magic");
+          break;
+        default:
+          // system/light/dark → no additional theme class
+          break;
+      }
     };
 
     applyTheme();
