@@ -4,10 +4,14 @@ import {
   Settings,
   HelpCircle,
   Store,
+<<<<<<< HEAD
   Gift,
   ExternalLink,
   RefreshCw,
   Info,
+=======
+  BookOpen,
+>>>>>>> upstream/main
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useSidebar } from "@/components/ui/sidebar"; // import useSidebar hook
@@ -56,6 +60,11 @@ const items = [
     icon: Settings,
   },
   {
+    title: "Library",
+    to: "/library",
+    icon: BookOpen,
+  },
+  {
     title: "Hub",
     to: "/hub",
     icon: Store,
@@ -67,6 +76,7 @@ type HoverState =
   | "start-hover:app"
   | "start-hover:chat"
   | "start-hover:settings"
+  | "start-hover:library"
   | "clear-hover"
   | "no-hover";
 
@@ -157,6 +167,8 @@ export function AppSidebar() {
     selectedItem = "Chat";
   } else if (hoverState === "start-hover:settings") {
     selectedItem = "Settings";
+  } else if (hoverState === "start-hover:library") {
+    selectedItem = "Library";
   } else if (state === "expanded") {
     if (isAppRoute) {
       selectedItem = "Apps";
@@ -364,6 +376,8 @@ function AppIcons({
                         onHoverChange("start-hover:chat");
                       } else if (item.title === "Settings") {
                         onHoverChange("start-hover:settings");
+                      } else if (item.title === "Library") {
+                        onHoverChange("start-hover:library");
                       }
                     }}
                   >

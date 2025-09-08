@@ -40,6 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRunApp } from "@/hooks/useRunApp";
+import { useShortcut } from "@/hooks/useShortcut";
 
 interface ErrorBannerProps {
   error: string | undefined;
@@ -51,10 +52,11 @@ const ErrorBanner = ({ error, onDismiss, onAIFix }: ErrorBannerProps) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const { isStreaming } = useStreamChat();
   if (!error) return null;
+  const isDockerError = error.includes("Cannot connect to the Docker");
 
   const getTruncatedError = () => {
     const firstLine = error.split("\n")[0];
-    const snippetLength = 200;
+    const snippetLength = 250;
     const snippet = error.substring(0, snippetLength);
     return firstLine.length < snippet.length
       ? firstLine
@@ -97,23 +99,27 @@ const ErrorBanner = ({ error, onDismiss, onAIFix }: ErrorBannerProps) => {
             <Lightbulb size={16} className=" text-red-800 dark:text-red-300" />
           </div>
           <span className="text-sm text-red-700 dark:text-red-200">
-            <span className="font-medium">Tip: </span>Check if restarting the
-            app fixes the error.
+            <span className="font-medium">Tip: </span>
+            {isDockerError
+              ? "Make sure Docker Desktop is running and try restarting the app."
+              : "Check if restarting the app fixes the error."}
           </span>
         </div>
       </div>
 
       {/* AI Fix button at the bottom */}
-      <div className="mt-2 flex justify-end">
-        <button
-          disabled={isStreaming}
-          onClick={onAIFix}
-          className="cursor-pointer flex items-center space-x-1 px-2 py-0.5 bg-red-500 dark:bg-red-600 text-white rounded text-sm hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Sparkles size={14} />
-          <span>Fix error with AI</span>
-        </button>
-      </div>
+      {!isDockerError && (
+        <div className="mt-2 flex justify-end">
+          <button
+            disabled={isStreaming}
+            onClick={onAIFix}
+            className="cursor-pointer flex items-center space-x-1 px-2 py-0.5 bg-red-500 dark:bg-red-600 text-white rounded text-sm hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Sparkles size={14} />
+            <span>Fix error with AI</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -143,6 +149,9 @@ export const PreviewIframe = ({ loading }: { loading: boolean }) => {
   );
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isPicking, setIsPicking] = useState(false);
+
+  //detect if the user is using Mac
+  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
   // Deactivate component selector when selection is cleared
   useEffect(() => {
@@ -296,6 +305,15 @@ export const PreviewIframe = ({ loading }: { loading: boolean }) => {
     }
   };
 
+  // Activate component selector using a shortcut
+  useShortcut(
+    "c",
+    { shift: true, ctrl: !isMac, meta: isMac },
+    handleActivateComponentSelector,
+    isComponentSelectorInitialized,
+    iframeRef,
+  );
+
   // Function to navigate back
   const handleNavigateBack = () => {
     if (canGoBack && iframeRef.current?.contentWindow) {
@@ -428,6 +446,7 @@ export const PreviewIframe = ({ loading }: { loading: boolean }) => {
                     ? "Deactivate component selector"
                     : "Select component"}
                 </p>
+                <p>{isMac ? "⌘ + ⇧ + C" : "Ctrl + ⇧ + C"}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -539,6 +558,7 @@ export const PreviewIframe = ({ loading }: { loading: boolean }) => {
           </div>
         ) : (
           <iframe
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-orientation-lock allow-pointer-lock allow-presentation allow-downloads"
             data-testid="preview-iframe-element"
             onLoad={() => {
               setErrorMessage(undefined);

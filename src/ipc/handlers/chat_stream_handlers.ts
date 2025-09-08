@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { ipcMain } from "electron";
 import {
-  CoreMessage,
+  ModelMessage,
   TextPart,
   ImagePart,
   streamText,
@@ -61,6 +61,9 @@ import { FileUploadsState } from "../utils/file_uploads_state";
 import { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
 import { extractMentionedAppsCodebases } from "../utils/mention_apps";
 import { parseAppMentions } from "@/shared/parse_mention_apps";
+import { prompts as promptsTable } from "../../db/schema";
+import { inArray } from "drizzle-orm";
+import { replacePromptReference } from "../utils/replacePromptReference";
 
 type AsyncIterableStream<T> = AsyncIterable<T> & ReadableStream<T>;
 
@@ -131,14 +134,14 @@ async function processStreamChunks({
         chunk = "</think>";
         inThinkingBlock = false;
       }
-      chunk += part.textDelta;
-    } else if (part.type === "reasoning") {
+      chunk += part.text;
+    } else if (part.type === "reasoning-delta") {
       if (!inThinkingBlock) {
         chunk = "<think>";
         inThinkingBlock = true;
       }
 
-      chunk += escapeDyadTags(part.textDelta);
+      chunk += escapeDyadTags(part.text);
     }
 
     if (!chunk) {
@@ -274,6 +277,26 @@ export function registerChatStreamHandlers() {
 
       // Add user message to database with attachment info
       let userPrompt = req.prompt + (attachmentInfo ? attachmentInfo : "");
+      // Inline referenced prompt contents for mentions like @prompt:<id>
+      try {
+        const matches = Array.from(userPrompt.matchAll(/@prompt:(\d+)/g));
+        if (matches.length > 0) {
+          const ids = Array.from(new Set(matches.map((m) => Number(m[1]))));
+          const referenced = await db
+            .select()
+            .from(promptsTable)
+            .where(inArray(promptsTable.id, ids));
+          if (referenced.length > 0) {
+            const promptsMap: Record<number, string> = {};
+            for (const p of referenced) {
+              promptsMap[p.id] = p.content;
+            }
+            userPrompt = replacePromptReference(userPrompt, promptsMap);
+          }
+        }
+      } catch (e) {
+        logger.error("Failed to inline referenced prompts:", e);
+      }
       if (req.selectedComponent) {
         let componentSnippet = "[component snippet not available]";
         try {
@@ -590,7 +613,7 @@ This conversation includes one or more image attachments. When the user uploads 
             ] as const)
           : [];
 
-        let chatMessages: CoreMessage[] = [
+        let chatMessages: ModelMessage[] = [
           ...codebasePrefix,
           ...otherCodebasePrefix,
           ...limitedMessageHistory.map((msg) => ({
@@ -634,7 +657,7 @@ This conversation includes one or more image attachments. When the user uploads 
               content:
                 "Summarize the following chat: " +
                 formatMessagesForSummary(previousChat?.messages ?? []),
-            } satisfies CoreMessage,
+            } satisfies ModelMessage,
           ];
         }
 
@@ -642,7 +665,7 @@ This conversation includes one or more image attachments. When the user uploads 
           chatMessages,
           modelClient,
         }: {
-          chatMessages: CoreMessage[];
+          chatMessages: ModelMessage[];
           modelClient: ModelClient;
         }) => {
           const dyadRequestId = uuidv4();
@@ -655,7 +678,7 @@ This conversation includes one or more image attachments. When the user uploads 
             logger.log("sending AI request");
           }
           return streamText({
-            maxTokens: await getMaxTokens(settings.selectedModel),
+            maxOutputTokens: await getMaxTokens(settings.selectedModel),
             temperature: await getTemperature(settings.selectedModel),
             maxRetries: 2,
             model: modelClient.model,
@@ -785,7 +808,7 @@ This conversation includes one or more image attachments. When the user uploads 
                   break;
                 }
                 if (part.type !== "text-delta") continue; // ignore reasoning for continuation
-                fullResponse += part.textDelta;
+                fullResponse += part.text;
                 fullResponse = cleanFullResponse(fullResponse);
                 fullResponse = await processResponseChunkUpdate({
                   fullResponse,
@@ -812,7 +835,7 @@ This conversation includes one or more image attachments. When the user uploads 
 
               let autoFixAttempts = 0;
               const originalFullResponse = fullResponse;
-              const previousAttempts: CoreMessage[] = [];
+              const previousAttempts: ModelMessage[] = [];
               while (
                 problemReport.problems.length > 0 &&
                 autoFixAttempts < 2 &&
@@ -1148,9 +1171,9 @@ async function replaceTextAttachmentWithContent(
 
 // Helper function to convert traditional message to one with proper image attachments
 async function prepareMessageWithAttachments(
-  message: CoreMessage,
+  message: ModelMessage,
   attachmentPaths: string[],
-): Promise<CoreMessage> {
+): Promise<ModelMessage> {
   let textContent = message.content;
   // Get the original text content
   if (typeof textContent !== "string") {

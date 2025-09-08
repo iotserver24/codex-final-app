@@ -6,6 +6,10 @@ import path from "path";
 import os from "os";
 import { execSync } from "child_process";
 import { generateAppFilesSnapshotData } from "./generateAppFilesSnapshotData";
+import {
+  BUILD_SYSTEM_POSTFIX,
+  BUILD_SYSTEM_PREFIX,
+} from "@/prompts/system_prompt";
 
 const showDebugLogs = process.env.DEBUG_LOGS === "true";
 
@@ -67,8 +71,12 @@ class ProModesDialog {
     public close: () => Promise<void>,
   ) {}
 
-  async toggleSmartContext() {
-    await this.page.getByRole("switch", { name: "Smart Context" }).click();
+  async setSmartContextMode(mode: "balanced" | "off" | "conservative") {
+    await this.page
+      .getByRole("button", {
+        name: mode.charAt(0).toUpperCase() + mode.slice(1),
+      })
+      .click();
   }
 
   async toggleTurboEdits() {
@@ -665,7 +673,7 @@ export class PageObject {
 
   async selectModel({ provider, model }: { provider: string; model: string }) {
     await this.page.getByRole("button", { name: "Model: Auto" }).click();
-    await this.page.getByText(provider).click();
+    await this.page.getByText(provider, { exact: true }).click();
     await this.page.getByText(model, { exact: true }).click();
   }
 
@@ -691,6 +699,24 @@ export class PageObject {
       .getByText("lmstudio-model-1", { exact: true })
       .first()
       .click();
+  }
+
+  async selectTestAzureModel() {
+    await this.page.getByRole("button", { name: "Model: Auto" }).click();
+    await this.page.getByText("Other AI providers").click();
+    await this.page.getByText("Azure OpenAI", { exact: true }).click();
+    await this.page.getByText("GPT-5", { exact: true }).click();
+  }
+
+  async setUpAzure({ autoApprove = false }: { autoApprove?: boolean } = {}) {
+    await this.githubConnector.clearPushEvents();
+    await this.goToSettingsTab();
+    if (autoApprove) {
+      await this.toggleAutoApprove();
+    }
+    // Azure should already be configured via environment variables
+    // so we don't need additional setup steps like setUpDyadProvider
+    await this.goToAppsTab();
   }
 
   async setUpTestProvider() {
@@ -725,6 +751,30 @@ export class PageObject {
 
   async goToSettingsTab() {
     await this.page.getByRole("link", { name: "Settings" }).click();
+  }
+
+  async goToLibraryTab() {
+    await this.page.getByRole("link", { name: "Library" }).click();
+  }
+
+  async createPrompt({
+    title,
+    description,
+    content,
+  }: {
+    title: string;
+    description?: string;
+    content: string;
+  }) {
+    await this.page.getByRole("button", { name: "New Prompt" }).click();
+    await this.page.getByRole("textbox", { name: "Title" }).fill(title);
+    if (description) {
+      await this.page
+        .getByRole("textbox", { name: "Description (optional)" })
+        .fill(description);
+    }
+    await this.page.getByRole("textbox", { name: "Content" }).fill(content);
+    await this.page.getByRole("button", { name: "Save" }).click();
   }
 
   getTitleBarAppNameButton() {
@@ -1116,6 +1166,8 @@ function prettifyDump(
       const content = Array.isArray(message.content)
         ? JSON.stringify(message.content)
         : message.content
+            .replace(BUILD_SYSTEM_PREFIX, "\n${BUILD_SYSTEM_PREFIX}")
+            .replace(BUILD_SYSTEM_POSTFIX, "${BUILD_SYSTEM_POSTFIX}")
             // Normalize line endings to always use \n
             .replace(/\r\n/g, "\n")
             // We remove package.json because it's flaky.

@@ -35,6 +35,7 @@ const providers = [
   "ollama",
   "lmstudio",
   "codex",
+  "azure",
 ] as const;
 
 export const cloudProviders = providers.filter(
@@ -69,6 +70,9 @@ export type ProviderSetting = z.infer<typeof ProviderSettingSchema>;
 
 export const RuntimeModeSchema = z.enum(["web-sandbox", "local-node", "unset"]);
 export type RuntimeMode = z.infer<typeof RuntimeModeSchema>;
+
+export const RuntimeMode2Schema = z.enum(["host", "docker"]);
+export type RuntimeMode2 = z.infer<typeof RuntimeMode2Schema>;
 
 export const ChatModeSchema = z.enum(["build", "ask", "designer", "agentic"]);
 export type ChatMode = z.infer<typeof ChatModeSchema>;
@@ -161,6 +165,7 @@ export const UserSettingsSchema = z.object({
   thinkingBudget: z.enum(["low", "medium", "high"]).optional(),
   enableProLazyEditsMode: z.boolean().optional(),
   enableProSmartFilesContextMode: z.boolean().optional(),
+  proSmartContextOption: z.enum(["balanced", "conservative"]).optional(),
   selectedTemplateId: z.string(),
   enableSupabaseWriteSqlMigration: z.boolean().optional(),
   selectedChatMode: ChatModeSchema.optional(),
@@ -170,6 +175,7 @@ export const UserSettingsSchema = z.object({
   enableNativeGit: z.boolean().optional(),
   enableAutoUpdate: z.boolean(),
   releaseChannel: ReleaseChannelSchema,
+  runtimeMode2: RuntimeMode2Schema.optional(),
 
   ////////////////////////////////
   // E2E TESTING ONLY.

@@ -69,10 +69,21 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
     userApiKey !== "Not Set";
   const hasEnvKey = !!(envVarName && envVars[envVarName]);
 
+<<<<<<< HEAD
   // codeX is always configured since it uses hardcoded token
   // CodeX Auto is always configured since it doesn't need API keys
   const isConfigured =
     isCodeX || isCodeXAuto ? true : isValidUserKey || hasEnvKey;
+=======
+  // Special handling for Azure OpenAI configuration
+  const isAzureConfigured =
+    provider === "azure"
+      ? !!(envVars["AZURE_API_KEY"] && envVars["AZURE_RESOURCE_NAME"])
+      : false;
+
+  const isConfigured =
+    provider === "azure" ? isAzureConfigured : isValidUserKey || hasEnvKey; // Configured if either is set
+>>>>>>> upstream/main
 
   // --- Save Handler ---
   const handleSaveKey = async () => {

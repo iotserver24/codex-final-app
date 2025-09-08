@@ -64,7 +64,7 @@
         },
         {
           "path": "manual/baz.json",
-          "content": "// File contents excluded from context",
+          "content": "[\"even json is included\"]\n",
           "force": false
         },
         {
@@ -114,7 +114,8 @@
         }
       ],
       "enable_lazy_edits": true,
-      "enable_smart_files_context": false
+      "enable_smart_files_context": false,
+      "smart_context_mode": "balanced"
     }
   },
   "headers": {
