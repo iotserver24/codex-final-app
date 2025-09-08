@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Copy,
   UploadIcon,
+  SparklesIcon,
 } from "lucide-react";
 import {
   Dialog,
@@ -20,24 +21,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
-import { showError } from "@/lib/toast";
-import { useState, useEffect } from "react";
-import { ChatLogsData } from "@/ipc/ipc_types";
-import { IpcClient } from "@/ipc/ipc_client";
-import { useSettings } from "@/hooks/useSettings";
-import type { UpdateCheckResult } from "@/ipc/ipc_types";
-=======
-import {
-  BookOpenIcon,
-  BugIcon,
-  UploadIcon,
-  ChevronLeftIcon,
-  CheckIcon,
-  XIcon,
-  FileIcon,
-  SparklesIcon,
-} from "lucide-react";
 import { IpcClient } from "@/ipc/ipc_client";
 import { useState, useEffect } from "react";
 import { useAtomValue } from "jotai";
@@ -46,7 +29,7 @@ import { ChatLogsData } from "@/ipc/ipc_types";
 import { showError } from "@/lib/toast";
 import { HelpBotDialog } from "./HelpBotDialog";
 import { useSettings } from "@/hooks/useSettings";
->>>>>>> upstream/main
+import type { UpdateCheckResult } from "@/ipc/ipc_types";
 
 interface HelpDialogProps {
   isOpen: boolean;
@@ -69,15 +52,11 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
   const [chatLogsData, setChatLogsData] = useState<ChatLogsData | null>(null);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [sessionId, setSessionId] = useState("");
-<<<<<<< HEAD
   const [appVersionState, setAppVersion] = useState<string | null>(null);
-=======
   const [isHelpBotOpen, setIsHelpBotOpen] = useState(false);
   const selectedChatId = useAtomValue(selectedChatIdAtom);
-  const { settings } = useSettings();
 
-  const isDyadProUser = settings?.providerSettings?.["auto"]?.apiKey?.value;
->>>>>>> upstream/main
+  const isCodexProUser = settings?.providerSettings?.["auto"]?.apiKey?.value;
 
   // Function to reset all dialog state
   const resetDialogState = () => {
@@ -447,32 +426,11 @@ Session ID: ${sessionId}
         <DialogHeader>
           <DialogTitle>Need help with CodeX?</DialogTitle>
         </DialogHeader>
-<<<<<<< HEAD
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full flex items-center justify-start gap-2 text-lg py-4"
-              onClick={() =>
-                IpcClient.getInstance().openExternalUrl(
-                  "https://codex.anishkumar.tech/docs",
-                )
-              }
-            >
-              <BookOpenIcon className="h-5 w-5" />
-              Open Docs
-            </Button>
-            <div className="text-sm text-muted-foreground">
-              Get help with common questions and issues.
-            </div>
-          </div>
-          <div className="space-y-2">
-=======
         <DialogDescription className="">
           If you need help or want to report an issue, here are some options:
         </DialogDescription>
         <div className="flex flex-col space-y-4 w-full">
-          {isDyadProUser ? (
+          {isCodexProUser ? (
             <div className="flex flex-col space-y-2">
               <Button
                 variant="default"
@@ -481,11 +439,11 @@ Session ID: ${sessionId}
                 }}
                 className="w-full py-6 border-primary/50 shadow-sm shadow-primary/10 transition-all hover:shadow-md hover:shadow-primary/15"
               >
-                <SparklesIcon className="mr-2 h-5 w-5" /> Chat with Dyad help
+                <SparklesIcon className="mr-2 h-5 w-5" /> Chat with CodeX help
                 bot (Pro)
               </Button>
               <p className="text-sm text-muted-foreground px-2">
-                Opens an in-app help chat assistant that searches through Dyad's
+                Opens an in-app help chat assistant that searches through CodeX's
                 docs.
               </p>
             </div>
@@ -495,7 +453,7 @@ Session ID: ${sessionId}
                 variant="outline"
                 onClick={() => {
                   IpcClient.getInstance().openExternalUrl(
-                    "https://www.dyad.sh/docs",
+                    "https://codex.anishkumar.tech/docs",
                   );
                 }}
                 className="w-full py-6 bg-(--background-lightest)"
@@ -509,7 +467,6 @@ Session ID: ${sessionId}
           )}
 
           <div className="flex flex-col space-y-2">
->>>>>>> upstream/main
             <Button
               variant="outline"
               className="w-full flex items-center justify-start gap-2 text-lg py-4"

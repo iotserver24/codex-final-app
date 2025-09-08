@@ -13,13 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Info } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
-<<<<<<< HEAD
-
-import { hasCodexProKey } from "@/lib/schemas";
-=======
 import { IpcClient } from "@/ipc/ipc_client";
-import { hasDyadProKey, type UserSettings } from "@/lib/schemas";
->>>>>>> upstream/main
+import { hasCodexProKey, type UserSettings } from "@/lib/schemas";
 
 export function ProModeSelector() {
   const { settings, updateSettings } = useSettings();

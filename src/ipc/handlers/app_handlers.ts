@@ -13,13 +13,8 @@ import type {
 } from "../ipc_types";
 import fs from "node:fs";
 import path from "node:path";
-<<<<<<< HEAD
 import { getAppPath, getUserDataPath } from "../../paths/paths";
-import { spawn } from "node:child_process";
-=======
-import { getDyadAppPath, getUserDataPath } from "../../paths/paths";
 import { ChildProcess, spawn } from "node:child_process";
->>>>>>> upstream/main
 import git from "isomorphic-git";
 import { promises as fsPromises } from "node:fs";
 

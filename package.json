@@ -1,15 +1,10 @@
 {
-<<<<<<< HEAD
+
   "name": "codex",
   "productName": "codex",
   "version": "1.0.8",
   "description": "Codex - AI-powered code editor and application builder",
-=======
-  "name": "dyad",
-  "productName": "dyad",
-  "version": "0.20.0-beta.1",
-  "description": "Free, local, open-source AI app builder",
->>>>>>> upstream/main
+
   "main": ".vite/build/main.js",
   "repository": {
     "type": "git",
@@ -19,11 +14,8 @@
     "node": ">=20"
   },
   "scripts": {
-<<<<<<< HEAD
     "clean": "rimraf out && rimraf scaffold/node_modules",
-=======
-    "clean": "rimraf out scaffold/node_modules",
->>>>>>> upstream/main
+
     "start": "electron-forge start",
     "dev:engine": "cross-env DYAD_ENGINE_URL=http://localhost:8080/v1 npm start",
     "staging:engine": "cross-env DYAD_ENGINE_URL=https://staging---dyad-llm-engine-kq7pivehnq-uc.a.run.app/v1 npm start",
@@ -58,12 +50,10 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "extract-codebase": "ts-node scripts/extract-codebase.ts",
-<<<<<<< HEAD
+
     "test:forge-config": "node scripts/test-forge-config.js",
     "prepare": "husky install",
-=======
-    "init-precommit": "husky",
->>>>>>> upstream/main
+
     "pre:e2e": "cross-env E2E_TEST_BUILD=true npm run package",
     "e2e": "playwright test",
     "e2e:shard": "playwright test --shard"

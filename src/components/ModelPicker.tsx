@@ -249,78 +249,6 @@ export function ModelPicker() {
               </>
             )}
 
-<<<<<<< HEAD
-            {/* Group other providers into submenus */}
-            {Object.entries(modelsByProviders)
-              .filter(([providerId]) => providerId !== "auto") // Skip auto provider as it's already handled
-              .sort(([a], [b]) => {
-                // Sort codeX first, then alphabetically
-                if (a === "codex") return -1;
-                if (b === "codex") return 1;
-                return a.localeCompare(b);
-              })
-              .map(([providerId, models]) => {
-                const provider = providers?.find((p) => p.id === providerId);
-                if (models.length === 0) return null;
-
-                return (
-                  <DropdownMenuSub key={providerId}>
-                    <DropdownMenuSubTrigger className="w-full font-normal">
-                      <div className="flex flex-col items-start">
-                        <span>{provider?.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {models.length} models
-                        </span>
-                      </div>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-56">
-                      <DropdownMenuLabel>
-                        {provider?.name} Models
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {models.map((model) => (
-                        <Tooltip key={`${providerId}-${model.apiName}`}>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuItem
-                              className={
-                                selectedModel.provider === providerId &&
-                                selectedModel.name === model.apiName
-                                  ? "bg-secondary"
-                                  : ""
-                              }
-                              onClick={() => {
-                                const customModelId =
-                                  model.type === "custom"
-                                    ? model.id
-                                    : undefined;
-                                onModelSelect({
-                                  name: model.apiName,
-                                  provider: providerId,
-                                  customModelId,
-                                });
-                                setOpen(false);
-                              }}
-                            >
-                              <div className="flex justify-between items-start w-full">
-                                <span>{model.displayName}</span>
-                                {model.tag && (
-                                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
-                                    {model.tag}
-                                  </span>
-                                )}
-                              </div>
-                            </DropdownMenuItem>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">
-                            {model.description}
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                );
-              })}
-=======
             {/* Primary providers as submenus */}
             {primaryProviders.map(([providerId, models]) => {
               const provider = providers?.find((p) => p.id === providerId);
@@ -332,7 +260,7 @@ export function ModelPicker() {
                         <span>{provider?.name ?? providerId}</span>
                         {provider?.type === "cloud" &&
                           !provider?.secondary &&
-                          isDyadProEnabled(settings) && (
+                          isCodexProEnabled(settings) && (
                             <span className="text-[10px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_100%] animate-[shimmer_5s_ease-in-out_infinite] text-white px-1.5 py-0.5 rounded-full font-medium">
                               Pro
                             </span>
@@ -484,7 +412,6 @@ export function ModelPicker() {
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
             )}
->>>>>>> upstream/main
           </>
         )}
 

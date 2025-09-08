@@ -4,14 +4,11 @@ import {
   Settings,
   HelpCircle,
   Store,
-<<<<<<< HEAD
   Gift,
   ExternalLink,
   RefreshCw,
   Info,
-=======
   BookOpen,
->>>>>>> upstream/main
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useSidebar } from "@/components/ui/sidebar"; // import useSidebar hook
