@@ -103,12 +103,16 @@ export function registerTokenCountHandlers() {
           chatContext: validateChatContext(chat.app.chatContext),
         });
         codebaseInfo = formattedOutput;
-        if (settings.enableCodexPro && settings.enableProSmartFilesContextMode) {
+        if (
+          settings.enableCodexPro &&
+          settings.enableProSmartFilesContextMode
+        ) {
           codebaseTokens = estimateTokens(
             files
               // It doesn't need to be the exact format but it's just to get a token estimate
               .map(
-                (file) => `<codex-file=${file.path}>${file.content}</codex-file>`,
+                (file) =>
+                  `<codex-file=${file.path}>${file.content}</codex-file>`,
               )
               .join("\n\n"),
           );

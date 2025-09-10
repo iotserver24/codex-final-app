@@ -54,7 +54,7 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
   const [sessionId, setSessionId] = useState("");
   const [appVersionState, setAppVersion] = useState<string | null>(null);
   const [isHelpBotOpen, setIsHelpBotOpen] = useState(false);
-  const selectedChatId = useAtomValue(selectedChatIdAtom);
+  const _selectedChatId = useAtomValue(selectedChatIdAtom);
 
   const isCodexProUser = settings?.providerSettings?.["auto"]?.apiKey?.value;
 
@@ -443,8 +443,8 @@ Session ID: ${sessionId}
                 bot (Pro)
               </Button>
               <p className="text-sm text-muted-foreground px-2">
-                Opens an in-app help chat assistant that searches through CodeX's
-                docs.
+                Opens an in-app help chat assistant that searches through
+                CodeX's docs.
               </p>
             </div>
           ) : (
