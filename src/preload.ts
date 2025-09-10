@@ -116,6 +116,20 @@ const validInvokeChannels = [
   "prompts:create",
   "prompts:update",
   "prompts:delete",
+  // Docs indexing
+  "docs:create-source",
+  "docs:list-sources",
+  "docs:get-source",
+  "docs:delete-source",
+  "docs:stop-crawling",
+  "docs:pause-crawling",
+  "docs:resume-crawling",
+  "docs:reindex",
+  "docs:generate-embeddings",
+  "docs:search",
+  "docs:get-pages",
+  "docs:get-chunks",
+  "docs:get-stats",
   // Test-only channels
   // These should ALWAYS be guarded with IS_TEST_BUILD in the main process.
   // We can't detect with IS_TEST_BUILD in the preload script because
@@ -137,6 +151,8 @@ const validReceiveChannels = [
   "help:chat:response:chunk",
   "help:chat:response:end",
   "help:chat:response:error",
+  // Docs indexing
+  "docs:crawl-progress",
 ] as const;
 
 type ValidInvokeChannel = (typeof validInvokeChannels)[number];

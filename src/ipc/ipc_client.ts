@@ -61,6 +61,15 @@ import type {
   PromptDto,
   CreatePromptParamsDto,
   UpdatePromptParamsDto,
+  CreateDocsSourceParams,
+  DocsSource,
+  DocsPage,
+  DocsChunk,
+  DocsSearchParams,
+  DocsSearchResult,
+  DocsCrawlProgress,
+  GenerateEmbeddingsParams,
+  ReindexDocsParams,
 } from "./ipc_types";
 import type { Template } from "../shared/templates";
 import type { AppChatContext, ProposalResult } from "@/lib/schemas";
@@ -1178,5 +1187,82 @@ export class IpcClient {
 
   public cancelHelpChat(sessionId: string): void {
     this.ipcRenderer.invoke("help:chat:cancel", sessionId).catch(() => {});
+  }
+
+  // --- Docs Indexing ---
+  public async createDocsSource(
+    params: CreateDocsSourceParams,
+  ): Promise<{ sourceId: number }> {
+    return this.ipcRenderer.invoke("docs:create-source", params);
+  }
+
+  public async listDocsSources(): Promise<DocsSource[]> {
+    return this.ipcRenderer.invoke("docs:list-sources");
+  }
+
+  public async getDocsSource(sourceId: number): Promise<DocsSource> {
+    return this.ipcRenderer.invoke("docs:get-source", sourceId);
+  }
+
+  public async deleteDocsSource(sourceId: number): Promise<void> {
+    await this.ipcRenderer.invoke("docs:delete-source", sourceId);
+  }
+
+  public async stopDocsCrawling(sourceId: number): Promise<void> {
+    await this.ipcRenderer.invoke("docs:stop-crawling", sourceId);
+  }
+
+  public async pauseDocsCrawling(sourceId: number): Promise<void> {
+    await this.ipcRenderer.invoke("docs:pause-crawling", sourceId);
+  }
+
+  public async resumeDocsCrawling(sourceId: number): Promise<void> {
+    await this.ipcRenderer.invoke("docs:resume-crawling", sourceId);
+  }
+
+  public async reindexDocs(params: ReindexDocsParams): Promise<void> {
+    await this.ipcRenderer.invoke("docs:reindex", params);
+  }
+
+  public async generateDocsEmbeddings(
+    params: GenerateEmbeddingsParams,
+  ): Promise<void> {
+    await this.ipcRenderer.invoke("docs:generate-embeddings", params);
+  }
+
+  public async searchDocs(
+    params: DocsSearchParams,
+  ): Promise<DocsSearchResult[]> {
+    return this.ipcRenderer.invoke("docs:search", params);
+  }
+
+  public async getDocsPages(sourceId: number): Promise<DocsPage[]> {
+    return this.ipcRenderer.invoke("docs:get-pages", sourceId);
+  }
+
+  public async getDocsChunks(pageId: number): Promise<DocsChunk[]> {
+    return this.ipcRenderer.invoke("docs:get-chunks", pageId);
+  }
+
+  public async getDocsStats(): Promise<{
+    totalSources: number;
+    totalPages: number;
+    totalChunks: number;
+    sourcesWithEmbeddings: number;
+  }> {
+    return this.ipcRenderer.invoke("docs:get-stats");
+  }
+
+  // Listen for docs crawl progress
+  public onDocsCrawlProgress(
+    callback: (progress: DocsCrawlProgress) => void,
+  ): () => void {
+    const listener = (data: any) => {
+      callback(data as DocsCrawlProgress);
+    };
+    this.ipcRenderer.on("docs:crawl-progress", listener);
+    return () => {
+      this.ipcRenderer.removeListener("docs:crawl-progress", listener);
+    };
   }
 }

@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Info,
   BookOpen,
+  Globe,
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useSidebar } from "@/components/ui/sidebar"; // import useSidebar hook
@@ -50,6 +51,11 @@ const items = [
     title: "Chat",
     to: "/chat",
     icon: Inbox,
+  },
+  {
+    title: "Docs",
+    to: "/docs",
+    icon: Globe,
   },
   {
     title: "Settings",

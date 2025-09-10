@@ -49,6 +49,7 @@ import { safeSend } from "../utils/safe_sender";
 import { cleanFullResponse } from "../utils/cleanFullResponse";
 import { generateProblemReport } from "../processors/tsc";
 import { createProblemFixPrompt } from "@/shared/problem_prompt";
+import { DocsContextService } from "../services/docs_context";
 import { AsyncVirtualFileSystem } from "../../../shared/VirtualFilesystem";
 import {
   getDyadAddDependencyTags,
@@ -539,6 +540,35 @@ ${componentSnippet}
         );
         if (isSummarizeIntent) {
           systemPrompt = SUMMARIZE_CHAT_SYSTEM_PROMPT;
+        }
+
+        // Add docs context if available
+        try {
+          const docsContextService = new DocsContextService();
+          const isDocsAvailable =
+            await docsContextService.isDocsContextAvailable();
+
+          if (isDocsAvailable) {
+            const docsContext = await docsContextService.getRelevantContext(
+              req.prompt,
+              {
+                maxChunks: 6,
+                minSimilarity: 0.7,
+                includeCodeBlocks: true,
+              },
+            );
+
+            if (docsContext.relevantChunks.length > 0) {
+              systemPrompt += `\n\n# Documentation Context\n\nI have access to indexed documentation that may be relevant to your query. Here are the most relevant excerpts:\n\n${docsContext.contextText}\n\nUse this documentation context to provide accurate, up-to-date information in your responses. When referencing information from the documentation, mention the source.`;
+
+              logger.log(
+                `Added docs context: ${docsContext.relevantChunks.length} chunks from sources: ${docsContext.sourcesUsed.join(", ")}`,
+              );
+            }
+          }
+        } catch (error) {
+          logger.warn("Error getting docs context:", error);
+          // Continue without docs context if there's an error
         }
 
         // Update the system prompt for images if there are image attachments

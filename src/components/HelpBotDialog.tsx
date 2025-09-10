@@ -149,9 +149,10 @@ export function HelpBotDialog({ isOpen, onClose }: HelpBotDialogProps) {
               content: assistantBufferRef.current,
               reasoning: reasoningBufferRef.current,
             };
+            return next; // Return the updated array
           }
         }
-        return next;
+        return prev; // Return the same array if no changes
       });
     }, FLUSH_INTERVAL_MS);
   };

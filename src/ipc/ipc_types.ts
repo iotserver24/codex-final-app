@@ -49,6 +49,106 @@ export interface EnhancePromptResult {
   text: string;
 }
 
+// --- Docs Indexing ---
+export interface CreateDocsSourceParams {
+  url: string;
+  title?: string;
+  options?: {
+    maxPages?: number;
+    maxDepth?: number;
+    concurrency?: number;
+    throttleMs?: number;
+    includePaths?: string[];
+    excludePaths?: string[];
+    downloadCodeFiles?: boolean;
+  };
+}
+
+export interface DocsSource {
+  id: number;
+  url: string;
+  title?: string;
+  status: "pending" | "crawling" | "paused" | "completed" | "failed";
+  totalPages: number;
+  crawledPages: number;
+  errorMessage?: string;
+  lastCrawledAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DocsPage {
+  id: number;
+  sourceId: number;
+  url: string;
+  title?: string;
+  content?: string;
+  contentHash: string;
+  filePath?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DocsChunk {
+  id: number;
+  pageId: number;
+  content: string;
+  chunkType: "text" | "code";
+  language?: string;
+  embedding?: string;
+  headingPath?: string;
+  sectionPosition?: number;
+  createdAt: Date;
+}
+
+export interface DocsSearchParams {
+  query: string;
+  sourceId?: number;
+  limit?: number;
+  chunkType?: "text" | "code" | "all";
+}
+
+export interface DocsSearchResult {
+  id: number;
+  content: string;
+  similarity: number;
+  url: string;
+  title: string;
+  chunkType: string;
+  language?: string;
+}
+
+export interface DocsCrawlProgress {
+  sourceId: number;
+  status: "pending" | "crawling" | "paused" | "completed" | "failed";
+  totalPages: number;
+  crawledPages: number;
+  currentUrl?: string;
+  errorMessage?: string;
+}
+
+export interface GenerateEmbeddingsParams {
+  sourceId: number;
+  regenerate?: boolean;
+}
+
+export interface ReindexDocsParams {
+  sourceId: number;
+}
+
+export interface UpdateCheckResult {
+  stable: {
+    version: string;
+    releaseNotes: string;
+    downloadUrl: string;
+  };
+  beta: {
+    version: string;
+    releaseNotes: string;
+    downloadUrl: string;
+  };
+}
+
 export interface ChatProblemsEvent {
   chatId: number;
   appId: number;

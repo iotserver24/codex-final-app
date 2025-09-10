@@ -172,3 +172,81 @@ export const versionsRelations = relations(versions, ({ one }) => ({
     references: [apps.id],
   }),
 }));
+
+// Docs indexing schema
+export const docsSources = sqliteTable("docs_sources", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  url: text("url").notNull().unique(),
+  title: text("title"),
+  status: text("status", {
+    enum: ["pending", "crawling", "paused", "completed", "failed"],
+  })
+    .notNull()
+    .default("pending"),
+  totalPages: integer("total_pages").default(0),
+  crawledPages: integer("crawled_pages").default(0),
+  errorMessage: text("error_message"),
+  lastCrawledAt: integer("last_crawled_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+export const docsPages = sqliteTable("docs_pages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  sourceId: integer("source_id")
+    .notNull()
+    .references(() => docsSources.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  title: text("title"),
+  content: text("content"),
+  contentHash: text("content_hash").notNull(),
+  filePath: text("file_path"), // Local file path where raw content is stored
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+export const docsChunks = sqliteTable("docs_chunks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  pageId: integer("page_id")
+    .notNull()
+    .references(() => docsPages.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  chunkType: text("chunk_type", { enum: ["text", "code"] })
+    .notNull()
+    .default("text"),
+  language: text("language"), // Programming language for code chunks
+  embedding: text("embedding"), // JSON array of floats for vector embeddings
+  headingPath: text("heading_path"), // H1 > H2 > H3 hierarchy
+  sectionPosition: integer("section_position"), // Order within the page
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+// Define relations for docs tables
+export const docsSourcesRelations = relations(docsSources, ({ many }) => ({
+  pages: many(docsPages),
+}));
+
+export const docsPagesRelations = relations(docsPages, ({ one, many }) => ({
+  source: one(docsSources, {
+    fields: [docsPages.sourceId],
+    references: [docsSources.id],
+  }),
+  chunks: many(docsChunks),
+}));
+
+export const docsChunksRelations = relations(docsChunks, ({ one }) => ({
+  page: one(docsPages, {
+    fields: [docsChunks.pageId],
+    references: [docsPages.id],
+  }),
+}));

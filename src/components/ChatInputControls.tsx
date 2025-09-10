@@ -29,7 +29,7 @@ export function ChatInputControls({
     setEnhancing(true);
     try {
       const res = await IpcClient.getInstance().enhancePrompt({
-        chatId,
+        chatId: chatId || undefined,
         input: inputValue,
       });
       if (res?.text) {
