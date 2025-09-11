@@ -36,6 +36,7 @@ const providers = [
   "lmstudio",
   "codex",
   "azure",
+  "europeanSwallow",
 ] as const;
 
 export const cloudProviders = providers.filter(

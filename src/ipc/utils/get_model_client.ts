@@ -302,6 +302,21 @@ function getRegularModelClient(
         backupModelClients: [],
       };
     }
+    case "europeanSwallow": {
+      // European Swallow AI uses OpenAI compatible API
+      const provider = createOpenAICompatible({
+        name: "europeanSwallow",
+        baseURL: "https://api.europeanswallowai.com/v1",
+        apiKey,
+      });
+      return {
+        modelClient: {
+          model: provider(model.name),
+          builtinProviderId: providerId,
+        },
+        backupModelClients: [],
+      };
+    }
     // designer provider removed
     default: {
       // Handle custom providers

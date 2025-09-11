@@ -56,6 +56,7 @@ const items = [
     title: "Docs",
     to: "/docs",
     icon: Globe,
+    comingSoon: true,
   },
   {
     title: "Settings",
@@ -385,8 +386,20 @@ function AppIcons({
                     }}
                   >
                     <div className="flex flex-col items-center gap-1">
-                      <item.icon className="h-5 w-5" />
-                      <span className={"text-xs"}>{item.title}</span>
+                      <div className="relative">
+                        <item.icon className="h-5 w-5" />
+                        {item.comingSoon && (
+                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
+                        )}
+                      </div>
+                      <span className={"text-xs"}>
+                        {item.title}
+                        {item.comingSoon && (
+                          <span className="block text-[10px] text-orange-500 font-medium">
+                            Soon
+                          </span>
+                        )}
+                      </span>
                     </div>
                   </Link>
                 </SidebarMenuButton>

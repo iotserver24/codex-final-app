@@ -184,6 +184,18 @@ export const MODEL_OPTIONS: Record<string, ModelOption[]> = {
       dollarSigns: 2,
     },
   ],
+  europeanSwallow: [
+    {
+      name: "european-swallow-ai",
+      displayName: "European Swallow AI",
+      description:
+        "Specialized for coding and software development with OpenAI compatibility",
+      maxOutputTokens: undefined, // Automatically determined by the service
+      contextWindow: 200_000, // Large context for complex coding tasks
+      temperature: 0, // Optimized settings (ignored by service but set for compatibility)
+      dollarSigns: 2, // Competitive pricing for coding tasks
+    },
+  ],
   auto: [
     {
       name: "auto",
@@ -453,6 +465,7 @@ export const PROVIDER_TO_ENV_VAR: Record<string, string> = {
   google: "GEMINI_API_KEY",
   openrouter: "OPENROUTER_API_KEY",
   azure: "AZURE_API_KEY",
+  europeanSwallow: "EUROPEAN_SWALLOW_API_KEY",
 };
 
 export const CLOUD_PROVIDERS: Record<
@@ -513,6 +526,12 @@ export const CLOUD_PROVIDERS: Record<
     websiteUrl: "https://portal.azure.com/",
     gatewayPrefix: "",
     secondary: true,
+  },
+  europeanSwallow: {
+    displayName: "European Swallow AI",
+    hasFreeTier: false,
+    websiteUrl: "https://dashboard.europeanswallowai.com/api-docs",
+    gatewayPrefix: "",
   },
 };
 

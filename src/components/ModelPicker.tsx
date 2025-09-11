@@ -216,11 +216,6 @@ export function ModelPicker() {
                             </span>
                           </span>
                           <div className="flex items-center gap-1.5">
-                            {isSmartAutoEnabled && (
-                              <span className="text-[10px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_100%] animate-[shimmer_5s_ease-in-out_infinite] text-white px-1.5 py-0.5 rounded-full font-medium">
-                                codeX Pro
-                              </span>
-                            )}
                             {model.tag && (
                               <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
                                 {model.tag}
@@ -258,13 +253,6 @@ export function ModelPicker() {
                     <div className="flex flex-col items-start w-full">
                       <div className="flex items-center gap-2">
                         <span>{provider?.name ?? providerId}</span>
-                        {provider?.type === "cloud" &&
-                          !provider?.secondary &&
-                          isCodexProEnabled(settings) && (
-                            <span className="text-[10px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_100%] animate-[shimmer_5s_ease-in-out_infinite] text-white px-1.5 py-0.5 rounded-full font-medium">
-                              Pro
-                            </span>
-                          )}
                         {provider?.type === "custom" && (
                           <span className="text-[10px] bg-amber-500/20 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
                             Custom
