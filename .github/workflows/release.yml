@@ -307,41 +307,21 @@ jobs:
           echo "=== Artifact details ==="
           ls -la artifacts/ || echo "No artifacts"
 
-      - name: Rename artifacts with descriptive names
+      - name: Prepare Windows artifacts (rename to requested format)
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          echo "Renaming artifacts for version $VERSION..."
+          echo "Preparing Windows artifacts for version $VERSION..."
 
           # Create a new directory for renamed artifacts
           mkdir -p renamed-artifacts
-
-          # Linux artifacts - include all formats (zip, deb, rpm)
-          if [ -d "artifacts/linux-builds-x64" ]; then
-            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
-            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
-            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \;
-          fi
-
-          if [ -d "artifacts/linux-builds-arm64" ]; then
-            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \;
-            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \;
-            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
-          fi
-
-          # macOS artifacts - ONLY zip format
-          if [ -d "artifacts/macos-builds-universal" ]; then
-            find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-macOS-Universal.zip" \;
-          fi
-
-          # Windows artifacts - include all formats (exe, zip)
+          
+          # Windows artifacts - only EXE with requested naming
           if [ -d "artifacts/windows-builds-x64" ]; then
-            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-x64-Setup.exe" \;
-            find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-x64-Portable.zip" \;
+            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "renamed-artifacts/codex-${VERSION}-windows-x64.exe" \;
           fi
 
           if [ -d "artifacts/windows-builds-arm64" ]; then
-            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-ARM64-Setup.exe" \;
-            find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-ARM64-Portable.zip" \;
+            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "renamed-artifacts/codex-${VERSION}-windows-arm64.exe" \;
           fi
 
           echo "Renamed artifacts:"
@@ -355,9 +335,6 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            renamed-artifacts/*.zip
-            renamed-artifacts/*.deb
-            renamed-artifacts/*.rpm
             renamed-artifacts/*.exe
           body: |
             ## CodeX v${{ steps.version.outputs.version }}
@@ -431,41 +408,21 @@ jobs:
           path: artifacts
         continue-on-error: true
 
-      - name: Prepare artifacts for target repo
+      - name: Prepare Windows artifacts for target repo
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          echo "Preparing artifacts for target repository version $VERSION..."
+          echo "Preparing Windows artifacts for target repository version $VERSION..."
 
           # Create a new directory for target repo artifacts
           mkdir -p target-repo-artifacts
-
-          # Linux artifacts - include all formats (zip, deb, rpm)
-          if [ -d "artifacts/linux-builds-x64" ]; then
-            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
-            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
-            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \;
-          fi
-
-          if [ -d "artifacts/linux-builds-arm64" ]; then
-            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \;
-            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \;
-            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
-          fi
-
-          # macOS artifacts - ONLY zip format
-          if [ -d "artifacts/macos-builds-universal" ]; then
-            find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-macOS-Universal.zip" \;
-          fi
-
-          # Windows artifacts - include all formats (exe, zip)
+          
+          # Windows artifacts - only EXE with requested naming
           if [ -d "artifacts/windows-builds-x64" ]; then
-            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-x64-Setup.exe" \;
-            find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-x64-Portable.zip" \;
+            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "target-repo-artifacts/codex-${VERSION}-windows-x64.exe" \;
           fi
 
           if [ -d "artifacts/windows-builds-arm64" ]; then
-            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-ARM64-Setup.exe" \;
-            find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/CodeX-${VERSION}-Windows-ARM64-Portable.zip" \;
+            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "target-repo-artifacts/codex-${VERSION}-windows-arm64.exe" \;
           fi
 
           echo "Target repo artifacts:"
@@ -479,9 +436,6 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            target-repo-artifacts/*.zip
-            target-repo-artifacts/*.deb
-            target-repo-artifacts/*.rpm
             target-repo-artifacts/*.exe
           body: |
             ## CodeX v${{ steps.version.outputs.version }}
