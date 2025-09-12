@@ -1186,7 +1186,11 @@ export class IpcClient {
   }
 
   public cancelHelpChat(sessionId: string): void {
-    this.ipcRenderer.invoke("help:chat:cancel", sessionId).catch(() => {});
+    this.ipcRenderer
+      .invoke("help:chat:cancel", sessionId)
+      .catch((error: unknown) => {
+        console.error("Failed to cancel help chat:", error);
+      });
   }
 
   // --- Docs Indexing ---

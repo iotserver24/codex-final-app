@@ -141,11 +141,23 @@ export interface UpdateCheckResult {
     version: string;
     releaseNotes: string;
     downloadUrl: string;
+    downloadPageUrl?: string;
+    readmeUrl?: string;
+    readmeMarkdown?: string;
+    updateNotice?: string;
+    downloadsApiUrl?: string;
+    updateInfo?: string[];
   };
   beta: {
     version: string;
     releaseNotes: string;
     downloadUrl: string;
+    downloadPageUrl?: string;
+    readmeUrl?: string;
+    readmeMarkdown?: string;
+    updateNotice?: string;
+    downloadsApiUrl?: string;
+    updateInfo?: string[];
   };
 }
 

@@ -9,6 +9,7 @@ import { DocsSourceCard } from "./DocsSourceCard";
 import { DocsSearch } from "./DocsSearch";
 import { DocsStats } from "./DocsStats";
 import { AddDocsSourceDialog } from "./AddDocsSourceDialog";
+import { Badge } from "../ui/badge";
 import { toast } from "sonner";
 
 export function DocsManager() {
@@ -42,7 +43,15 @@ export function DocsManager() {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b">
         <div>
-          <h2 className="text-xl font-semibold">Documentation Indexing</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">Documentation Indexing</h2>
+            <Badge
+              variant="secondary"
+              className="text-xs px-2 py-0.5 rounded-full"
+            >
+              Beta
+            </Badge>
+          </div>
           <p className="text-sm text-muted-foreground">
             Index and search documentation from any website
           </p>

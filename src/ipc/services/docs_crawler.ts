@@ -10,6 +10,7 @@ import { db } from "../../db";
 import { docsSources, docsPages, docsChunks } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import log from "electron-log";
+import { BrowserWindow } from "electron";
 
 export interface CrawlOptions {
   maxPages?: number;
@@ -19,6 +20,8 @@ export interface CrawlOptions {
   includePaths?: string[];
   excludePaths?: string[];
   downloadCodeFiles?: boolean;
+  useHeadlessRender?: boolean;
+  allowCrossOrigin?: boolean;
 }
 
 export interface CrawlProgress {
@@ -47,6 +50,7 @@ export class DocsCrawler {
   private visited = new Set<string>();
   private baseUrl: string;
   private origin: string;
+  private allowedOrigins: Set<string>;
   private options: Required<CrawlOptions>;
   private isPaused = false;
   private isStopped = false;
@@ -66,6 +70,7 @@ export class DocsCrawler {
 
     const url = new URL(baseUrl);
     this.origin = url.origin;
+    this.allowedOrigins = new Set([this.origin]);
 
     this.options = {
       maxPages: options.maxPages ?? 1000,
@@ -75,6 +80,8 @@ export class DocsCrawler {
       includePaths: options.includePaths ?? [],
       excludePaths: options.excludePaths ?? [],
       downloadCodeFiles: options.downloadCodeFiles ?? true,
+      useHeadlessRender: options.useHeadlessRender ?? true,
+      allowCrossOrigin: options.allowCrossOrigin ?? false,
     };
 
     this.queue = new PQueue({
@@ -94,6 +101,41 @@ export class DocsCrawler {
     );
   }
 
+  private async renderWithHeadlessBrowser(
+    url: string,
+    timeoutMs: number = 20000,
+  ): Promise<string | null> {
+    try {
+      const win = new BrowserWindow({
+        show: false,
+        webPreferences: {
+          offscreen: true,
+          javascript: true,
+          nodeIntegration: false,
+          contextIsolation: true,
+        },
+      });
+
+      await win.loadURL(url);
+
+      const html: string = (await Promise.race([
+        win.webContents.executeJavaScript("document.documentElement.outerHTML"),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Headless render timeout")),
+            timeoutMs,
+          ),
+        ),
+      ])) as string;
+
+      win.destroy();
+      return typeof html === "string" && html.length > 0 ? html : null;
+    } catch (error) {
+      log.error(`Headless render failed for ${url}:`, error);
+      return null;
+    }
+  }
+
   private sanitizeForPath(str: string): string {
     return str.replace(/[^\w\-_.]/g, "_");
   }
@@ -102,8 +144,8 @@ export class DocsCrawler {
     try {
       const urlObj = new URL(url);
 
-      // Must be same origin
-      if (urlObj.origin !== this.origin) {
+      // Must be same origin unless explicitly allowed
+      if (!this.allowedOrigins.has(urlObj.origin)) {
         log.debug(`Skipping different origin: ${url}`);
         return false;
       }
@@ -255,18 +297,121 @@ export class DocsCrawler {
         });
       }
 
-      const response = await axios.get(url, {
-        timeout: 15000,
-        headers: {
-          "User-Agent": "CodexCrawler/1.0 (Documentation Indexer)",
-          Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-        maxRedirects: 3,
-      });
+      // Attempt primary URL and a set of robust fallbacks (trailing slash, index pages, common docs landing pages)
+      const urlObj = new URL(url);
+      const pathHasExtension = /\.[a-zA-Z0-9]{1,6}$/.test(urlObj.pathname);
+      const candidates: string[] = [url];
+      if (!url.endsWith("/") && !pathHasExtension) {
+        candidates.push(`${url}/`);
+      }
+      const basePath = url.endsWith("/") ? url : `${url}/`;
+      const commonEntrypoints = [
+        "index.html",
+        "index",
+        "getting-started",
+        "guide",
+        "guides",
+        "overview",
+        "features",
+        "docs",
+        "documentation",
+      ];
+      for (const p of commonEntrypoints) {
+        // Only add if we didn't already include exact candidate
+        const candidate = basePath + p;
+        if (!candidates.includes(candidate)) candidates.push(candidate);
+      }
 
-      const html = response.data;
-      const $ = cheerio.load(html);
+      let html: string | null = null;
+      let finalUrl = url;
+      for (const candidate of candidates) {
+        try {
+          const resp = await axios.get(candidate, {
+            timeout: 15000,
+            headers: {
+              "User-Agent": "CodexCrawler/1.0 (Documentation Indexer)",
+              Accept:
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            },
+            maxRedirects: 3,
+          });
+          html = resp.data;
+          finalUrl = candidate;
+          if (candidate !== url) {
+            log.info(`Fetched fallback URL for ${url}: ${candidate}`);
+          }
+          break;
+        } catch (err: any) {
+          // Try next candidate on HTTP errors
+          const status = err?.response?.status;
+          log.info(
+            `Attempt failed (${status ?? "no-status"}) for ${candidate}, trying next`,
+          );
+          // Optional headless fallback per candidate on failure
+          if (this.options.useHeadlessRender) {
+            const rendered = await this.renderWithHeadlessBrowser(candidate);
+            if (rendered && rendered.length > 200) {
+              html = rendered;
+              finalUrl = candidate;
+              log.info(`Headless fallback succeeded for ${candidate}`);
+              break;
+            }
+          }
+        }
+      }
+
+      if (!html) {
+        // Last-chance headless attempt on the original URL
+        if (this.options.useHeadlessRender) {
+          const rendered = await this.renderWithHeadlessBrowser(url);
+          if (rendered && rendered.length > 200) {
+            html = rendered;
+            finalUrl = url;
+          }
+        }
+      }
+
+      if (!html) {
+        log.error(`All attempts failed for ${url}`);
+        return null;
+      }
+
+      const responseUrl = finalUrl;
+      const htmlStr = html;
+      const $ = cheerio.load(htmlStr);
+
+      // Optionally discover alternate origin on first page
+      if (
+        this.options.allowCrossOrigin &&
+        depth === 0 &&
+        this.allowedOrigins.size === 1
+      ) {
+        const originCounts = new Map<string, number>();
+        $("a[href]").each((_, el: any) => {
+          const href = $(el).attr("href");
+          if (!href) return;
+          try {
+            const linkUrl = new URL(href, responseUrl);
+            const origin = linkUrl.origin;
+            if (origin !== this.origin) {
+              originCounts.set(origin, (originCounts.get(origin) || 0) + 1);
+            }
+          } catch {}
+        });
+        // Pick dominant alternate origin if it has significant presence
+        let topOrigin: string | null = null;
+        let topCount = 0;
+        for (const [o, c] of originCounts.entries()) {
+          if (c > topCount) {
+            topOrigin = o;
+            topCount = c;
+          }
+        }
+        if (topOrigin && topCount >= 3) {
+          this.allowedOrigins.add(topOrigin);
+          log.info(`Discovered and allowed alternate origin: ${topOrigin}`);
+        }
+      }
 
       // Extract page content
       const title =
@@ -354,7 +499,7 @@ export class DocsCrawler {
         if (!href) return;
 
         try {
-          const linkUrl = new URL(href, url).toString();
+          const linkUrl = new URL(href, responseUrl).toString();
           if (this.shouldCrawlUrl(linkUrl) && !this.visited.has(linkUrl)) {
             links.push(linkUrl);
           }
@@ -364,7 +509,7 @@ export class DocsCrawler {
       });
 
       // Save raw HTML file
-      const urlPath = new URL(url).pathname;
+      const urlPath = new URL(responseUrl).pathname;
       const safePath = this.sanitizeForPath(urlPath);
       const fileName = safePath.endsWith("/")
         ? "index.html"
@@ -372,7 +517,7 @@ export class DocsCrawler {
       const filePath = path.join(this.docsDir, fileName);
 
       await fs.mkdir(path.dirname(filePath), { recursive: true });
-      await fs.writeFile(filePath, html, "utf8");
+      await fs.writeFile(filePath, htmlStr, "utf8");
 
       // Queue additional links for crawling
       if (
@@ -380,15 +525,14 @@ export class DocsCrawler {
         this.visited.size < this.options.maxPages
       ) {
         for (const link of links.slice(0, 10)) {
-          // Limit links per page
           if (!this.visited.has(link)) {
-            this.queue.add(() => this.processUrl(link, depth + 1));
+            this.enqueueCrawl(link, depth + 1, undefined);
           }
         }
       }
 
       return {
-        url,
+        url: responseUrl,
         title,
         content,
         codeBlocks,
@@ -399,6 +543,29 @@ export class DocsCrawler {
       log.error(`Error crawling ${url}:`, error);
       return null;
     }
+  }
+
+  private enqueueCrawl(
+    url: string,
+    depth: number,
+    results?: PageContent[],
+  ): void {
+    // results is optional for internal calls; we maintain a shared array in crawl()
+    this.queue.add(async () => {
+      const result = await this.processUrl(url, depth);
+      if (result) {
+        if (results) results.push(result);
+        await this.savePageContent(result);
+        await db
+          .update(docsSources)
+          .set({
+            crawledPages: (results ? results.length : undefined) as any,
+            updatedAt: new Date(),
+          })
+          .where(eq(docsSources.id, this.sourceId));
+        log.info(`Processed page: ${result.url}`);
+      }
+    });
   }
 
   private async savePageContent(pageContent: PageContent): Promise<void> {
@@ -552,10 +719,13 @@ export class DocsCrawler {
       );
       log.info(`Processing ${seedUrls.length} seed URLs`);
 
+      // Shared results array used by queued tasks
+      const results: PageContent[] = [];
+
       // Process seed URLs
       for (const url of seedUrls) {
         if (this.shouldCrawlUrl(url)) {
-          this.queue.add(() => this.processUrl(url, 0));
+          this.enqueueCrawl(url, 0, results);
           log.info(`Queued URL for crawling: ${url}`);
         } else {
           log.info(`Skipped URL: ${url}`);
@@ -565,29 +735,8 @@ export class DocsCrawler {
       // If no URLs were queued, add the base URL as fallback
       if (this.queue.size === 0) {
         log.info("No URLs queued, adding base URL as fallback");
-        this.queue.add(() => this.processUrl(this.baseUrl, 0));
+        this.enqueueCrawl(this.baseUrl, 0, results);
       }
-
-      // Process queue and save pages
-      const results: PageContent[] = [];
-
-      this.queue.on("completed", async (result) => {
-        if (result) {
-          results.push(result);
-          await this.savePageContent(result);
-
-          // Update progress
-          await db
-            .update(docsSources)
-            .set({
-              crawledPages: results.length,
-              updatedAt: new Date(),
-            })
-            .where(eq(docsSources.id, this.sourceId));
-
-          log.info(`Processed page ${results.length}: ${result.url}`);
-        }
-      });
 
       this.queue.on("error", (error) => {
         log.error("Queue error:", error);

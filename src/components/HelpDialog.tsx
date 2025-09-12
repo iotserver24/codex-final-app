@@ -19,17 +19,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { IpcClient } from "@/ipc/ipc_client";
+} from "./ui/dialog";
+import { Button } from "./ui/button";
+import { IpcClient } from "../ipc/ipc_client";
 import { useState, useEffect } from "react";
-import { useAtomValue } from "jotai";
-import { selectedChatIdAtom } from "@/atoms/chatAtoms";
-import { ChatLogsData } from "@/ipc/ipc_types";
-import { showError } from "@/lib/toast";
+import { ChatLogsData } from "../ipc/ipc_types";
+import { showError } from "../lib/toast";
 import { HelpBotDialog } from "./HelpBotDialog";
-import { useSettings } from "@/hooks/useSettings";
-import type { UpdateCheckResult } from "@/ipc/ipc_types";
+import { useSettings } from "../hooks/useSettings";
+import type { UpdateCheckResult } from "../ipc/ipc_types";
 
 interface HelpDialogProps {
   isOpen: boolean;
@@ -41,6 +39,11 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
     version: string;
     releaseNotes: string;
     downloadUrl: string;
+    downloadPageUrl?: string;
+    readmeUrl?: string;
+    readmeMarkdown?: string;
+    updateNotice?: string;
+    updateInfoList?: string[];
   }>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const { settings } = useSettings();
@@ -54,7 +57,7 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
   const [sessionId, setSessionId] = useState("");
   const [appVersionState, setAppVersion] = useState<string | null>(null);
   const [isHelpBotOpen, setIsHelpBotOpen] = useState(false);
-  const _selectedChatId = useAtomValue(selectedChatIdAtom);
+  // const _selectedChatId = useAtomValue(selectedChatIdAtom);
 
   const isCodexProUser = settings?.providerSettings?.["auto"]?.apiKey?.value;
 
@@ -260,11 +263,26 @@ Session ID: ${sessionId}
       };
 
       if (isNewer(appVersionState, channelData.version)) {
-        setUpdateInfo({
+        const info = {
           version: channelData.version,
           releaseNotes: channelData.releaseNotes,
           downloadUrl: channelData.downloadUrl,
-        });
+          downloadPageUrl: channelData.downloadPageUrl,
+          readmeUrl: channelData.readmeUrl,
+          readmeMarkdown: channelData.readmeMarkdown,
+          updateNotice: channelData.updateNotice,
+          updateInfoList: channelData.updateInfo,
+        } as const;
+        let readmeMarkdown: string | undefined = info.readmeMarkdown;
+        if (!readmeMarkdown && info.readmeUrl) {
+          try {
+            const res = await fetch(info.readmeUrl);
+            if (res.ok) readmeMarkdown = await res.text();
+          } catch (error) {
+            console.error("Failed to fetch README markdown:", error);
+          }
+        }
+        setUpdateInfo({ ...info, readmeMarkdown });
         setShowUpdateModal(true);
       } else {
         showError("You are using the latest version.");
@@ -527,21 +545,53 @@ Session ID: ${sessionId}
               <div className="mb-2">
                 A new version (<b>{updateInfo?.version}</b>) is available!
               </div>
-              <div className="font-semibold mb-1">Release Notes:</div>
-              {renderReleaseNotes(updateInfo?.releaseNotes)}
+              {updateInfo?.updateInfoList &&
+              updateInfo.updateInfoList.length > 0 ? (
+                <div className="mt-2">
+                  <div className="font-semibold mb-1">What's new</div>
+                  <ul className="list-disc ml-6 text-sm space-y-1">
+                    {updateInfo.updateInfoList.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : updateInfo?.updateNotice ? (
+                <div className="mt-2">
+                  <div className="font-semibold mb-1">Notice</div>
+                  <div className="prose dark:prose-invert max-h-60 overflow-y-auto border rounded p-3">
+                    <pre className="whitespace-pre-wrap text-sm">
+                      {updateInfo.updateNotice}
+                    </pre>
+                  </div>
+                </div>
+              ) : updateInfo?.readmeMarkdown ? (
+                <div className="mt-2">
+                  <div className="font-semibold mb-1">Update Details</div>
+                  <div className="prose dark:prose-invert max-h-60 overflow-y-auto border rounded p-3">
+                    <pre className="whitespace-pre-wrap text-sm">
+                      {updateInfo.readmeMarkdown}
+                    </pre>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="font-semibold mb-1">Release Notes:</div>
+                  {renderReleaseNotes(updateInfo?.releaseNotes)}
+                </>
+              )}
             </DialogDescription>
             <DialogFooter>
               <Button
                 variant="default"
                 onClick={() => {
-                  if (updateInfo?.downloadUrl) {
-                    IpcClient.getInstance().openExternalUrl(
-                      updateInfo.downloadUrl,
-                    );
+                  const url =
+                    updateInfo?.downloadPageUrl || updateInfo?.downloadUrl;
+                  if (url) {
+                    IpcClient.getInstance().openExternalUrl(url);
                   }
                 }}
               >
-                Download Update
+                Open Download Page
               </Button>
               <Button
                 variant="outline"

@@ -1265,7 +1265,7 @@ export function registerAppHandlers() {
 
   ipcMain.handle("check-for-updates", async (): Promise<UpdateCheckResult> => {
     try {
-      const res = await fetch("https://codex.anishkumar.tech/version.json");
+      const res = await fetch("http://codex.anishkumar.tech/version.json");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 

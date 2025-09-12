@@ -1,7 +1,7 @@
 {
   "name": "codex",
   "productName": "codex",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "Codex - AI-powered code editor and application builder",
   "main": ".vite/build/main.js",
   "repository": {

@@ -56,7 +56,6 @@ const items = [
     title: "Docs",
     to: "/docs",
     icon: Globe,
-    comingSoon: true,
   },
   {
     title: "Settings",
@@ -94,6 +93,13 @@ export function AppSidebar() {
     version: string;
     releaseNotes: string;
     downloadUrl: string;
+    downloadPageUrl?: string;
+    readmeUrl?: string;
+    readmeMarkdown?: string;
+    updateNotice?: string;
+    downloadsApiUrl?: string;
+    platformButtons?: { label: string; url: string }[];
+    updateInfoList?: string[];
   }>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [appVersion, setAppVersion] = useState<string | null>(null);
@@ -125,11 +131,60 @@ export function AppSidebar() {
         };
 
         if (isNewer(appVersion, channelData.version)) {
-          setUpdateInfo({
+          const info = {
             version: channelData.version,
             releaseNotes: channelData.releaseNotes,
             downloadUrl: channelData.downloadUrl,
-          });
+            downloadPageUrl: channelData.downloadPageUrl,
+            readmeUrl: channelData.readmeUrl,
+            readmeMarkdown: channelData.readmeMarkdown,
+            updateNotice: channelData.updateNotice,
+            downloadsApiUrl: channelData.downloadsApiUrl,
+            updateInfoList: channelData.updateInfo,
+          } as const;
+          // Attempt to fetch README markdown if provided
+          let readmeMarkdown: string | undefined = info.readmeMarkdown;
+          let platformButtons: { label: string; url: string }[] | undefined;
+          if (!readmeMarkdown && info.readmeUrl) {
+            try {
+              const res = await fetch(info.readmeUrl);
+              if (res.ok) {
+                readmeMarkdown = await res.text();
+              }
+            } catch {}
+          }
+          if (info.downloadsApiUrl) {
+            try {
+              const res = await fetch(info.downloadsApiUrl);
+              if (res.ok) {
+                const json = await res.json();
+                const latest = json.latest || json; // support either at root or nested
+                const os = await IpcClient.getInstance().getSystemPlatform?.();
+                const collect = (arr?: any[]) =>
+                  Array.isArray(arr)
+                    ? arr.map((d) => ({ label: d.name, url: d.url }))
+                    : [];
+                platformButtons = [
+                  ...collect(latest?.downloads?.windows),
+                  ...collect(latest?.downloads?.macos),
+                  ...collect(latest?.downloads?.linux),
+                ];
+                // Move detected OS buttons to front
+                if (os) {
+                  const startsWithOs = (label: string) =>
+                    (os === "win32" &&
+                      label.toLowerCase().startsWith("windows")) ||
+                    (os === "darwin" &&
+                      label.toLowerCase().startsWith("mac")) ||
+                    (os === "linux" && label.toLowerCase().startsWith("linux"));
+                  platformButtons.sort((a, b) =>
+                    startsWithOs(a.label) ? -1 : startsWithOs(b.label) ? 1 : 0,
+                  );
+                }
+              }
+            } catch {}
+          }
+          setUpdateInfo({ ...info, readmeMarkdown, platformButtons });
           setShowUpdateModal(true);
         }
       } catch {
@@ -207,11 +262,21 @@ export function AppSidebar() {
       };
 
       if (isNewer(appVersion, channelData.version)) {
-        setUpdateInfo({
+        const info = {
           version: channelData.version,
           releaseNotes: channelData.releaseNotes,
           downloadUrl: channelData.downloadUrl,
-        });
+          downloadPageUrl: channelData.downloadPageUrl,
+          readmeUrl: channelData.readmeUrl,
+        } as const;
+        let readmeMarkdown: string | undefined;
+        if (info.readmeUrl) {
+          try {
+            const res = await fetch(info.readmeUrl);
+            if (res.ok) readmeMarkdown = await res.text();
+          } catch {}
+        }
+        setUpdateInfo({ ...info, readmeMarkdown });
         setShowUpdateModal(true);
       } else {
         toast.success?.("You are using the latest version.") ||
@@ -310,27 +375,78 @@ export function AppSidebar() {
             <div className="mb-2">
               A new version (<b>{updateInfo?.version}</b>) is available!
             </div>
-            <div className="font-semibold mb-1">Release Notes:</div>
-            {renderReleaseNotes(updateInfo?.releaseNotes)}
-            <div className="flex gap-2 mt-4">
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                onClick={() => {
-                  if (updateInfo?.downloadUrl) {
-                    IpcClient.getInstance().openExternalUrl(
-                      updateInfo.downloadUrl,
-                    );
-                  }
-                }}
-              >
-                Download Update
-              </button>
-              <button
-                className="px-4 py-2 border rounded hover:bg-muted"
-                onClick={() => setShowUpdateModal(false)}
-              >
-                Remind Me Later
-              </button>
+            {updateInfo?.updateInfoList &&
+            updateInfo.updateInfoList.length > 0 ? (
+              <div className="mt-2">
+                <div className="font-semibold mb-1">What's new</div>
+                <ul className="list-disc ml-6 text-sm space-y-1">
+                  {updateInfo.updateInfoList.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : updateInfo?.updateNotice ? (
+              <div className="mt-2">
+                <div className="font-semibold mb-1">Notice</div>
+                <div className="prose dark:prose-invert max-h-60 overflow-y-auto border rounded p-3">
+                  <pre className="whitespace-pre-wrap text-sm">
+                    {updateInfo.updateNotice}
+                  </pre>
+                </div>
+              </div>
+            ) : updateInfo?.readmeMarkdown ? (
+              <div className="mt-2">
+                <div className="font-semibold mb-1">Update Details</div>
+                <div className="prose dark:prose-invert max-h-60 overflow-y-auto border rounded p-3">
+                  {/* We don’t have a markdown renderer in this component; show plain text fallback */}
+                  <pre className="whitespace-pre-wrap text-sm">
+                    {updateInfo.readmeMarkdown}
+                  </pre>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="font-semibold mb-1">Release Notes:</div>
+                {renderReleaseNotes(updateInfo?.releaseNotes)}
+              </>
+            )}
+            <div className="flex flex-col gap-3 mt-4">
+              {updateInfo?.platformButtons &&
+                updateInfo.platformButtons.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {updateInfo.platformButtons.slice(0, 6).map((btn, idx) => (
+                      <button
+                        key={idx}
+                        className="px-3 py-2 border rounded hover:bg-muted"
+                        onClick={() =>
+                          IpcClient.getInstance().openExternalUrl(btn.url)
+                        }
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              <div className="flex gap-2">
+                <button
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  onClick={() => {
+                    const url =
+                      updateInfo?.downloadPageUrl || updateInfo?.downloadUrl;
+                    if (url) {
+                      IpcClient.getInstance().openExternalUrl(url);
+                    }
+                  }}
+                >
+                  Open Download Page
+                </button>
+                <button
+                  className="px-4 py-2 border rounded hover:bg-muted"
+                  onClick={() => setShowUpdateModal(false)}
+                >
+                  Remind Me Later
+                </button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -386,17 +502,12 @@ function AppIcons({
                     }}
                   >
                     <div className="flex flex-col items-center gap-1">
-                      <div className="relative">
-                        <item.icon className="h-5 w-5" />
-                        {item.comingSoon && (
-                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
-                        )}
-                      </div>
-                      <span className={"text-xs"}>
+                      <item.icon className="h-5 w-5" />
+                      <span className={"text-sm flex items-center gap-1"}>
                         {item.title}
-                        {item.comingSoon && (
-                          <span className="block text-[10px] text-orange-500 font-medium">
-                            Soon
+                        {item.title === "Docs" && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted-foreground/15 text-muted-foreground">
+                            Beta
                           </span>
                         )}
                       </span>

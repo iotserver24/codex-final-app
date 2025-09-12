@@ -16,8 +16,8 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
 
   constructor(
     apiKey: string,
-    apiUrl: string = "https://api.openai.com/v1",
-    model: string = "text-embedding-3-small",
+    apiUrl = "https://api.openai.com/v1",
+    model = "text-embedding-3-small",
   ) {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl;
@@ -45,7 +45,7 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
       }
 
       const data = await response.json();
-      return data.data.map((item: any) => item.embedding);
+      return data.data.map((item: { embedding: number[] }) => item.embedding);
     } catch (error) {
       log.error("Error generating embeddings:", error);
       throw error;
@@ -60,19 +60,32 @@ export class PollinationsEmbeddingProvider implements EmbeddingProvider {
       const embeddings: number[][] = [];
 
       for (const text of texts) {
-        const response = await fetch(
-          "https://text.pollinations.ai/embeddings",
-          {
+        // First try with an explicit model
+        let response = await fetch("https://text.pollinations.ai/embeddings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            input: text,
+            model: "text-embedding-3-small",
+          }),
+        });
+
+        // If that fails (e.g., 404 or model not supported), try without model
+        if (!response.ok) {
+          const status = response.status;
+          log.warn(
+            `Pollinations with model failed (${status}). Retrying without model...`,
+          );
+          response = await fetch("https://text.pollinations.ai/embeddings", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              input: text,
-              model: "text-embedding-3-small",
-            }),
-          },
-        );
+            body: JSON.stringify({ input: text }),
+          });
+        }
 
         if (!response.ok) {
           throw new Error(
@@ -218,7 +231,7 @@ export class DocsEmbeddingService {
   async searchSimilarChunks(
     query: string,
     sourceId?: number,
-    limit: number = 10,
+    limit = 10,
   ): Promise<
     Array<{
       id: number;
@@ -231,46 +244,24 @@ export class DocsEmbeddingService {
     }>
   > {
     try {
-      // Generate embedding for query
+      // Try vector search
       const [queryEmbedding] = await this.provider.generateEmbeddings([query]);
 
-      // Get all chunks with embeddings
-      let chunksQuery = db.query.docsChunks.findMany({
-        where: (chunks, { isNotNull, and }) => {
-          const conditions = [isNotNull(chunks.embedding)];
-          if (sourceId) {
-            // We need to join with pages to filter by sourceId
-            // For now, we'll get all chunks and filter in memory
-          }
-          return and(...conditions);
-        },
-        with: {
-          page: {
-            columns: {
-              url: true,
-              title: true,
-              sourceId: true,
-            },
-          },
-        },
+      const chunks = await db.query.docsChunks.findMany({
+        where: (chunks, { isNotNull, and }) => and(isNotNull(chunks.embedding)),
+        with: { page: { columns: { url: true, title: true, sourceId: true } } },
       });
 
-      const chunks = await chunksQuery;
-
-      // Filter by sourceId if provided
       const filteredChunks = sourceId
         ? chunks.filter((chunk) => chunk.page.sourceId === sourceId)
         : chunks;
 
-      // Calculate similarities
       const results = filteredChunks
         .map((chunk) => {
           if (!chunk.embedding) return null;
-
           try {
             const embedding = JSON.parse(chunk.embedding);
             const similarity = this.cosineSimilarity(queryEmbedding, embedding);
-
             return {
               id: chunk.id,
               content: chunk.content,
@@ -284,16 +275,58 @@ export class DocsEmbeddingService {
             return null;
           }
         })
-        .filter(
-          (result): result is NonNullable<typeof result> => result !== null,
-        )
+        .filter((r): r is NonNullable<typeof r> => r !== null)
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, limit);
 
       return results;
     } catch (error) {
-      log.error("Error searching similar chunks:", error);
-      throw error;
+      // Fallback: keyword search when embedding provider fails (e.g., 404)
+      log.warn(
+        "Embedding provider failed; falling back to keyword search:",
+        error,
+      );
+
+      const chunks = await db.query.docsChunks.findMany({
+        with: { page: { columns: { url: true, title: true, sourceId: true } } },
+      });
+
+      const filtered = sourceId
+        ? chunks.filter((c) => c.page.sourceId === sourceId)
+        : chunks;
+
+      const q = query.toLowerCase();
+      const terms = q.split(/\s+/).filter(Boolean);
+
+      const scored = filtered
+        .map((c) => {
+          const text = c.content.toLowerCase();
+          let score = 0;
+          for (const t of terms) {
+            if (!t) continue;
+            // simple term frequency weight
+            const matches = text.split(t).length - 1;
+            score += matches;
+          }
+          // boost title match
+          const title = (c.page.title || "").toLowerCase();
+          for (const t of terms) if (title.includes(t)) score += 2;
+          if (score <= 0) return null;
+          return {
+            id: c.id,
+            content: c.content,
+            similarity: Math.min(1, score / 10),
+            url: c.page.url,
+            title: c.page.title || "Untitled",
+            chunkType: c.chunkType,
+            language: c.language || undefined,
+          };
+        })
+        .filter((r): r is NonNullable<typeof r> => r !== null)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, limit);
+
+      return scored;
     }
   }
 
