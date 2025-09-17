@@ -1,21 +1,30 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI as createGoogle } from "@ai-sdk/google";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createXai } from "@ai-sdk/xai";
+import { createVertex as createGoogleVertex } from "@ai-sdk/google-vertex";
 import { azure } from "@ai-sdk/azure";
+import { LanguageModelV2 } from "@ai-sdk/provider";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import type { LargeLanguageModel, UserSettings } from "../../lib/schemas";
+import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
+import type {
+  LargeLanguageModel,
+  UserSettings,
+  VertexProviderSetting,
+} from "../../lib/schemas";
 import { getEnvVar } from "./read_env";
 import log from "electron-log";
+import { FREE_OPENROUTER_MODEL_NAMES } from "../shared/language_model_constants";
 import { getLanguageModelProviders } from "../shared/language_model_helpers";
 import { LanguageModelProvider } from "../ipc_types";
 
 import { FetchFunction } from "@ai-sdk/provider-utils";
 
 import { LM_STUDIO_BASE_URL } from "./lm_studio_utils";
-import { LanguageModel } from "ai";
 import { createOllamaProvider } from "./ollama_provider";
 import { getOllamaApiUrl } from "../handlers/local_model_ollama_handler";
+import { createFallback } from "./fallback_ai_model";
 
 const _codexEngineUrl = process.env.CODEX_ENGINE_URL;
 const _codexGatewayUrl = process.env.CODEX_GATEWAY_URL;
@@ -24,6 +33,10 @@ const AUTO_MODELS = [
   {
     provider: "google",
     name: "gemini-2.5-flash",
+  },
+  {
+    provider: "openrouter",
+    name: "qwen/qwen3-coder:free",
   },
   {
     provider: "anthropic",
@@ -36,7 +49,7 @@ const AUTO_MODELS = [
 ];
 
 export interface ModelClient {
-  model: LanguageModel;
+  model: LanguageModelV2;
   builtinProviderId?: string;
 }
 
@@ -90,6 +103,30 @@ export async function getModelClient(
   }
   // Handle 'auto' provider by trying each model in AUTO_MODELS until one works
   if (model.provider === "auto") {
+    if (model.name === "free") {
+      const openRouterProvider = allProviders.find(
+        (p) => p.id === "openrouter",
+      );
+      if (!openRouterProvider) {
+        throw new Error("OpenRouter provider not found");
+      }
+      return {
+        modelClient: {
+          model: createFallback({
+            models: FREE_OPENROUTER_MODEL_NAMES.map(
+              (name: string) =>
+                getRegularModelClient(
+                  { provider: "openrouter", name },
+                  settings,
+                  openRouterProvider,
+                ).modelClient.model,
+            ),
+          }),
+          builtinProviderId: "openrouter",
+        },
+        isEngineEnabled: false,
+      };
+    }
     for (const autoModel of AUTO_MODELS) {
       const providerInfo = allProviders.find(
         (p) => p.id === autoModel.provider,
@@ -170,11 +207,60 @@ function getRegularModelClient(
         backupModelClients: [],
       };
     }
+    case "xai": {
+      const provider = createXai({ apiKey });
+      return {
+        modelClient: {
+          model: provider(model.name),
+          builtinProviderId: providerId,
+        },
+        backupModelClients: [],
+      };
+    }
     case "google": {
       const provider = createGoogle({ apiKey });
       return {
         modelClient: {
           model: provider(model.name),
+          builtinProviderId: providerId,
+        },
+        backupModelClients: [],
+      };
+    }
+    case "vertex": {
+      // Vertex uses Google service account credentials with project/location
+      const vertexSettings = settings.providerSettings?.[
+        model.provider
+      ] as VertexProviderSetting;
+      const project = vertexSettings?.projectId;
+      const location = vertexSettings?.location;
+      const serviceAccountKey = vertexSettings?.serviceAccountKey?.value;
+
+      // Use a baseURL that does NOT pin to publishers/google so that
+      // full publisher model IDs (e.g. publishers/deepseek-ai/models/...) work.
+      const regionHost = `${location === "global" ? "" : `${location}-`}aiplatform.googleapis.com`;
+      const baseURL = `https://${regionHost}/v1/projects/${project}/locations/${location}`;
+      const provider = createGoogleVertex({
+        project,
+        location,
+        baseURL,
+        googleAuthOptions: serviceAccountKey
+          ? {
+              // Expecting the user to paste the full JSON of the service account key
+              credentials: JSON.parse(serviceAccountKey),
+            }
+          : undefined,
+      });
+      return {
+        modelClient: {
+          // For built-in Google models on Vertex, the path must include
+          // publishers/google/models/<model>. For partner MaaS models the
+          // full publisher path is already included.
+          model: provider(
+            model.name.includes("/")
+              ? model.name
+              : `publishers/google/models/${model.name}`,
+          ),
           builtinProviderId: providerId,
         },
         backupModelClients: [],
@@ -302,12 +388,12 @@ function getRegularModelClient(
         backupModelClients: [],
       };
     }
-    case "europeanSwallow": {
-      // European Swallow AI uses OpenAI compatible API
-      const provider = createOpenAICompatible({
-        name: "europeanSwallow",
-        baseURL: "https://api.europeanswallowai.com/v1",
-        apiKey,
+    case "bedrock": {
+      // AWS Bedrock supports API key authentication using AWS_BEARER_TOKEN_BEDROCK
+      // See: https://sdk.vercel.ai/providers/ai-sdk-providers/amazon-bedrock#api-key-authentication
+      const provider = createAmazonBedrock({
+        apiKey: apiKey,
+        region: getEnvVar("AWS_REGION") || "us-east-1",
       });
       return {
         modelClient: {
@@ -317,7 +403,6 @@ function getRegularModelClient(
         backupModelClients: [],
       };
     }
-    // designer provider removed
     default: {
       // Handle custom providers
       if (providerConfig.type === "custom") {

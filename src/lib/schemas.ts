@@ -26,10 +26,29 @@ export type ChatSummary = z.infer<typeof ChatSummarySchema>;
  */
 export const ChatSummariesSchema = z.array(ChatSummarySchema);
 
+/**
+ * Zod schema for chat search result objects returned by the search-chats IPC
+ */
+export const ChatSearchResultSchema = z.object({
+  id: z.number(),
+  appId: z.number(),
+  title: z.string().nullable(),
+  createdAt: z.date(),
+  matchedMessageContent: z.string().nullable(),
+});
+
+/**
+ * Type derived from the ChatSearchResultSchema
+ */
+export type ChatSearchResult = z.infer<typeof ChatSearchResultSchema>;
+
+export const ChatSearchResultsSchema = z.array(ChatSearchResultSchema);
+
 const providers = [
   "openai",
   "anthropic",
   "google",
+  "vertex",
   "auto",
   "openrouter",
   "ollama",
@@ -37,6 +56,8 @@ const providers = [
   "codex",
   "azure",
   "europeanSwallow",
+  "xai",
+  "bedrock",
 ] as const;
 
 export const cloudProviders = providers.filter(
@@ -59,15 +80,35 @@ export type LargeLanguageModel = z.infer<typeof LargeLanguageModelSchema>;
 
 /**
  * Zod schema for provider settings
+ * Regular providers use only apiKey. Vertex has additional optional fields.
  */
-export const ProviderSettingSchema = z.object({
+export const RegularProviderSettingSchema = z.object({
   apiKey: SecretSchema.optional(),
 });
+
+export const VertexProviderSettingSchema = z.object({
+  // We make this undefined so that it makes existing callsites easier.
+  apiKey: z.undefined(),
+  projectId: z.string().optional(),
+  location: z.string().optional(),
+  serviceAccountKey: SecretSchema.optional(),
+});
+
+export const ProviderSettingSchema = z.union([
+  // Must use more specific type first!
+  // Zod uses the first type that matches.
+  VertexProviderSettingSchema,
+  RegularProviderSettingSchema,
+]);
 
 /**
  * Type derived from the ProviderSettingSchema
  */
 export type ProviderSetting = z.infer<typeof ProviderSettingSchema>;
+export type RegularProviderSetting = z.infer<
+  typeof RegularProviderSettingSchema
+>;
+export type VertexProviderSetting = z.infer<typeof VertexProviderSettingSchema>;
 
 export const RuntimeModeSchema = z.enum(["web-sandbox", "local-node", "unset"]);
 export type RuntimeMode = z.infer<typeof RuntimeModeSchema>;

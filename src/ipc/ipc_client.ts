@@ -4,6 +4,7 @@ import {
   ChatSummariesSchema,
   type UserSettings,
   type ContextPathResults,
+  ChatSearchResultsSchema,
 } from "../lib/schemas";
 import type {
   AppOutput,
@@ -72,8 +73,12 @@ import type {
   ReindexDocsParams,
 } from "./ipc_types";
 import type { Template } from "../shared/templates";
-import type { AppChatContext, ProposalResult } from "@/lib/schemas";
-import { showError } from "../lib/toast";
+import type {
+  AppChatContext,
+  ChatSearchResult,
+  ProposalResult,
+} from "@/lib/schemas";
+import { showError } from "@/lib/toast";
 
 export interface ChatStreamCallbacks {
   onUpdate: (messages: Message[]) => void;
@@ -291,6 +296,20 @@ export class IpcClient {
     try {
       const data = await this.ipcRenderer.invoke("get-chats", appId);
       return ChatSummariesSchema.parse(data);
+    } catch (error) {
+      showError(error);
+      throw error;
+    }
+  }
+
+  // search for chats
+  public async searchChats(
+    appId: number,
+    query: string,
+  ): Promise<ChatSearchResult[]> {
+    try {
+      const data = await this.ipcRenderer.invoke("search-chats", appId, query);
+      return ChatSearchResultsSchema.parse(data);
     } catch (error) {
       showError(error);
       throw error;

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { IpcClient } from "@/ipc/ipc_client";
 import type { LanguageModelProvider } from "@/ipc/ipc_types";
 import { useSettings } from "./useSettings";
-import { cloudProviders } from "@/lib/schemas";
+import { cloudProviders, VertexProviderSetting } from "@/lib/schemas";
 
 export function useLanguageModelProviders() {
   const ipcClient = IpcClient.getInstance();
@@ -23,6 +23,18 @@ export function useLanguageModelProviders() {
     // codeX provider is always ready since it uses a hardcoded token
     if (provider === "codex") {
       return true;
+    }
+    // Vertex uses service account credentials instead of an API key
+    if (provider === "vertex") {
+      const vertexSettings = providerSettings as VertexProviderSetting;
+      if (
+        vertexSettings?.serviceAccountKey?.value &&
+        vertexSettings?.projectId &&
+        vertexSettings?.location
+      ) {
+        return true;
+      }
+      return false;
     }
     if (providerSettings?.apiKey?.value) {
       return true;

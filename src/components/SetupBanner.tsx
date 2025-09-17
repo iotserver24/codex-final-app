@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { providerSettingsRoute } from "@/routes/settings/providers/$provider";
 import { settingsRoute } from "@/routes/settings";
+import SetupProviderCard from "@/components/SetupProviderCard";
 
 import { useState, useEffect, useCallback } from "react";
 import { IpcClient } from "@/ipc/ipc_client";
@@ -57,11 +58,19 @@ export function SetupBanner() {
     checkNode();
   }, [checkNode]);
 
-  const handleAiSetupClick = () => {
+  const handleGoogleSetupClick = () => {
     // Telemetry tracking disabled
     navigate({
       to: providerSettingsRoute.id,
       params: { provider: "google" },
+    });
+  };
+
+  const handleOpenRouterSetupClick = () => {
+    // Telemetry tracking disabled
+    navigate({
+      to: providerSettingsRoute.id,
+      params: { provider: "openrouter" },
     });
   };
 
@@ -124,7 +133,7 @@ export function SetupBanner() {
   return (
     <>
       <p className="text-xl text-zinc-700 dark:text-zinc-300 p-4">
-        Follow these steps and you'll be ready to start building with Dyad...
+        Setup Codex
       </p>
       <div className={bannerClasses}>
         <Accordion
@@ -225,30 +234,38 @@ export function SetupBanner() {
               <p className="text-sm mb-3">
                 Connect your preferred AI provider to start generating code.
               </p>
-              <div
-                className="p-3 bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 rounded-lg cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/70 transition-colors"
-                onClick={handleAiSetupClick}
-                role="button"
+              <SetupProviderCard
+                variant="google"
+                onClick={handleGoogleSetupClick}
                 tabIndex={isNodeSetupComplete ? 0 : -1}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-blue-100 dark:bg-blue-800 p-1.5 rounded-full">
-                      <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-sm text-blue-800 dark:text-blue-300">
-                        Setup Google Gemini API Key
-                      </h4>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                        <GiftIcon className="w-3 h-3" />
-                        Use Google Gemini for free
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
+                leadingIcon={
+                  <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                }
+                title="Setup Google Gemini API Key"
+                subtitle={
+                  <>
+                    <GiftIcon className="w-3 h-3" />
+                    Use Google Gemini for free
+                  </>
+                }
+              />
+
+              <SetupProviderCard
+                className="mt-2"
+                variant="openrouter"
+                onClick={handleOpenRouterSetupClick}
+                tabIndex={isNodeSetupComplete ? 0 : -1}
+                leadingIcon={
+                  <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                }
+                title="Setup OpenRouter API Key"
+                subtitle={
+                  <>
+                    <GiftIcon className="w-3 h-3" />
+                    Free models available
+                  </>
+                }
+              />
 
               <div
                 className="mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors"
@@ -289,7 +306,7 @@ function NodeJsHelpCallout() {
         <a
           onClick={() => {
             IpcClient.getInstance().openExternalUrl(
-              "https://www.dyad.sh/docs/help/nodejs",
+              "https://codex.anishkumar.tech/docs/help/nodejs",
             );
           }}
           className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
@@ -342,10 +359,42 @@ function NodeInstallButton({
     case "finished-checking":
       return (
         <div className="mt-3 text-sm text-red-600 dark:text-red-400">
-          Node.js not detected. Closing and re-opening Dyad usually fixes this.
+          Node.js not detected. Closing and re-opening Codex usually fixes this.
         </div>
       );
     default:
       const _exhaustiveCheck: never = nodeInstallStep;
   }
 }
+
+export const OpenRouterSetupBanner = ({
+  className,
+}: {
+  className?: string;
+}) => {
+  const navigate = useNavigate();
+  return (
+    <SetupProviderCard
+      className={cn("mt-2", className)}
+      variant="openrouter"
+      onClick={() => {
+        // Telemetry tracking disabled
+        navigate({
+          to: providerSettingsRoute.id,
+          params: { provider: "openrouter" },
+        });
+      }}
+      tabIndex={0}
+      leadingIcon={
+        <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+      }
+      title="Setup OpenRouter API Key"
+      subtitle={
+        <>
+          <GiftIcon className="w-3 h-3" />
+          Free models available
+        </>
+      }
+    />
+  );
+};

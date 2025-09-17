@@ -75,6 +75,14 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
       ? !!(envVars["AZURE_API_KEY"] && envVars["AZURE_RESOURCE_NAME"])
       : false;
 
+  // Special handling for Vertex configuration status
+  const vertexSettings = settings?.providerSettings?.vertex as any;
+  const isVertexConfigured = Boolean(
+    vertexSettings?.projectId &&
+      vertexSettings?.location &&
+      vertexSettings?.serviceAccountKey?.value,
+  );
+
   // codeX is always configured since it uses hardcoded token
   // CodeX Auto is always configured since it doesn't need API keys
   const isConfigured =
@@ -82,7 +90,9 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
       ? true
       : provider === "azure"
         ? isAzureConfigured
-        : isValidUserKey || hasEnvKey;
+        : provider === "vertex"
+          ? isVertexConfigured
+          : isValidUserKey || hasEnvKey; // Configured if either is set
 
   // --- Save Handler ---
   const handleSaveKey = async () => {

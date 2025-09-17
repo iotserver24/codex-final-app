@@ -24,6 +24,8 @@ import { useLanguageModelsByProviders } from "@/hooks/useLanguageModelsByProvide
 import { LocalModel } from "@/ipc/ipc_types";
 import { useLanguageModelProviders } from "@/hooks/useLanguageModelProviders";
 import { useSettings } from "@/hooks/useSettings";
+import { PriceBadge } from "@/components/PriceBadge";
+import { TURBO_MODELS } from "@/ipc/shared/language_model_constants";
 
 export function ModelPicker() {
   const { settings, updateSettings } = useSettings();
@@ -106,7 +108,23 @@ export function ModelPicker() {
   // Get auto provider models (if any)
   const autoModels =
     !loading && modelsByProviders && modelsByProviders["auto"]
-      ? modelsByProviders["auto"]
+      ? modelsByProviders["auto"].filter((model) => {
+          if (
+            settings &&
+            !isCodexProEnabled(settings) &&
+            model.apiName === "turbo"
+          ) {
+            return false;
+          }
+          if (
+            settings &&
+            isCodexProEnabled(settings) &&
+            model.apiName === "free"
+          ) {
+            return false;
+          }
+          return true;
+        })
       : [];
 
   // Determine availability of local models
@@ -134,6 +152,9 @@ export function ModelPicker() {
     const provider = providers?.find((p) => p.id === providerId);
     return !(provider && provider.secondary);
   });
+  if (settings && isCodexProEnabled(settings)) {
+    primaryProviders.unshift(["auto", TURBO_MODELS]);
+  }
   const secondaryProviders = providerEntries.filter(([providerId, models]) => {
     if (models.length === 0) return false;
     const provider = providers?.find((p) => p.id === providerId);
@@ -210,12 +231,17 @@ export function ModelPicker() {
                         <div className="flex justify-between items-start w-full">
                           <span className="flex flex-col items-start">
                             <span>
-                              {isSmartAutoEnabled
+                              {isSmartAutoEnabled && model.apiName === "auto"
                                 ? "Smart Auto"
                                 : model.displayName}
                             </span>
                           </span>
                           <div className="flex items-center gap-1.5">
+                            {isSmartAutoEnabled && (
+                              <span className="text-[10px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_100%] animate-[shimmer_5s_ease-in-out_infinite] text-white px-1.5 py-0.5 rounded-full font-medium">
+                                Pro only
+                              </span>
+                            )}
                             {model.tag && (
                               <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
                                 {model.tag}
@@ -226,7 +252,7 @@ export function ModelPicker() {
                       </DropdownMenuItem>
                     </TooltipTrigger>
                     <TooltipContent side="right">
-                      {isSmartAutoEnabled ? (
+                      {isSmartAutoEnabled && model.apiName === "auto" ? (
                         <p>
                           <strong>Smart Auto</strong> uses a cheaper model for
                           easier tasks
@@ -246,13 +272,36 @@ export function ModelPicker() {
 
             {/* Primary providers as submenus */}
             {primaryProviders.map(([providerId, models]) => {
+              models = models.filter((model) => {
+                // Don't show free models if Codex Pro is enabled because
+                // we will use the paid models (in Codex Pro backend) which
+                // don't have the free limitations.
+                if (
+                  isCodexProEnabled(settings) &&
+                  model.apiName.endsWith(":free")
+                ) {
+                  return false;
+                }
+                return true;
+              });
               const provider = providers?.find((p) => p.id === providerId);
+              const providerDisplayName =
+                provider?.id === "auto"
+                  ? "Codex Turbo"
+                  : (provider?.name ?? providerId);
               return (
                 <DropdownMenuSub key={providerId}>
                   <DropdownMenuSubTrigger className="w-full font-normal">
                     <div className="flex flex-col items-start w-full">
                       <div className="flex items-center gap-2">
-                        <span>{provider?.name ?? providerId}</span>
+                        <span>{providerDisplayName}</span>
+                        {provider?.type === "cloud" &&
+                          !provider?.secondary &&
+                          isCodexProEnabled(settings) && (
+                            <span className="text-[10px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_100%] animate-[shimmer_5s_ease-in-out_infinite] text-white px-1.5 py-0.5 rounded-full font-medium">
+                              Pro
+                            </span>
+                          )}
                         {provider?.type === "custom" && (
                           <span className="text-[10px] bg-amber-500/20 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
                             Custom
@@ -266,7 +315,7 @@ export function ModelPicker() {
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-56">
                     <DropdownMenuLabel>
-                      {(provider?.name ?? providerId) + " Models"}
+                      {providerDisplayName + " Models"}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {models.map((model) => (
@@ -292,11 +341,7 @@ export function ModelPicker() {
                           >
                             <div className="flex justify-between items-start w-full">
                               <span>{model.displayName}</span>
-                              {model.dollarSigns && (
-                                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
-                                  {"$".repeat(model.dollarSigns)}
-                                </span>
-                              )}
+                              <PriceBadge dollarSigns={model.dollarSigns} />
                               {model.tag && (
                                 <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
                                   {model.tag}
