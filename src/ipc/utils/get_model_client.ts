@@ -65,42 +65,6 @@ export async function getModelClient(
 
   const _codexApiKey = settings.providerSettings?.auto?.apiKey?.value;
 
-  // --- Handle specific provider ---
-  const providerConfig = allProviders.find((p) => p.id === model.provider);
-
-  if (!providerConfig) {
-    throw new Error(`Configuration not found for provider: ${model.provider}`);
-  }
-
-  // Handle codeX Pro override - now client-side only
-  if (settings.enableCodexPro) {
-    // CodeX Pro is now client-side and works with any provider
-    const isEngineEnabled =
-      settings.enableProSmartFilesContextMode ||
-      settings.enableProLazyEditsMode;
-
-    logger.info(
-      `\x1b[1;97;44m Using client-side CodeX Pro for model: ${model.name}. engine_enabled=${isEngineEnabled} \x1b[0m`,
-    );
-
-    // Use the regular provider but with Pro features enabled
-    const regularClientBundle = getRegularModelClient(
-      model,
-      settings,
-      providerConfig,
-    );
-
-    if (isEngineEnabled) {
-      logger.info(
-        `\x1b[1;30;42m CodeX Pro features enabled: Smart Context & Lazy Edits \x1b[0m`,
-      );
-    }
-
-    return {
-      modelClient: regularClientBundle.modelClient,
-      isEngineEnabled,
-    };
-  }
   // Handle 'auto' provider by trying each model in AUTO_MODELS until one works
   if (model.provider === "auto") {
     if (model.name === "free") {
@@ -165,6 +129,44 @@ export async function getModelClient(
       settings,
     );
   }
+
+  // --- Handle specific provider ---
+  const providerConfig = allProviders.find((p) => p.id === model.provider);
+
+  if (!providerConfig) {
+    throw new Error(`Configuration not found for provider: ${model.provider}`);
+  }
+
+  // Handle codeX Pro override - now client-side only
+  if (settings.enableCodexPro) {
+    // CodeX Pro is now client-side and works with any provider
+    const isEngineEnabled =
+      settings.enableProSmartFilesContextMode ||
+      settings.enableProLazyEditsMode;
+
+    logger.info(
+      `\x1b[1;97;44m Using client-side CodeX Pro for model: ${model.name}. engine_enabled=${isEngineEnabled} \x1b[0m`,
+    );
+
+    // Use the regular provider but with Pro features enabled
+    const regularClientBundle = getRegularModelClient(
+      model,
+      settings,
+      providerConfig,
+    );
+
+    if (isEngineEnabled) {
+      logger.info(
+        `\x1b[1;30;42m CodeX Pro features enabled: Smart Context & Lazy Edits \x1b[0m`,
+      );
+    }
+
+    return {
+      modelClient: regularClientBundle.modelClient,
+      isEngineEnabled,
+    };
+  }
+
   const regularBundle = getRegularModelClient(model, settings, providerConfig);
   return { modelClient: regularBundle.modelClient };
 }
@@ -394,6 +396,21 @@ function getRegularModelClient(
       const provider = createAmazonBedrock({
         apiKey: apiKey,
         region: getEnvVar("AWS_REGION") || "us-east-1",
+      });
+      return {
+        modelClient: {
+          model: provider(model.name),
+          builtinProviderId: providerId,
+        },
+        backupModelClients: [],
+      };
+    }
+    case "europeanswallow": {
+      // Uses OpenAI-compatible Chat Completions API
+      const provider = createOpenAICompatible({
+        name: "europeanswallow",
+        baseURL: "https://api.europeanswallowai.com/v1",
+        apiKey,
       });
       return {
         modelClient: {

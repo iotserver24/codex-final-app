@@ -19,8 +19,8 @@ const logger = log.scope("settings");
 // Need to maintain backwards compatibility!
 const DEFAULT_SETTINGS: UserSettings = {
   selectedModel: {
-    name: "auto",
-    provider: "auto",
+    name: "openai-fast",
+    provider: "codex",
   },
   providerSettings: {},
   telemetryConsent: "unset",

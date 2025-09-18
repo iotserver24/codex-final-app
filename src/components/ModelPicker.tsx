@@ -109,6 +109,19 @@ export function ModelPicker() {
   const autoModels =
     !loading && modelsByProviders && modelsByProviders["auto"]
       ? modelsByProviders["auto"].filter((model) => {
+          // Always hide Turbo (Pro)
+          if (model.apiName === "turbo") {
+            return false;
+          }
+          // Hide Smart Auto entry when Pro Smart Context is enabled
+          if (
+            settings &&
+            settings.enableProSmartFilesContextMode &&
+            isCodexProEnabled(settings) &&
+            model.apiName === "auto"
+          ) {
+            return false;
+          }
           if (
             settings &&
             !isCodexProEnabled(settings) &&
@@ -155,6 +168,18 @@ export function ModelPicker() {
   if (settings && isCodexProEnabled(settings)) {
     primaryProviders.unshift(["auto", TURBO_MODELS]);
   }
+  // Ensure 'codex' provider appears first among primary providers
+  const primaryProvidersOrdered = (() => {
+    const ordered = [...primaryProviders];
+    const codexIndex = ordered.findIndex(
+      ([providerId]) => providerId === "codex",
+    );
+    if (codexIndex > 0) {
+      const [codexEntry] = ordered.splice(codexIndex, 1);
+      ordered.unshift(codexEntry);
+    }
+    return ordered;
+  })();
   const secondaryProviders = providerEntries.filter(([providerId, models]) => {
     if (models.length === 0) return false;
     const provider = providers?.find((p) => p.id === providerId);
@@ -237,11 +262,6 @@ export function ModelPicker() {
                             </span>
                           </span>
                           <div className="flex items-center gap-1.5">
-                            {isSmartAutoEnabled && (
-                              <span className="text-[10px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_100%] animate-[shimmer_5s_ease-in-out_infinite] text-white px-1.5 py-0.5 rounded-full font-medium">
-                                Pro only
-                              </span>
-                            )}
                             {model.tag && (
                               <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
                                 {model.tag}
@@ -271,7 +291,7 @@ export function ModelPicker() {
             )}
 
             {/* Primary providers as submenus */}
-            {primaryProviders.map(([providerId, models]) => {
+            {primaryProvidersOrdered.map(([providerId, models]) => {
               models = models.filter((model) => {
                 // Don't show free models if Codex Pro is enabled because
                 // we will use the paid models (in Codex Pro backend) which
@@ -295,13 +315,7 @@ export function ModelPicker() {
                     <div className="flex flex-col items-start w-full">
                       <div className="flex items-center gap-2">
                         <span>{providerDisplayName}</span>
-                        {provider?.type === "cloud" &&
-                          !provider?.secondary &&
-                          isCodexProEnabled(settings) && (
-                            <span className="text-[10px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_100%] animate-[shimmer_5s_ease-in-out_infinite] text-white px-1.5 py-0.5 rounded-full font-medium">
-                              Pro
-                            </span>
-                          )}
+                        {provider?.type === "cloud" && null}
                         {provider?.type === "custom" && (
                           <span className="text-[10px] bg-amber-500/20 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
                             Custom

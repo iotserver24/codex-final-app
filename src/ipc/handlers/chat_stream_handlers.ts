@@ -748,6 +748,32 @@ This conversation includes one or more image attachments. When the user uploads 
               },
             } satisfies GoogleGenerativeAIProviderOptions;
           }
+          // For providers that don't support streaming well, fall back to non-stream
+          if (modelClient.builtinProviderId === "europeanswallow") {
+            const { generateText } = await import("ai");
+            const result = await generateText({
+              maxOutputTokens: await getMaxTokens(settings.selectedModel),
+              temperature: await getTemperature(settings.selectedModel),
+              model: modelClient.model,
+              providerOptions,
+              system: systemPrompt,
+              messages: chatMessages.filter((m) => m.content),
+            });
+
+            // Simulate a single "chunk" update so UI shows the returned text/error
+            await processResponseChunkUpdate({ fullResponse: result.text });
+            // End the stream lifecycle cleanly for the renderer
+            safeSend(event.sender, "chat:response:end", {
+              chatId: req.chatId,
+              updatedFiles: false,
+            } satisfies ChatResponseEnd);
+
+            // Return an empty async iterator to satisfy the expected shape
+            return {
+              fullStream: (async function* () {})() as any,
+            } as any;
+          }
+
           return streamText({
             headers: isAnthropic
               ? {

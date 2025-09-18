@@ -1,5 +1,6 @@
 import { ipcMain, app } from "electron";
 import { db, getDatabasePath } from "../../db";
+import { resetDatabase, initializeDatabase } from "../../db";
 import { apps, chats } from "../../db/schema";
 import { desc, eq } from "drizzle-orm";
 import type {
@@ -1225,9 +1226,7 @@ export function registerAppHandlers() {
     const dbPath = getDatabasePath();
     if (fs.existsSync(dbPath)) {
       // Close database connections first
-      if (db.$client) {
-        db.$client.close();
-      }
+      resetDatabase();
       await fsPromises.unlink(dbPath);
       logger.log(`Database file deleted: ${dbPath}`);
     }
@@ -1254,6 +1253,12 @@ export function registerAppHandlers() {
     }
     logger.log("all app files removed.");
     logger.log("reset all complete.");
+    // Re-initialize the database so subsequent IPC handlers work immediately
+    try {
+      initializeDatabase();
+    } catch (e) {
+      logger.error("Failed to re-initialize database after reset:", e);
+    }
   });
 
   ipcMain.handle("get-app-version", async (): Promise<{ version: string }> => {

@@ -11,6 +11,7 @@ import {
   MODEL_OPTIONS,
   PROVIDER_TO_ENV_VAR,
 } from "./language_model_constants";
+import { getPollinationsModels } from "./pollinations_models";
 /**
  * Fetches language model providers from both the database (custom) and hardcoded constants (cloud),
  * merging them with custom providers taking precedence.
@@ -134,16 +135,30 @@ export async function getLanguageModels({
   // If it's a cloud provider, also get the hardcoded models
   let hardcodedModels: LanguageModel[] = [];
   if (provider.type === "cloud") {
-    // Special-case: fetch CodeX models dynamically from API
+    // Special-case: fetch CodeX models dynamically from Pollinations API
     if (providerId === "codex") {
       try {
-        const remote = await fetchCodexModelsFromApi();
-        if (remote.length > 0) {
-          return [...remote, ...customModels];
-        }
+        const pollinationsModels = await getPollinationsModels();
+        const codexModels: LanguageModel[] = pollinationsModels.map(
+          (model) => ({
+            id: model.name,
+            displayName: model.displayName,
+            apiName: model.name,
+            description: model.description,
+            maxOutputTokens: model.maxOutputTokens,
+            contextWindow: model.contextWindow,
+            tag: model.tag,
+            type: "cloud",
+          }),
+        );
+        return [...codexModels, ...customModels];
       } catch (error) {
-        console.error("Failed to fetch CodeX models from API:", error);
-        // fall back to hardcoded list below
+        console.error(
+          "Failed to fetch CodeX models from Pollinations API:",
+          error,
+        );
+        // fall back to empty array if API fails
+        return customModels;
       }
     }
     if (providerId in MODEL_OPTIONS) {
@@ -199,36 +214,3 @@ export function isCustomProvider({ providerId }: { providerId: string }) {
 export const CUSTOM_PROVIDER_PREFIX = "custom::";
 
 // --- Helpers ---
-async function fetchCodexModelsFromApi(): Promise<LanguageModel[]> {
-  const url = "https://text.pollinations.ai/models";
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Fetch models failed: ${res.status} ${res.statusText}`);
-  }
-  const data = (await res.json()) as any[];
-  if (!Array.isArray(data)) return [];
-
-  const mapped: LanguageModel[] = data
-    .filter((m) => typeof m?.name === "string")
-    .map((m) => {
-      const displayName: string = m.description || m.name;
-      const tag: string | undefined = m.reasoning
-        ? "Reasoning"
-        : m.community
-          ? "Community"
-          : undefined;
-      return {
-        apiName: m.name as string,
-        displayName,
-        description: m.description || "",
-        tag,
-        maxOutputTokens: undefined,
-        contextWindow: undefined,
-        temperature: undefined,
-        type: "cloud",
-      } as LanguageModel;
-    });
-  // Filter out any models we do not want to expose (e.g., audio-only or disallowed)
-  const BLOCKED_MODELS = new Set(["openai-audio"]);
-  return mapped.filter((m) => !BLOCKED_MODELS.has(m.apiName));
-}

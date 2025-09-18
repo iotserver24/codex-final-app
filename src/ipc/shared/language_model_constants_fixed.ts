@@ -364,16 +364,6 @@ export const MODEL_OPTIONS: Record<string, ModelOption[]> = {
       dollarSigns: 4,
     },
   ],
-  europeanswallow: [
-    {
-      name: "european-swallow-ai",
-      displayName: "European Swallow AI",
-      description: "OpenAI-compatible Chat Completions endpoint",
-      maxOutputTokens: 16_000,
-      contextWindow: 128_000,
-      temperature: 0,
-    },
-  ],
   bedrock: [
     {
       name: "us.anthropic.claude-sonnet-4-20250514-v1:0",
@@ -437,7 +427,6 @@ export const PROVIDER_TO_ENV_VAR: Record<string, string> = {
   azure: "AZURE_API_KEY",
   xai: "XAI_API_KEY",
   bedrock: "AWS_BEARER_TOKEN_BEDROCK",
-  europeanswallow: "EUROPEAN_SWALLOW_AI_API_KEY",
   // codex doesn't need an env var as it uses hardcoded token
 };
 
@@ -504,12 +493,6 @@ export const CLOUD_PROVIDERS: Record<
     hasFreeTier: true,
     websiteUrl: "https://codex.anishkumar.tech",
     gatewayPrefix: "codex/",
-  },
-  europeanswallow: {
-    displayName: "European Swallow AI",
-    hasFreeTier: false,
-    websiteUrl: "https://api.europeanswallowai.com",
-    gatewayPrefix: "",
   },
 };
 

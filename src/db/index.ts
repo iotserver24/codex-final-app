@@ -16,6 +16,18 @@ const logger = log.scope("db");
 // Database connection factory
 let _db: ReturnType<typeof drizzle> | null = null;
 
+export function resetDatabase(): void {
+  try {
+    if (_db && (_db as any).$client) {
+      (_db as any).$client.close();
+    }
+  } catch (e) {
+    logger.error("Error closing database client during reset:", e);
+  } finally {
+    _db = null;
+  }
+}
+
 /**
  * Get the database path based on the current environment
  */
