@@ -110,6 +110,14 @@ export function readSettings(): UserSettings {
         encryptionType,
       };
     }
+    if (combinedSettings.polarLicenseKey) {
+      const encryptionType = combinedSettings.polarLicenseKey.encryptionType;
+      combinedSettings.polarLicenseKey = {
+        value: decrypt(combinedSettings.polarLicenseKey),
+        encryptionType,
+      };
+    }
+    // No persisted E2B/Polar keys in settings; license is entered per-share
     for (const provider in combinedSettings.providerSettings) {
       if (combinedSettings.providerSettings[provider].apiKey) {
         const encryptionType =
@@ -157,6 +165,10 @@ export function writeSettings(settings: Partial<UserSettings>): void {
         newSettings.vercelAccessToken.value,
       );
     }
+    if (newSettings.polarLicenseKey) {
+      newSettings.polarLicenseKey = encrypt(newSettings.polarLicenseKey.value);
+    }
+    // No persisted E2B/Polar keys in settings; license is entered per-share
     if (newSettings.supabase) {
       if (newSettings.supabase.accessToken) {
         newSettings.supabase.accessToken = encrypt(

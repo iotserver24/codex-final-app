@@ -1,9 +1,17 @@
 import { LanguageModel } from "../ipc_types";
 
 export const PROVIDERS_THAT_SUPPORT_THINKING: (keyof typeof MODEL_OPTIONS)[] = [
+  "openai",
+  "anthropic",
   "google",
   "vertex",
+  "openrouter",
+  "azure",
+  "xai",
+  "bedrock",
+  "europeanswallow",
   "auto",
+  "codex",
 ];
 
 export interface ModelOption {

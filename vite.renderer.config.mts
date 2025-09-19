@@ -5,6 +5,9 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    allowedHosts: [".e2b.app"],
+  },
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

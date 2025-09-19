@@ -16,6 +16,7 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { Console } from "./Console";
 import { useRunApp } from "@/hooks/useRunApp";
 import { PublishPanel } from "./PublishPanel";
+import { SharePanel } from "./SharePanel";
 
 interface ConsoleHeaderProps {
   isOpen: boolean;
@@ -119,6 +120,8 @@ export function PreviewPanel() {
                 <ConfigurePanel />
               ) : previewMode === "publish" ? (
                 <PublishPanel />
+              ) : previewMode === "share" ? (
+                <SharePanel />
               ) : (
                 <Problems />
               )}

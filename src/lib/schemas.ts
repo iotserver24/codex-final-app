@@ -194,6 +194,8 @@ export const UserSettingsSchema = z.object({
   githubUser: GithubUserSchema.optional(),
   githubAccessToken: SecretSchema.optional(),
   vercelAccessToken: SecretSchema.optional(),
+  // Optional: persist user-provided Polar license key for paid share durations
+  polarLicenseKey: SecretSchema.optional(),
   supabase: SupabaseSchema.optional(),
   neon: NeonSchema.optional(),
   autoApproveChanges: z.boolean().optional(),

@@ -24,6 +24,8 @@ import { AutoUpdateSwitch } from "@/components/AutoUpdateSwitch";
 import { ReleaseChannelSelector } from "@/components/ReleaseChannelSelector";
 import { NeonIntegration } from "@/components/NeonIntegration";
 import { RuntimeModeSelector } from "@/components/RuntimeModeSelector";
+import { PolarLicenseSettings } from "@/components/PolarLicenseSettings";
+// E2B integration settings removed: license handled in Share panel
 
 export default function SettingsPage() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
@@ -84,6 +86,9 @@ export default function SettingsPage() {
               <VercelIntegration />
               <SupabaseIntegration />
               <NeonIntegration />
+              <div id="polar-license">
+                <PolarLicenseSettings />
+              </div>
             </div>
           </div>
 

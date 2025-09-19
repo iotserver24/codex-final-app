@@ -13,6 +13,7 @@ import {
 } from "./main/settings";
 import { handleSupabaseOAuthReturn } from "./supabase_admin/supabase_return_handler";
 import { handleCodexProReturn } from "./main/pro";
+import { startPolarCheckoutServer } from "./main/polar_checkout_server";
 import { IS_TEST_BUILD } from "./ipc/utils/test_utils";
 import { BackupManager } from "./backup_manager";
 import { getDatabasePath, initializeDatabase } from "./db";
@@ -66,6 +67,14 @@ export async function onReady() {
   const settings = readSettings();
   await onFirstRunMaybe(settings);
   createWindow();
+
+  // Start local server for Polar checkout success callbacks
+  const _server = startPolarCheckoutServer({
+    onEvent: (evt) => {
+      // Forward to renderer
+      mainWindow?.webContents.send("polar:checkout", evt);
+    },
+  });
 
   logger.info("Auto-update enabled=", settings.enableAutoUpdate);
   if (settings.enableAutoUpdate) {

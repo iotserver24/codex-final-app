@@ -82,6 +82,11 @@ jobs:
           FORGE_ARCH: "${{ matrix.architecture }}"
           # Suppress Vite CJS deprecation warning
           VITE_CJS_IGNORE_WARNING: "true"
+          # Environment variables for app functionality
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          POLAR_API_KEY: ${{ secrets.POLAR_API_KEY }}
+          POLAR_CHECKOUT_URL: ${{ secrets.POLAR_CHECKOUT_URL }}
+          VITE_POLAR_CHECKOUT_URL: ${{ secrets.VITE_POLAR_CHECKOUT_URL }}
         run: |
           echo "Starting Linux build for ${{ matrix.architecture }}..."
           echo "Current directory: $(pwd)"
@@ -160,6 +165,11 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
           # Ensure we're building for the correct architecture
           FORGE_ARCH: "${{ matrix.architecture }}"
+          # Environment variables for app functionality
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          POLAR_API_KEY: ${{ secrets.POLAR_API_KEY }}
+          POLAR_CHECKOUT_URL: ${{ secrets.POLAR_CHECKOUT_URL }}
+          VITE_POLAR_CHECKOUT_URL: ${{ secrets.VITE_POLAR_CHECKOUT_URL }}
         run: |
           echo "Building for macOS ${{ matrix.architecture }}..."
           if [ "${{ matrix.architecture }}" = "universal" ]; then
@@ -259,6 +269,11 @@ jobs:
           CERTIFICATE_PATH: ${{ env.CERTIFICATE_PATH }}
           CERTIFICATE_PASSWORD: ${{ env.CERTIFICATE_PASSWORD }}
           SELF_SIGNED: ${{ env.SELF_SIGNED }}
+          # Environment variables for app functionality
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          POLAR_API_KEY: ${{ secrets.POLAR_API_KEY }}
+          POLAR_CHECKOUT_URL: ${{ secrets.POLAR_CHECKOUT_URL }}
+          VITE_POLAR_CHECKOUT_URL: ${{ secrets.VITE_POLAR_CHECKOUT_URL }}
         run: |
           echo "Building for Windows ${{ matrix.architecture }} with code signing..."
           echo "Certificate thumbprint: $env:SM_CODE_SIGNING_CERT_SHA1_HASH"

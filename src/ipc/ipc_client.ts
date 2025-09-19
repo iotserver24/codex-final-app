@@ -1288,4 +1288,88 @@ export class IpcClient {
       this.ipcRenderer.removeListener("docs:crawl-progress", listener);
     };
   }
+
+  // --- E2B Share Preview ---
+  public async sharePreviewE2B(params: {
+    appId: number;
+    port?: number;
+    durationMinutes?: number;
+    licenseKey?: string;
+  }): Promise<{ url: string }> {
+    return this.ipcRenderer.invoke("share-preview:e2b", params);
+  }
+
+  public async clipboardWriteText(text: string): Promise<void> {
+    await this.ipcRenderer.invoke("clipboard:write-text", text);
+  }
+
+  public async getE2BStatus(params: { appId: number }): Promise<{
+    running: boolean;
+    url?: string;
+    port?: number;
+    startedAt?: number;
+  }> {
+    return this.ipcRenderer.invoke("e2b:status", params);
+  }
+
+  public async listE2BVersions(params: { appId: number }): Promise<{
+    versions: {
+      version: number;
+      url: string;
+      port: number;
+      startedAt: number;
+      expiresAt: number;
+    }[];
+  }> {
+    return this.ipcRenderer.invoke("e2b:list", params);
+  }
+
+  public async getE2BLogs(params: {
+    appId: number;
+  }): Promise<{ logs: string }> {
+    return this.ipcRenderer.invoke("e2b:logs", params);
+  }
+
+  public async stopE2B(params: { appId: number }): Promise<void> {
+    return this.ipcRenderer.invoke("e2b:stop", params);
+  }
+
+  public async syncE2BFile(params: {
+    appId: number;
+    fileRelPath: string;
+  }): Promise<void> {
+    return this.ipcRenderer.invoke("e2b:sync-file", params);
+  }
+
+  public async syncE2BAll(params: {
+    appId: number;
+  }): Promise<{ synced: number }> {
+    return this.ipcRenderer.invoke("e2b:sync-all", params);
+  }
+
+  public async getE2BProgress(params: {
+    appId: number;
+  }): Promise<{ lines: string[] }> {
+    return this.ipcRenderer.invoke("e2b:progress", params);
+  }
+  // --- End E2B Share Preview ---
+
+  // --- Polar Checkout Events ---
+  public onPolarCheckout(
+    callback: (evt: {
+      type: "success" | "error";
+      checkoutId?: string;
+      data?: any;
+      error?: string;
+    }) => void,
+  ): () => void {
+    const listener = (data: any) => {
+      callback(data as any);
+    };
+    (this.ipcRenderer as any).on("polar:checkout", listener);
+    return () => {
+      (this.ipcRenderer as any).removeListener("polar:checkout", listener);
+    };
+  }
+  // --- End Polar Checkout Events ---
 }

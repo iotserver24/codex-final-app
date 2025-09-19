@@ -1,4 +1,3 @@
-import { PROVIDERS_THAT_SUPPORT_THINKING } from "../shared/language_model_constants";
 import type { UserSettings } from "../../lib/schemas";
 
 function getThinkingBudgetTokens(
@@ -23,22 +22,30 @@ export function getExtraProviderOptions(
   if (!providerId) {
     return {};
   }
+
+  // All providers now support thinking - apply thinking config to everyone
+  const budgetTokens = getThinkingBudgetTokens(settings?.thinkingBudget);
+
+  // Provider-specific configurations
   if (providerId === "openai") {
     return {
       reasoning_effort: "medium",
-    };
-  }
-  if (PROVIDERS_THAT_SUPPORT_THINKING.includes(providerId)) {
-    const budgetTokens = getThinkingBudgetTokens(settings?.thinkingBudget);
-    return {
       thinking: {
         type: "enabled",
         include_thoughts: true,
-        // -1 means dynamic thinking where model determines.
-        // budget_tokens: 128, // minimum for Gemini Pro is 128
         budget_tokens: budgetTokens,
       },
     };
   }
-  return {};
+
+  // Default thinking configuration for all other providers
+  return {
+    thinking: {
+      type: "enabled",
+      include_thoughts: true,
+      // -1 means dynamic thinking where model determines.
+      // budget_tokens: 128, // minimum for Gemini Pro is 128
+      budget_tokens: budgetTokens,
+    },
+  };
 }
