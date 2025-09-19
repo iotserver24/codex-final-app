@@ -6,7 +6,10 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 codex/
-
+open-lovable
+/open-lovable
+open-lovable/
+/open-lovable/
 # dist
 dist/
 

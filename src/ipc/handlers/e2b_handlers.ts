@@ -7,6 +7,7 @@ import { apps } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { getAppPath } from "../../paths/paths";
 import { createLoggedHandler } from "./safe_handle";
+import { getHardcodedEnvVar } from "../../constants/hardcoded_env";
 
 const logger = log.scope("e2b_handlers");
 const handle = createLoggedHandler(logger);
@@ -243,9 +244,10 @@ export function registerE2BHandlers() {
         licenseKey?: string;
       },
     ): Promise<{ url: string }> => {
-      const apiKey = process.env.E2B_API_KEY;
+      const apiKey =
+        getHardcodedEnvVar("E2B_API_KEY") || process.env.E2B_API_KEY;
       if (!apiKey) {
-        throw new Error("E2B_API_KEY is not set in environment");
+        throw new Error("E2B_API_KEY is not available");
       }
 
       const app = await db.query.apps.findFirst({ where: eq(apps.id, appId) });
@@ -274,7 +276,8 @@ export function registerE2BHandlers() {
       // Verify Polar license if paid duration
       const isPaid = PAID_MINUTES.has(requestedMinutes);
       if (isPaid) {
-        const polarApiKey = process.env.POLAR_API_KEY;
+        const polarApiKey =
+          getHardcodedEnvVar("POLAR_API_KEY") || process.env.POLAR_API_KEY;
         if (!licenseKey) {
           throw new Error(
             "Paid duration selected. A valid Polar license key is required.",
@@ -282,7 +285,7 @@ export function registerE2BHandlers() {
         }
         if (!polarApiKey) {
           throw new Error(
-            "POLAR_API_KEY is not set in environment; cannot verify license for paid durations",
+            "POLAR_API_KEY is not available; cannot verify license for paid durations",
           );
         }
         try {
