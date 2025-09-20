@@ -91,7 +91,6 @@ export const AgenticModeInterface: React.FC = () => {
   const [currentJob, setCurrentJob] = useState<AgenticJob | null>(null);
   const [jobHistory, setJobHistory] = useState<AgenticJob[]>([]);
   const [progressUpdates, setProgressUpdates] = useState<ProgressUpdate[]>([]);
-  const [_isStreaming, setIsStreaming] = useState(false);
 
   const progressRef = useRef<HTMLDivElement>(null);
   const ipcClient = IpcClient.getInstance();
@@ -111,7 +110,6 @@ export const AgenticModeInterface: React.FC = () => {
     if (!prompt.trim() || isRunning) return;
 
     setIsRunning(true);
-    setIsStreaming(true);
     setProgressUpdates([]);
 
     try {
@@ -163,7 +161,7 @@ export const AgenticModeInterface: React.FC = () => {
         timestamp: Date.now(),
       });
       setIsRunning(false);
-      setIsStreaming(false);
+      false;
     }
   };
 
@@ -263,7 +261,7 @@ export const AgenticModeInterface: React.FC = () => {
             statusResponse.status === "stopped"
           ) {
             setIsRunning(false);
-            setIsStreaming(false);
+            false;
 
             if (statusResponse.status === "completed") {
               addProgressUpdate({
@@ -340,7 +338,7 @@ export const AgenticModeInterface: React.FC = () => {
     try {
       await ipcClient.cancelAgenticJob(currentJob.id);
       setIsRunning(false);
-      setIsStreaming(false);
+      false;
       addProgressUpdate({
         type: "status",
         message: "🛑 Job cancelled by user",
