@@ -48,6 +48,12 @@ import type {
   GetVercelDeploymentsParams,
   DisconnectVercelProjectParams,
   IsVercelProjectAvailableParams,
+  CreateAgenticJobParams,
+  CreateAgenticJobResponse,
+  AgenticJobStatusResponse,
+  RollbackParams,
+  AgenticChatParams,
+  AutonomousAgenticParams,
   SaveVercelAccessTokenParams,
   VercelProject,
   UpdateChatParams,
@@ -1372,4 +1378,100 @@ export class IpcClient {
     };
   }
   // --- End Polar Checkout Events ---
+
+  // --- Agentic Mode Methods ---
+  public async createAgenticJob(
+    params: CreateAgenticJobParams,
+  ): Promise<CreateAgenticJobResponse> {
+    return this.ipcRenderer.invoke("agentic:create-job", params);
+  }
+
+  public async getAgenticJobStatus(
+    jobId: string,
+  ): Promise<AgenticJobStatusResponse | null> {
+    return this.ipcRenderer.invoke("agentic:get-job-status", jobId);
+  }
+
+  public async cancelAgenticJob(
+    jobId: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    return this.ipcRenderer.invoke("agentic:cancel-job", jobId);
+  }
+
+  public async rollbackAgenticJob(
+    params: RollbackParams,
+  ): Promise<{ success: boolean; error?: string }> {
+    return this.ipcRenderer.invoke("agentic:rollback-job", params);
+  }
+
+  public async getAgenticJobHistory(
+    limit: number = 10,
+  ): Promise<AgenticJobStatusResponse[]> {
+    return this.ipcRenderer.invoke("agentic:get-job-history", limit);
+  }
+
+  public async getAgenticQueueStats(): Promise<{
+    total: number;
+    byStatus: Record<string, number>;
+    activeJobs: number;
+  }> {
+    return this.ipcRenderer.invoke("agentic:get-queue-stats");
+  }
+
+  public async getAgenticVectorStats(): Promise<{
+    totalChunks: number;
+    chunksByType: Record<string, number>;
+    chunksByFile: Record<string, number>;
+  }> {
+    return this.ipcRenderer.invoke("agentic:get-vector-stats");
+  }
+
+  public async createAgenticChat(params: AgenticChatParams): Promise<{
+    success: boolean;
+    agenticChatId?: number;
+    error?: string;
+  }> {
+    return this.ipcRenderer.invoke("agentic:create-chat", params);
+  }
+
+  public async getAgenticChatStatus(agenticChatId: number): Promise<{
+    chatId: number;
+    status: string;
+    messages: any[];
+    lastMessage: string;
+  } | null> {
+    return this.ipcRenderer.invoke("agentic:get-chat-status", agenticChatId);
+  }
+
+  public async createAutonomousAgenticChat(
+    params: AutonomousAgenticParams,
+  ): Promise<{
+    success: boolean;
+    agenticChatId?: number;
+    error?: string;
+  }> {
+    return this.ipcRenderer.invoke("agentic:create-autonomous-chat", params);
+  }
+
+  public async getAutonomousAgenticStatus(agenticChatId: number): Promise<{
+    chatId: number;
+    status: string;
+    currentIteration: number;
+    totalMessages: number;
+    lastMessage: string;
+    iterations: Array<{ message: string; timestamp: number }>;
+  } | null> {
+    return this.ipcRenderer.invoke(
+      "agentic:get-autonomous-status",
+      agenticChatId,
+    );
+  }
+
+  public async stopAutonomousAgentic(agenticChatId: number): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    return this.ipcRenderer.invoke("agentic:stop-autonomous", agenticChatId);
+  }
+  // --- End Agentic Mode Methods ---
 }

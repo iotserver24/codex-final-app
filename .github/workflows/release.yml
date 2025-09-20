@@ -1,3 +1,8 @@
+# Build and Release CodeX
+
+env:
+  BUILD_ENABLED: false  # ← CHANGE THIS: true = build, false = skip everything
+
 name: Build and Release CodeX
 
 on:
@@ -19,6 +24,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
+    if: ${{ env.BUILD_ENABLED == 'true' }}
     strategy:
       matrix:
         # Build for both x64 and ARM64 architectures
@@ -121,6 +127,7 @@ jobs:
   build-macos:
     runs-on: macos-14
     timeout-minutes: 30
+    if: ${{ env.BUILD_ENABLED == 'true' }}
     strategy:
       matrix:
         # Build ONLY a universal macOS artifact
@@ -194,6 +201,7 @@ jobs:
   build-windows:
     runs-on: windows-2025
     timeout-minutes: 30
+    if: ${{ env.BUILD_ENABLED == 'true' }}
     strategy:
       matrix:
         # Build for both x64 and ARM64 architectures
@@ -293,7 +301,7 @@ jobs:
   create-release:
     needs: [build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
-    if: always() # Run even if some builds fail
+    if: always() && ${{ env.BUILD_ENABLED == 'true' }} # Run even if some builds fail, but only when builds are enabled
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -401,7 +409,7 @@ jobs:
   upload-to-target-repo:
     needs: [create-release]
     runs-on: ubuntu-latest
-    if: always() # Run even if some builds fail
+    if: always() && ${{ env.BUILD_ENABLED == 'true' }} # Run even if some builds fail, but only when builds are enabled
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -500,11 +508,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: iotserver24/codex
 
+  # Show message when builds are disabled
+  builds-disabled:
+    runs-on: ubuntu-latest
+    if: ${{ env.BUILD_ENABLED == 'false' }}
+    steps:
+      - name: Builds Disabled Message
+        run: |
+          echo "🚫 Builds are disabled for this workflow run."
+          echo "To enable builds, change BUILD_ENABLED to 'true' in the workflow file."
+          echo "This workflow will skip all build, release, and upload steps."
+          echo "Only version update will be performed (if needed)."
+
   # Optional: Update version in package.json
   update-version:
-    needs: [create-release]
+    needs: [create-release, builds-disabled]
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
+    if: always() && ${{ env.BUILD_ENABLED == 'false' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

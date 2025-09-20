@@ -572,3 +572,17 @@ export interface HelpChatResponseError {
   sessionId: string;
   error: string;
 }
+
+// --- Agentic Chat Types ---
+export interface AgenticChatParams {
+  chatId: number;
+  prompt: string;
+  mode: "dry-run" | "interactive" | "auto-apply" | "force-apply";
+}
+
+export interface AutonomousAgenticParams {
+  chatId: number;
+  prompt: string;
+  mode: "dry-run" | "interactive" | "auto-apply" | "force-apply";
+  maxIterations?: number;
+}

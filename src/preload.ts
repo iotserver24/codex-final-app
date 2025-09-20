@@ -147,6 +147,19 @@ const validInvokeChannels = [
   "supabase:fake-connect-and-set-project",
   // E2B Share Preview
   "share-preview:e2b",
+  // Agentic Mode
+  "agentic:create-job",
+  "agentic:get-job-status",
+  "agentic:cancel-job",
+  "agentic:rollback-job",
+  "agentic:get-job-history",
+  "agentic:get-queue-stats",
+  "agentic:get-vector-stats",
+  "agentic:create-chat",
+  "agentic:get-chat-status",
+  "agentic:create-autonomous-chat",
+  "agentic:get-autonomous-status",
+  "agentic:stop-autonomous",
 ];
 
 // Add valid receive channels

@@ -17,16 +17,9 @@ import { cn } from "@/lib/utils";
 export function ChatModeSelector() {
   const { settings, updateSettings } = useSettings();
 
-  const selectedMode =
-    settings?.selectedChatMode === "agentic"
-      ? "build"
-      : settings?.selectedChatMode || "build";
+  const selectedMode = settings?.selectedChatMode || "build";
 
   const handleModeChange = (value: string) => {
-    // Prevent selecting agentic mode (coming soon)
-    if (value === "agentic") {
-      return;
-    }
     updateSettings({ selectedChatMode: value as ChatMode });
   };
 
@@ -39,7 +32,7 @@ export function ChatModeSelector() {
       case "designer":
         return "Designer";
       case "agentic":
-        return "Agentic (Coming Soon)";
+        return "Agentic";
       default:
         return "Build";
     }
@@ -94,20 +87,16 @@ export function ChatModeSelector() {
             </span>
           </div>
         </SelectItem>
-        <SelectItem
-          value="agentic"
-          disabled
-          className="opacity-50 cursor-not-allowed"
-        >
+        <SelectItem value="agentic" disabled>
           <div className="flex flex-col items-start">
             <div className="flex items-center gap-2">
               <span className="font-medium">Agentic</span>
-              <span className="text-xs bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 px-1.5 py-0.5 rounded-full font-medium">
+              <span className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-1.5 py-0.5 rounded-full font-medium">
                 Coming Soon
               </span>
             </div>
             <span className="text-xs text-muted-foreground">
-              Continuous iteration and refinement
+              Autonomous AI agent for complete project development
             </span>
           </div>
         </SelectItem>

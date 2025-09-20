@@ -32,6 +32,9 @@ import { registerPromptHandlers } from "./handlers/prompt_handlers";
 import { registerHelpBotHandlers } from "./handlers/help_bot_handlers";
 import { registerDocsHandlers } from "./handlers/docs_handlers";
 import { registerE2BHandlers } from "./handlers/e2b_handlers";
+import { registerAgenticHandlers } from "./handlers/agentic_handlers";
+import { registerAgenticChatHandlers } from "./handlers/agentic_chat_handlers";
+import { registerAutonomousAgenticHandlers } from "./handlers/agentic_autonomous_handlers";
 
 export function registerIpcHandlers() {
   // Register all IPC handlers by category
@@ -69,4 +72,7 @@ export function registerIpcHandlers() {
   registerHelpBotHandlers();
   registerDocsHandlers();
   registerE2BHandlers();
+  registerAgenticHandlers();
+  registerAgenticChatHandlers();
+  registerAutonomousAgenticHandlers();
 }
