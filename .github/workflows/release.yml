@@ -1,7 +1,8 @@
 # Build and Release CodeX
 
-env:
-  BUILD_ENABLED: false  # ← CHANGE THIS: true = build, false = skip everything
+# ← CHANGE THIS: true = build, false = skip everything
+variables:
+  BUILD_ENABLED: false
 
 name: Build and Release CodeX
 
@@ -24,7 +25,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
-    if: ${{ env.BUILD_ENABLED == 'true' }}
+    if: ${{ variables.BUILD_ENABLED == 'true' }}
     strategy:
       matrix:
         # Build for both x64 and ARM64 architectures
@@ -127,7 +128,7 @@ jobs:
   build-macos:
     runs-on: macos-14
     timeout-minutes: 30
-    if: ${{ env.BUILD_ENABLED == 'true' }}
+    if: ${{ variables.BUILD_ENABLED == 'true' }}
     strategy:
       matrix:
         # Build ONLY a universal macOS artifact
@@ -201,7 +202,7 @@ jobs:
   build-windows:
     runs-on: windows-2025
     timeout-minutes: 30
-    if: ${{ env.BUILD_ENABLED == 'true' }}
+    if: ${{ variables.BUILD_ENABLED == 'true' }}
     strategy:
       matrix:
         # Build for both x64 and ARM64 architectures
@@ -511,7 +512,7 @@ jobs:
   # Show message when builds are disabled
   builds-disabled:
     runs-on: ubuntu-latest
-    if: ${{ env.BUILD_ENABLED == 'false' }}
+    if: ${{ variables.BUILD_ENABLED == 'false' }}
     steps:
       - name: Builds Disabled Message
         run: |
