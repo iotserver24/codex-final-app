@@ -36,7 +36,7 @@ export function ChatModeSelector() {
         return "Agentic";
 
       case "agent":
-        return "Agent";
+        return "Agent-MCP";
 
       default:
         return "Build";
@@ -108,7 +108,7 @@ export function ChatModeSelector() {
         </SelectItem>
         <SelectItem value="agent">
           <div className="flex flex-col items-start">
-            <span className="font-medium">Agent (experimental)</span>
+            <span className="font-medium">Agent-MCP</span>
             <span className="text-xs text-muted-foreground">
               Agent can use tools (MCP) and generate code
             </span>

@@ -1,6 +1,6 @@
 # App Sharing with CodeX
 
-CodeX v1.2.0 introduces powerful app sharing capabilities that let you share your applications with anyone via secure E2B sandboxes.
+CodeX v1.1.2 introduces powerful app sharing capabilities that let you share your applications with anyone via secure E2B sandboxes.
 
 ## What is App Sharing?
 

@@ -1,6 +1,6 @@
 # Thinking Configuration in CodeX
 
-CodeX v1.2.0 introduces **universal thinking support** - all AI models now support advanced reasoning and thinking capabilities. This guide explains how to configure and optimize thinking for the best results.
+CodeX v1.1.2 introduces **universal thinking support** - all AI models now support advanced reasoning and thinking capabilities. This guide explains how to configure and optimize thinking for the best results.
 
 ## What is AI Thinking?
 
@@ -24,7 +24,7 @@ AI thinking is a process where models:
 
 ### All Models Support Thinking
 
-In CodeX v1.2.0, **every AI model** supports thinking:
+In CodeX v1.1.2, **every AI model** supports thinking:
 
 - **No more restrictions** - Choose any model and get thinking capabilities
 - **Consistent experience** - Same thinking features across all providers

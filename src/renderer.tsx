@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { router } from "./router";
 import { RouterProvider } from "@tanstack/react-router";
@@ -92,17 +92,15 @@ function App() {
 
   useEffect(() => {
     // Subscribe to navigation state changes
-    const unsubscribe = router.subscribe("onResolved", (navigation) => {
-      // Capture the navigation event in PostHog
-      posthog.capture("navigation", {
-        toPath: navigation.toLocation.pathname,
-        fromPath: navigation.fromLocation?.pathname,
-      });
-
-      // Optionally capture as a standard pageview as well
-      posthog.capture("$pageview", {
-        path: navigation.toLocation.pathname,
-      });
+    const unsubscribe = router.subscribe("onResolved", (_navigation) => {
+      // Navigation tracking disabled - telemetry removed
+      // posthog.capture("navigation", {
+      //   toPath: navigation.toLocation.pathname,
+      //   fromPath: navigation.fromLocation?.pathname,
+      // });
+      // posthog.capture("$pageview", {
+      //   path: navigation.toLocation.pathname,
+      // });
     });
 
     // Clean up subscription when component unmounts

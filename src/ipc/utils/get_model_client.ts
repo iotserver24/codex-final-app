@@ -25,9 +25,12 @@ import { LM_STUDIO_BASE_URL } from "./lm_studio_utils";
 import { createOllamaProvider } from "./ollama_provider";
 import { getOllamaApiUrl } from "../handlers/local_model_ollama_handler";
 import { createFallback } from "./fallback_ai_model";
+import { createDyadEngine } from "./llm_engine_provider";
 
 const _codexEngineUrl = process.env.CODEX_ENGINE_URL;
 const _codexGatewayUrl = process.env.CODEX_GATEWAY_URL;
+const dyadEngineUrl = process.env.DYAD_ENGINE_URL;
+const dyadGatewayUrl = process.env.DYAD_GATEWAY_URL;
 
 const AUTO_MODELS = [
   {
@@ -64,6 +67,7 @@ export async function getModelClient(
   const allProviders = await getLanguageModelProviders();
 
   const _codexApiKey = settings.providerSettings?.auto?.apiKey?.value;
+  const dyadApiKey = settings.providerSettings?.dyad?.apiKey?.value;
 
   // --- Handle specific provider ---
   const providerConfig = allProviders.find((p) => p.id === model.provider);
@@ -73,7 +77,7 @@ export async function getModelClient(
   }
 
   // Handle Dyad Pro override
-  if (dyadApiKey && settings.enableDyadPro) {
+  if (dyadApiKey && settings.enableCodexPro) {
     // Check if the selected provider supports Dyad Pro (has a gateway prefix) OR
     // we're using local engine.
     // IMPORTANT: some providers like OpenAI have an empty string gateway prefix,
@@ -125,7 +129,7 @@ export async function getModelClient(
           `${providerConfig.gatewayPrefix || ""}${modelName}`,
           isEngineEnabled
             ? {
-                files,
+                files: [],
               }
             : undefined,
         ),

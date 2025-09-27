@@ -1,0 +1,188 @@
+/* Sponsorship Logos Component Styles */
+.sponsorship-logos {
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  padding: 2rem 0;
+  position: relative;
+}
+
+.sponsorship-logos::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.sponsorship-logos__container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.sponsorship-logos__track {
+  display: flex;
+  align-items: center;
+  animation: scroll 20s linear infinite;
+  width: fit-content;
+  gap: 3rem;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.sponsorship-logos__item {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  min-width: 200px;
+  height: 80px;
+}
+
+.sponsorship-logos__item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.sponsorship-logos__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.sponsorship-logos__link:hover {
+  transform: scale(1.05);
+}
+
+.sponsorship-logos__logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: brightness(0.9) contrast(1.1);
+  transition: all 0.3s ease;
+}
+
+.sponsorship-logos__item:hover .sponsorship-logos__logo {
+  filter: brightness(1) contrast(1.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sponsorship-logos {
+    padding: 1.5rem 0;
+  }
+
+  .sponsorship-logos__track {
+    gap: 2rem;
+    animation-duration: 15s;
+  }
+
+  .sponsorship-logos__item {
+    min-width: 150px;
+    height: 60px;
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sponsorship-logos__track {
+    gap: 1.5rem;
+    animation-duration: 12s;
+  }
+
+  .sponsorship-logos__item {
+    min-width: 120px;
+    height: 50px;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* Pause animation on hover */
+.sponsorship-logos:hover .sponsorship-logos__track {
+  animation-play-state: paused;
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+  .sponsorship-logos {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  }
+
+  .sponsorship-logos__item {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .sponsorship-logos__item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .sponsorship-logos__item {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .sponsorship-logos__logo {
+    filter: brightness(1.2) contrast(1.5);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sponsorship-logos__track {
+    animation: none;
+  }
+
+  .sponsorship-logos::before {
+    animation: none;
+  }
+
+  .sponsorship-logos__item {
+    transition: none;
+  }
+
+  .sponsorship-logos__item:hover {
+    transform: none;
+  }
+}

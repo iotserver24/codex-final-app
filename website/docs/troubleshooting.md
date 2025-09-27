@@ -1,6 +1,6 @@
 # Troubleshooting CodeX
 
-This guide helps you resolve common issues with CodeX v1.2.0, including problems with AI models, app sharing, and general functionality.
+This guide helps you resolve common issues with CodeX v1.1.2, including problems with AI models, app sharing, and general functionality.
 
 ## Common Issues
 
@@ -194,7 +194,7 @@ Contact support if you experience:
 
 When reporting issues, include:
 
-- **CodeX version** (v1.2.0)
+- **CodeX version** (v1.1.2)
 - **Operating system** and version
 - **Steps to reproduce** the problem
 - **Error messages** (if any)

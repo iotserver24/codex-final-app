@@ -1,6 +1,6 @@
 # AI Models in CodeX
 
-CodeX v1.2.0 supports 50+ AI models from multiple providers, with **universal thinking capabilities** now available for all models.
+CodeX v1.1.2 supports 50+ AI models from multiple providers, with **universal thinking capabilities** now available for all models.
 
 ## Universal Thinking Support
 
@@ -14,7 +14,7 @@ Thinking allows AI models to reason through problems step-by-step before providi
 
 ### All Models Now Support Thinking
 
-In v1.2.0, **every AI model** in CodeX supports thinking capabilities:
+In v1.1.2, **every AI model** in CodeX supports thinking capabilities:
 
 - No more division between "thinking" and "non-thinking" models
 - Choose any model and get advanced reasoning

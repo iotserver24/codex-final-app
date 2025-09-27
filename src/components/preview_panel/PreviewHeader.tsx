@@ -264,13 +264,6 @@ export const PreviewHeader = () => {
             "Configure",
             "configure-mode-button",
           )}
-          {renderButton(
-            "configure",
-            configureRef,
-            <Wrench size={14} />,
-            "Configure",
-            "configure-mode-button",
-          )}
           {/* Insert Share Preview (E2B) button after Configure */}
           <div
             onMouseEnter={() => setSharePopoverOpen(true)}

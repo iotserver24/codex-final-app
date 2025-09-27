@@ -1,8 +1,8 @@
 # Getting Started with CodeX
 
-Welcome to CodeX v1.2.0! This guide will help you get up and running with the latest version of CodeX, featuring universal AI thinking support and app sharing capabilities.
+Welcome to CodeX v1.1.2! This guide will help you get up and running with the latest version of CodeX, featuring universal AI thinking support and app sharing capabilities.
 
-## What's New in v1.2.0
+## What's New in v1.1.2
 
 ### 🧠 Universal Thinking Support
 
@@ -23,9 +23,9 @@ Welcome to CodeX v1.2.0! This guide will help you get up and running with the la
 
 1. Go to the [Releases page](https://github.com/iotserver24/codex/releases)
 2. Download the appropriate installer for your platform:
-   - **Windows**: `codex-1.2.0-windows-x64.exe` or `codex-1.2.0-windows-arm64.exe`
-   - **macOS**: `codex-1.2.0-macos-universal.zip`
-   - **Linux**: `codex-1.2.0-linux-x64.zip` or `codex-1.2.0-linux-arm64.zip`
+   - **Windows**: `codex-1.1.2-windows-x64.exe` or `codex-1.1.2-windows-arm64.exe`
+   - **macOS**: `codex-1.1.2-macos-universal.zip`
+   - **Linux**: `codex-1.1.2-linux-x64.zip` or `codex-1.1.2-linux-arm64.zip`
 
 ### Install CodeX
 

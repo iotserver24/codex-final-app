@@ -1,6 +1,6 @@
 # CodeX Documentation
 
-Welcome to the CodeX documentation! This comprehensive guide covers everything you need to know about CodeX v1.2.0, the AI-powered code editor and application builder.
+Welcome to the CodeX documentation! This comprehensive guide covers everything you need to know about CodeX v1.1.2, the AI-powered code editor and application builder.
 
 ## What is CodeX?
 
@@ -87,7 +87,7 @@ CodeX is an AI-powered development environment that helps you build applications
 - [Performance Optimization](./troubleshooting.md#performance-optimization) - Improve CodeX performance
 - [Getting Help](./troubleshooting.md#getting-help) - Contact support and community
 
-## What's New in v1.2.0
+## What's New in v1.1.2
 
 ### Universal Thinking Support
 
