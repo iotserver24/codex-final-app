@@ -123,8 +123,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        # Build ONLY a universal macOS artifact
-        architecture: [universal]
+        # Build for both ARM64 and x86_64 architectures separately
+        architecture: [arm64, x64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -172,23 +172,14 @@ jobs:
           VITE_POLAR_CHECKOUT_URL: ${{ secrets.VITE_POLAR_CHECKOUT_URL }}
         run: |
           echo "Building for macOS ${{ matrix.architecture }}..."
-          if [ "${{ matrix.architecture }}" = "universal" ]; then
-            # For universal build, we need to build both architectures and combine them
-            echo "Building universal macOS binary..."
-            npx electron-forge make --platform darwin --arch x64,arm64
-          else
-            npx electron-forge make --platform darwin --arch ${{ matrix.architecture }}
-          fi
+          npx electron-forge make --platform darwin --arch ${{ matrix.architecture }}
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-builds-${{ matrix.architecture }}
           path: |
-            # The "universal" build step above generates separate x64 and arm64 zips.
-            # Collect both so downstream steps can package a single Universal asset name.
-            out/make/zip/darwin/x64/*.zip
-            out/make/zip/darwin/arm64/*.zip
+            out/make/zip/darwin/${{ matrix.architecture }}/*.zip
           retention-days: 30
 
   build-windows:
@@ -329,7 +320,7 @@ jobs:
 
           # Create a new directory for renamed artifacts
           mkdir -p renamed-artifacts
-          
+
           # Windows artifacts - EXE and ZIP files
           if [ -d "artifacts/windows-builds-x64" ]; then
             find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "renamed-artifacts/codex-${VERSION}-windows-x64.exe" \;
@@ -342,8 +333,12 @@ jobs:
           fi
 
           # macOS artifacts - ZIP files
-          if [ -d "artifacts/macos-builds-universal" ]; then
-            find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "renamed-artifacts/codex-${VERSION}-macos-universal.zip" \;
+          if [ -d "artifacts/macos-builds-arm64" ]; then
+            find artifacts/macos-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/codex-${VERSION}-macos-arm64.zip" \;
+          fi
+
+          if [ -d "artifacts/macos-builds-x64" ]; then
+            find artifacts/macos-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/codex-${VERSION}-macos-x64.zip" \;
           fi
 
           # Linux artifacts - ZIP, DEB, and RPM files
@@ -390,7 +385,8 @@ jobs:
             - **Windows (ARM64) (Portable)**: Download the `.zip` file for portable use on ARM64 Windows
 
             **macOS:**
-            - **Mac Universal**: Download the universal `.zip` file (works on both Intel and Apple Silicon)
+            - **Mac (ARM64)**: Download the `.zip` file for Apple Silicon Macs
+            - **Mac (x64)**: Download the `.zip` file for Intel Macs
 
             **Linux:**
             - **Linux (x64)**: Download the `.zip` file for 64-bit Linux systems
@@ -450,7 +446,7 @@ jobs:
 
           # Create a new directory for target repo artifacts
           mkdir -p target-repo-artifacts
-          
+
           # Windows artifacts - EXE and ZIP files
           if [ -d "artifacts/windows-builds-x64" ]; then
             find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "target-repo-artifacts/codex-${VERSION}-windows-x64.exe" \;
@@ -463,8 +459,12 @@ jobs:
           fi
 
           # macOS artifacts - ZIP files
-          if [ -d "artifacts/macos-builds-universal" ]; then
-            find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "target-repo-artifacts/codex-${VERSION}-macos-universal.zip" \;
+          if [ -d "artifacts/macos-builds-arm64" ]; then
+            find artifacts/macos-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/codex-${VERSION}-macos-arm64.zip" \;
+          fi
+
+          if [ -d "artifacts/macos-builds-x64" ]; then
+            find artifacts/macos-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/codex-${VERSION}-macos-x64.zip" \;
           fi
 
           # Linux artifacts - ZIP, DEB, and RPM files
@@ -511,7 +511,8 @@ jobs:
             - **Windows (ARM64) (Portable)**: Download the `.zip` file for portable use on ARM64 Windows
 
             **macOS:**
-            - **Mac Universal**: Download the universal `.zip` file (works on both Intel and Apple Silicon)
+            - **Mac (ARM64)**: Download the `.zip` file for Apple Silicon Macs
+            - **Mac (x64)**: Download the `.zip` file for Intel Macs
 
             **Linux:**
             - **Linux (x64)**: Download the `.zip` file for 64-bit Linux systems
