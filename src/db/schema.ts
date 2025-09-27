@@ -195,6 +195,30 @@ export const docsSources = sqliteTable("docs_sources", {
     .default(sql`(unixepoch())`),
 });
 
+// --- MCP (Model Context Protocol) tables ---
+export const mcpServers = sqliteTable("mcp_servers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  transport: text("transport").notNull(),
+  command: text("command"),
+  // Store typed JSON for args and environment variables
+  args: text("args", { mode: "json" }).$type<string[] | null>(),
+  envJson: text("env_json", { mode: "json" }).$type<Record<
+    string,
+    string
+  > | null>(),
+  url: text("url"),
+  enabled: integer("enabled", { mode: "boolean" })
+    .notNull()
+    .default(sql`0`),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
 export const docsPages = sqliteTable("docs_pages", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   sourceId: integer("source_id")
@@ -231,6 +255,22 @@ export const docsChunks = sqliteTable("docs_chunks", {
     .default(sql`(unixepoch())`),
 });
 
+export const mcpToolConsents = sqliteTable(
+  "mcp_tool_consents",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    serverId: integer("server_id")
+      .notNull()
+      .references(() => mcpServers.id, { onDelete: "cascade" }),
+    toolName: text("tool_name").notNull(),
+    consent: text("consent").notNull().default("ask"), // ask | always | denied
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (table) => [unique("uniq_mcp_consent").on(table.serverId, table.toolName)],
+);
+
 // Define relations for docs tables
 export const docsSourcesRelations = relations(docsSources, ({ many }) => ({
   pages: many(docsPages),
@@ -250,3 +290,18 @@ export const docsChunksRelations = relations(docsChunks, ({ one }) => ({
     references: [docsPages.id],
   }),
 }));
+
+// Define relations for MCP tables
+export const mcpServersRelations = relations(mcpServers, ({ many }) => ({
+  toolConsents: many(mcpToolConsents),
+}));
+
+export const mcpToolConsentsRelations = relations(
+  mcpToolConsents,
+  ({ one }) => ({
+    server: one(mcpServers, {
+      fields: [mcpToolConsents.serverId],
+      references: [mcpServers.id],
+    }),
+  }),
+);

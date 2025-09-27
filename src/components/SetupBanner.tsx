@@ -8,9 +8,10 @@ import {
   XCircle,
   Loader2,
   Settings,
+  GlobeIcon,
 } from "lucide-react";
 import { providerSettingsRoute } from "@/routes/settings/providers/$provider";
-import { settingsRoute } from "@/routes/settings";
+
 import SetupProviderCard from "@/components/SetupProviderCard";
 
 import { useState, useEffect, useCallback } from "react";
@@ -26,6 +27,10 @@ import { cn } from "@/lib/utils";
 import { NodeSystemInfo } from "@/ipc/ipc_types";
 
 import { useLanguageModelProviders } from "@/hooks/useLanguageModelProviders";
+import { useScrollAndNavigateTo } from "@/hooks/useScrollAndNavigateTo";
+// @ts-ignore
+import logo from "../../assets/logo.svg";
+
 type NodeInstallStep =
   | "install"
   | "waiting-for-continue"
@@ -58,6 +63,11 @@ export function SetupBanner() {
     checkNode();
   }, [checkNode]);
 
+  const settingsScrollAndNavigateTo = useScrollAndNavigateTo("/settings", {
+    behavior: "smooth",
+    block: "start",
+  });
+
   const handleGoogleSetupClick = () => {
     // Telemetry tracking disabled
     navigate({
@@ -73,12 +83,16 @@ export function SetupBanner() {
       params: { provider: "openrouter" },
     });
   };
+  const handleDyadProSetupClick = () => {
+    posthog.capture("setup-flow:ai-provider-setup:dyad:click");
+    IpcClient.getInstance().openExternalUrl(
+      "https://www.dyad.sh/pro?utm_source=dyad-app&utm_medium=app&utm_campaign=setup-banner",
+    );
+  };
 
   const handleOtherProvidersClick = () => {
-    // Telemetry tracking disabled
-    navigate({
-      to: settingsRoute.id,
-    });
+    posthog.capture("setup-flow:ai-provider-setup:other:click");
+    settingsScrollAndNavigateTo("provider-settings");
   };
 
   const handleNodeInstallClick = useCallback(async () => {
@@ -108,7 +122,7 @@ export function SetupBanner() {
 
   if (itemsNeedAction.length === 0) {
     return (
-      <h1 className="text-6xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 tracking-tight">
+      <h1 className="text-center text-5xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 tracking-tight">
         Build your dream app
       </h1>
     );
@@ -256,13 +270,30 @@ export function SetupBanner() {
                 onClick={handleOpenRouterSetupClick}
                 tabIndex={isNodeSetupComplete ? 0 : -1}
                 leadingIcon={
-                  <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                 }
                 title="Setup OpenRouter API Key"
                 subtitle={
                   <>
                     <GiftIcon className="w-3 h-3" />
                     Free models available
+                  </>
+                }
+              />
+
+              <SetupProviderCard
+                className="mt-2"
+                variant="dyad"
+                onClick={handleDyadProSetupClick}
+                tabIndex={isNodeSetupComplete ? 0 : -1}
+                leadingIcon={
+                  <img src={logo} alt="Dyad Logo" className="w-6 h-6 mr-0.5" />
+                }
+                title="Setup Dyad Pro"
+                subtitle={
+                  <>
+                    <GlobeIcon className="w-3 h-3" />
+                    Access all AI models with one plan
                   </>
                 }
               />

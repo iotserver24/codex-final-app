@@ -18,6 +18,12 @@ import { hasCodexProKey, type UserSettings } from "@/lib/schemas";
 export function ProModeSelector() {
   const { settings, updateSettings } = useSettings();
 
+  const toggleWebSearch = () => {
+    updateSettings({
+      enableProWebSearch: !settings?.enableProWebSearch,
+    });
+  };
+
   const toggleLazyEdits = () => {
     updateSettings({
       enableProLazyEditsMode: !settings?.enableProLazyEditsMode,
@@ -95,6 +101,15 @@ export function ProModeSelector() {
               isTogglable={hasProKey}
               settingEnabled={Boolean(settings?.enableCodexPro)}
               toggle={toggleProEnabled}
+            />
+            <SelectorRow
+              id="web-search"
+              label="Web Search"
+              description="Search the web for information"
+              tooltip="Uses the web to search for information"
+              isTogglable={proModeTogglable}
+              settingEnabled={Boolean(settings?.enableProWebSearch)}
+              toggle={toggleWebSearch}
             />
             <SelectorRow
               id="lazy-edits"

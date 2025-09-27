@@ -35,6 +35,7 @@ import { registerE2BHandlers } from "./handlers/e2b_handlers";
 import { registerAgenticHandlers } from "./handlers/agentic_handlers";
 import { registerAgenticChatHandlers } from "./handlers/agentic_chat_handlers";
 import { registerAutonomousAgenticHandlers } from "./handlers/agentic_autonomous_handlers";
+import { registerMcpHandlers } from "./handlers/mcp_handlers";
 
 export function registerIpcHandlers() {
   // Register all IPC handlers by category
@@ -75,4 +76,5 @@ export function registerIpcHandlers() {
   registerAgenticHandlers();
   registerAgenticChatHandlers();
   registerAutonomousAgenticHandlers();
+  registerMcpHandlers();
 }

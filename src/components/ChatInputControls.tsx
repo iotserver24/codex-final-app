@@ -9,6 +9,8 @@ import { useAtomValue } from "jotai";
 import { IpcClient } from "@/ipc/ipc_client";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { McpToolsPicker } from "@/components/McpToolsPicker";
+import { useSettings } from "@/hooks/useSettings";
 
 export function ChatInputControls({
   showContextFilesPicker = false,
@@ -44,9 +46,17 @@ export function ChatInputControls({
     }
   };
 
+  const { settings } = useSettings();
+
   return (
     <div className="flex">
       <ChatModeSelector />
+      {settings?.selectedChatMode === "agent" && (
+        <>
+          <div className="w-1.5"></div>
+          <McpToolsPicker />
+        </>
+      )}
       <div className="w-1.5"></div>
       <ModelPicker />
       <div className="w-1.5"></div>

@@ -586,3 +586,37 @@ export interface AutonomousAgenticParams {
   mode: "dry-run" | "interactive" | "auto-apply" | "force-apply";
   maxIterations?: number;
 }
+
+// --- MCP Types ---
+export interface McpServer {
+  id: number;
+  name: string;
+  transport: string;
+  command?: string | null;
+  args?: string[] | null;
+  cwd?: string | null;
+  envJson?: Record<string, string> | null;
+  url?: string | null;
+  enabled: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface CreateMcpServer
+  extends Omit<McpServer, "id" | "createdAt" | "updatedAt"> {}
+export type McpServerUpdate = Partial<McpServer> & Pick<McpServer, "id">;
+export type McpToolConsentType = "ask" | "always" | "denied";
+
+export interface McpTool {
+  name: string;
+  description?: string | null;
+  consent: McpToolConsentType;
+}
+
+export interface McpToolConsent {
+  id: number;
+  serverId: number;
+  toolName: string;
+  consent: McpToolConsentType;
+  updatedAt: number;
+}

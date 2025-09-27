@@ -4,6 +4,11 @@ import { useLoadApps } from "@/hooks/useLoadApps";
 import { useRouter, useLocation } from "@tanstack/react-router";
 import { useSettings } from "@/hooks/useSettings";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 // @ts-ignore
 import logo from "../../assets/logo.svg";
 import { providerSettingsRoute } from "@/routes/settings/providers/$provider";
@@ -14,6 +19,12 @@ import { CodexProSuccessDialog } from "@/components/CodexProSuccessDialog";
 import { IpcClient } from "@/ipc/ipc_client";
 
 import { PreviewHeader } from "@/components/preview_panel/PreviewHeader";
+
+// Define the UserBudgetInfo type
+interface UserBudgetInfo {
+  totalCredits: number;
+  usedCredits: number;
+}
 
 export const TitleBar = () => {
   const [selectedAppId] = useAtom(selectedAppIdAtom);
@@ -199,5 +210,23 @@ export function CodexProButton({
     >
       {isCodexProEnabled ? "Pro" : "Pro (off)"}
     </Button>
+  );
+}
+
+export function AICreditStatus({ userBudget }: { userBudget: UserBudgetInfo }) {
+  const remaining = Math.round(
+    userBudget.totalCredits - userBudget.usedCredits,
+  );
+  return (
+    <Tooltip>
+      <TooltipTrigger>
+        <div className="text-xs pl-1 mt-0.5">{remaining} credits</div>
+      </TooltipTrigger>
+      <TooltipContent>
+        <div>
+          <p>Note: there is a slight delay in updating the credit status.</p>
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 }

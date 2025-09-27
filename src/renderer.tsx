@@ -9,7 +9,8 @@ import {
   QueryClientProvider,
   MutationCache,
 } from "@tanstack/react-query";
-import { showError } from "./lib/toast";
+import { showError, showMcpConsentToast } from "./lib/toast";
+import { IpcClient } from "./ipc/ipc_client";
 
 // @ts-ignore
 console.log("Running in mode:", import.meta.env.MODE);
@@ -88,6 +89,42 @@ const queryClient = new QueryClient({
 
 function App() {
   // Navigation tracking disabled - telemetry removed
+
+  useEffect(() => {
+    // Subscribe to navigation state changes
+    const unsubscribe = router.subscribe("onResolved", (navigation) => {
+      // Capture the navigation event in PostHog
+      posthog.capture("navigation", {
+        toPath: navigation.toLocation.pathname,
+        fromPath: navigation.fromLocation?.pathname,
+      });
+
+      // Optionally capture as a standard pageview as well
+      posthog.capture("$pageview", {
+        path: navigation.toLocation.pathname,
+      });
+    });
+
+    // Clean up subscription when component unmounts
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const ipc = IpcClient.getInstance();
+    const unsubscribe = ipc.onMcpToolConsentRequest((payload) => {
+      showMcpConsentToast({
+        serverName: payload.serverName,
+        toolName: payload.toolName,
+        toolDescription: payload.toolDescription,
+        inputPreview: payload.inputPreview,
+        onDecision: (d) => ipc.respondToMcpConsentRequest(payload.requestId, d),
+      });
+    });
+    return () => unsubscribe();
+  }, []);
+
   return <RouterProvider router={router} />;
 }
 

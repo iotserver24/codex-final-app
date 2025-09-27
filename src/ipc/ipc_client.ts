@@ -5,6 +5,7 @@ import {
   type UserSettings,
   type ContextPathResults,
   ChatSearchResultsSchema,
+  AppSearchResultsSchema,
 } from "../lib/schemas";
 import type {
   AppOutput,
@@ -77,10 +78,13 @@ import type {
   DocsCrawlProgress,
   GenerateEmbeddingsParams,
   ReindexDocsParams,
+  McpServerUpdate,
+  CreateMcpServer,
 } from "./ipc_types";
 import type { Template } from "../shared/templates";
 import type {
   AppChatContext,
+  AppSearchResult,
   ChatSearchResult,
   ProposalResult,
 } from "@/lib/schemas";
@@ -132,11 +136,13 @@ export class IpcClient {
       onError: (error: string) => void;
     }
   >;
+  private mcpConsentHandlers: Map<string, (payload: any) => void>;
   private constructor() {
     this.ipcRenderer = (window as any).electron.ipcRenderer as IpcRenderer;
     this.chatStreams = new Map();
     this.appStreams = new Map();
     this.helpStreams = new Map();
+    this.mcpConsentHandlers = new Map();
     // Set up listeners for stream events
     this.ipcRenderer.on("chat:response:chunk", (data) => {
       if (
@@ -251,6 +257,12 @@ export class IpcClient {
         this.helpStreams.delete(sessionId);
       }
     });
+
+    // MCP tool consent request from main
+    this.ipcRenderer.on("mcp:tool-consent-request", (payload) => {
+      const handler = this.mcpConsentHandlers.get("consent");
+      if (handler) handler(payload);
+    });
   }
 
   public static getInstance(): IpcClient {
@@ -325,6 +337,17 @@ export class IpcClient {
   // Get all apps
   public async listApps(): Promise<ListAppsResponse> {
     return this.ipcRenderer.invoke("list-apps");
+  }
+
+  // Search apps by name
+  public async searchApps(searchQuery: string): Promise<AppSearchResult[]> {
+    try {
+      const data = await this.ipcRenderer.invoke("search-app", searchQuery);
+      return AppSearchResultsSchema.parse(data);
+    } catch (error) {
+      showError(error);
+      throw error;
+    }
   }
 
   public async readAppFile(appId: number, filePath: string): Promise<string> {
@@ -823,6 +846,67 @@ export class IpcClient {
     return res.json();
   }
 
+  // --- MCP Client Methods ---
+  public async listMcpServers() {
+    return this.ipcRenderer.invoke("mcp:list-servers");
+  }
+
+  public async createMcpServer(params: CreateMcpServer) {
+    return this.ipcRenderer.invoke("mcp:create-server", params);
+  }
+
+  public async updateMcpServer(params: McpServerUpdate) {
+    return this.ipcRenderer.invoke("mcp:update-server", params);
+  }
+
+  public async deleteMcpServer(id: number) {
+    return this.ipcRenderer.invoke("mcp:delete-server", id);
+  }
+
+  public async listMcpTools(serverId: number) {
+    return this.ipcRenderer.invoke("mcp:list-tools", serverId);
+  }
+
+  // Removed: upsertMcpTools and setMcpToolActive – tools are fetched dynamically at runtime
+
+  public async getMcpToolConsents() {
+    return this.ipcRenderer.invoke("mcp:get-tool-consents");
+  }
+
+  public async setMcpToolConsent(params: {
+    serverId: number;
+    toolName: string;
+    consent: "ask" | "always" | "denied";
+  }) {
+    return this.ipcRenderer.invoke("mcp:set-tool-consent", params);
+  }
+
+  public onMcpToolConsentRequest(
+    handler: (payload: {
+      requestId: string;
+      serverId: number;
+      serverName: string;
+      toolName: string;
+      toolDescription?: string | null;
+      inputPreview?: string | null;
+    }) => void,
+  ) {
+    this.mcpConsentHandlers.set("consent", handler as any);
+    return () => {
+      this.mcpConsentHandlers.delete("consent");
+    };
+  }
+
+  public respondToMcpConsentRequest(
+    requestId: string,
+    decision: "accept-once" | "accept-always" | "decline",
+  ) {
+    this.ipcRenderer.invoke("mcp:tool-consent-response", {
+      requestId,
+      decision,
+    });
+  }
+
   // Get proposal details
   public async getProposal(chatId: number): Promise<ProposalResult | null> {
     try {
@@ -1061,6 +1145,14 @@ export class IpcClient {
       apiBaseUrl,
       envVarName,
     });
+  }
+  public async editCustomLanguageModelProvider(
+    params: CreateCustomLanguageModelProviderParams,
+  ): Promise<LanguageModelProvider> {
+    return this.ipcRenderer.invoke(
+      "edit-custom-language-model-provider",
+      params,
+    );
   }
 
   public async createCustomLanguageModel(
