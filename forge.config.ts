@@ -94,7 +94,7 @@ const config: ForgeConfig = {
     arch: process.env.FORGE_ARCH ? [process.env.FORGE_ARCH] : ["x64", "arm64"],
   },
   rebuildConfig: {
-    extraModules: ["better-sqlite3"],
+    extraModules: ["better-sqlite3", "drizzle-orm"],
     force: true,
   },
   makers: [
