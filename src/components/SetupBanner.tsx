@@ -10,6 +10,12 @@ import {
   Settings,
   GlobeIcon,
 } from "lucide-react";
+
+declare global {
+  const posthog: {
+    capture: (event: string, properties?: Record<string, any>) => void;
+  };
+}
 import { providerSettingsRoute } from "@/routes/settings/providers/$provider";
 
 import SetupProviderCard from "@/components/SetupProviderCard";

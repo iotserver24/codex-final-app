@@ -27,9 +27,7 @@ export interface ExecutionAPI {
 }
 
 export interface WebSearchAPI {
-  search(
-    query: string,
-  ): Promise<{
+  search(query: string): Promise<{
     results: Array<{ title: string; url: string; snippet: string }>;
   }>;
 }
@@ -244,9 +242,7 @@ class ExecutionTools implements ExecutionAPI {
 }
 
 class WebSearchTools implements WebSearchAPI {
-  async search(
-    query: string,
-  ): Promise<{
+  async search(query: string): Promise<{
     results: Array<{ title: string; url: string; snippet: string }>;
   }> {
     try {

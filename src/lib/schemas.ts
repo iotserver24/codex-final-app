@@ -216,6 +216,12 @@ export const UserSettingsSchema = z.object({
   vercelAccessToken: SecretSchema.optional(),
   // Optional: persist user-provided Polar license key for paid share durations
   polarLicenseKey: SecretSchema.optional(),
+  // Optional: E2B API key for sandbox functionality
+  e2bApiKey: SecretSchema.optional(),
+  // Optional: Polar API key for additional functionality
+  polarApiKey: SecretSchema.optional(),
+  // Default share duration in minutes
+  defaultShareDuration: z.number().optional(),
   supabase: SupabaseSchema.optional(),
   neon: NeonSchema.optional(),
   autoApproveChanges: z.boolean().optional(),
@@ -223,6 +229,7 @@ export const UserSettingsSchema = z.object({
   telemetryUserId: z.string().optional(),
   hasRunBefore: z.boolean().optional(),
   enableCodexPro: z.boolean().optional(),
+  enableDyadPro: z.boolean().optional(),
   experiments: ExperimentsSchema.optional(),
   lastShownReleaseNotesVersion: z.string().optional(),
   maxChatTurnsInContext: z.number().optional(),

@@ -288,7 +288,7 @@ export const AgenticModeInterface: React.FC = () => {
             // Add to job history
             setJobHistory((prev) => [
               {
-                job_id: agenticChatId.toString(),
+                id: agenticChatId.toString(),
                 status: statusResponse.status as any,
                 progress: {
                   phase: "completed",
@@ -307,6 +307,8 @@ export const AgenticModeInterface: React.FC = () => {
                   statusResponse.status === "failed"
                     ? [statusResponse.lastMessage]
                     : [],
+                createdAt: Date.now(),
+                mode: "dry-run",
               },
               ...prev.slice(0, 9),
             ]); // Keep last 10 jobs
@@ -351,7 +353,7 @@ export const AgenticModeInterface: React.FC = () => {
 
   const rollbackJob = async (jobId: string) => {
     try {
-      await ipcClient.rollbackAgenticJob(jobId);
+      await ipcClient.rollbackAgenticJob({ jobId });
       addProgressUpdate({
         type: "status",
         message: `🔄 Rolled back job ${jobId}`,

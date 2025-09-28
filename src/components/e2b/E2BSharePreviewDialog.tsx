@@ -1,5 +1,15 @@
 import { useMemo, useState } from "react";
-import e2bQr from "../../../assets/e2b-qr.png";
+import e2bQr from "../../../../assets/e2b-qr.png";
+
+declare global {
+  interface Window {
+    electron?: {
+      ipcRenderer: {
+        invoke: (channel: string, ...args: any[]) => Promise<any>;
+      };
+    };
+  }
+}
 import { useSharePreviewE2B } from "@/hooks/useSharePreviewE2B";
 import { Button } from "@/components/ui/button";
 import {

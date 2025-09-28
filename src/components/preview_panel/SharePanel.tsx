@@ -7,8 +7,10 @@ import { useSharePreviewE2B } from "@/hooks/useSharePreviewE2B";
 // import e2bQr from "../../../assets/e2b-qr.png";
 import { useSettings } from "@/hooks/useSettings";
 import { useNavigate } from "@tanstack/react-router";
+import { showError } from "@/lib/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Clock,
   ExternalLink,
@@ -25,20 +27,49 @@ import {
 
 export function SharePanel() {
   const appId = useAtomValue(selectedAppIdAtom);
-  const { share, isLoading, useStatus, useLogs, useProgress, useVersions } =
-    useSharePreviewE2B(appId);
+  const {
+    share,
+    isLoading,
+    useStatus,
+    useLogs,
+    useProgress,
+    useVersions,
+    canDisableBadge,
+  } = useSharePreviewE2B(appId);
   const { data: status } = useStatus();
   const { data: logs } = useLogs();
   const { data: progress } = useProgress();
   const { data: versions } = useVersions();
   const { settings } = useSettings();
   const navigate = useNavigate();
-  const [duration, setDuration] = useState<number>(15);
+  const [duration, setDuration] = useState<number>(
+    settings?.defaultShareDuration || 15,
+  );
   const [licenseKey, setLicenseKey] = useState<string>("");
+  const [enableBadge, setEnableBadge] = useState<boolean>(false);
+  const [customSubdomain, setCustomSubdomain] = useState<string>("");
   const [reloadKey, setReloadKey] = useState<number>(Date.now());
   const [copied, setCopied] = useState<boolean>(false);
+  const [lastShareResult, setLastShareResult] = useState<{
+    subdomainUrl?: string;
+    e2bUrl?: string;
+  } | null>(null);
 
-  const url = status?.url;
+  // Always use subdomain URL - never show E2B URL to users
+  const url = lastShareResult?.subdomainUrl;
+
+  // Debug logging to help identify the issue
+  console.log("URL Debug:", {
+    lastShareResult,
+    finalUrl: url,
+    customSubdomain,
+    hasSubdomainUrl: !!lastShareResult?.subdomainUrl,
+  });
+
+  // Preview URL for the custom subdomain
+  const previewSubdomainUrl = customSubdomain
+    ? `https://${customSubdomain}.kitoryd.cc`
+    : null;
   const cacheBustedUrl = useMemo(() => {
     if (!url) return undefined;
     const u = new URL(url);
@@ -56,9 +87,26 @@ export function SharePanel() {
     }
   }, [duration, licenseKey, settings?.polarLicenseKey?.value]);
 
+  // Update duration when settings change
+  useEffect(() => {
+    if (
+      settings?.defaultShareDuration &&
+      settings.defaultShareDuration !== duration
+    ) {
+      setDuration(settings.defaultShareDuration);
+    }
+  }, [settings?.defaultShareDuration, duration]);
+
+  // Set badge default based on user type
+  useEffect(() => {
+    const userCanDisableBadge = canDisableBadge(duration);
+    setEnableBadge(!userCanDisableBadge); // Default: enabled for free users, disabled for paid users
+  }, [duration, canDisableBadge]);
+
   const handleCopyUrl = async () => {
-    if (url) {
-      await navigator.clipboard.writeText(url);
+    const urlToCopy = lastShareResult?.subdomainUrl;
+    if (urlToCopy) {
+      await navigator.clipboard.writeText(urlToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -113,29 +161,72 @@ export function SharePanel() {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <select
-              className="px-3 py-2 text-sm border rounded-lg bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-              value={duration}
-              title="Select deployment duration"
-              aria-label="Select deployment duration"
-              onChange={(e) => setDuration(Number(e.target.value))}
-            >
-              <option value={5}>5 minutes</option>
-              <option value={10}>10 minutes</option>
-              <option value={15}>15 minutes</option>
-              <option value={30}>30 minutes</option>
-              <option value={60}>60 minutes</option>
-            </select>
-            <Badge
-              variant={getDurationBadgeVariant(duration)}
-              className="gap-1"
-            >
-              {getDurationIcon(duration)}
-              {duration <= 15 ? "Free" : "Paid"}
-            </Badge>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <select
+                className="px-3 py-2 text-sm border rounded-lg bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                value={duration}
+                title="Select deployment duration"
+                aria-label="Select deployment duration"
+                onChange={(e) => setDuration(Number(e.target.value))}
+              >
+                <option value={5}>5 minutes</option>
+                <option value={10}>10 minutes</option>
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={60}>60 minutes</option>
+              </select>
+              <Badge
+                variant={getDurationBadgeVariant(duration)}
+                className="gap-1"
+              >
+                {getDurationIcon(duration)}
+                {duration <= 15 ? "Free" : "Paid"}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Custom Subdomain Input */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-1">
+                <Globe className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center gap-1 flex-1">
+                  <span className="text-sm text-muted-foreground">
+                    https://
+                  </span>
+                  <input
+                    type="text"
+                    value={customSubdomain}
+                    onChange={(e) =>
+                      setCustomSubdomain(
+                        e.target.value
+                          .replace(/[^a-zA-Z0-9-]/g, "")
+                          .toLowerCase(),
+                      )
+                    }
+                    placeholder="myapp"
+                    required
+                    className="flex-1 px-2 py-1 text-sm border rounded bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    title="Choose your custom subdomain (required)"
+                    aria-label="Custom subdomain (required)"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    .kitoryd.cc
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Preview URL */}
+            {customSubdomain && (
+              <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded border">
+                Preview:{" "}
+                <span className="font-mono">{previewSubdomainUrl}</span>
+              </div>
+            )}
           </div>
 
           {(duration === 30 || duration === 60) &&
@@ -158,16 +249,55 @@ export function SharePanel() {
               </Button>
             )}
 
+          {/* Badge control for paid users */}
+          {canDisableBadge(duration) && (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={enableBadge}
+                onCheckedChange={setEnableBadge}
+                id="badge-toggle"
+              />
+              <label htmlFor="badge-toggle" className="text-sm">
+                Show "Made with Codex" badge
+              </label>
+            </div>
+          )}
+
           <Button
             className="ml-auto gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-            onClick={() =>
-              share({
-                durationMinutes: duration,
-                licenseKey:
-                  licenseKey || settings?.polarLicenseKey?.value || undefined,
-              })
+            onClick={async () => {
+              // Validate subdomain (now mandatory)
+              if (
+                !customSubdomain ||
+                customSubdomain.length < 3 ||
+                customSubdomain.length > 63
+              ) {
+                showError("Please enter a subdomain (3-63 characters)");
+                return;
+              }
+
+              try {
+                const result = await share({
+                  durationMinutes: duration,
+                  licenseKey:
+                    licenseKey || settings?.polarLicenseKey?.value || undefined,
+                  enableCustomDomain: true,
+                  enableBadge,
+                  customSubdomain: customSubdomain, // Now mandatory
+                });
+
+                // Store the share result for URL display
+                setLastShareResult(result);
+              } catch {
+                // Error handling is already done in the hook
+              }
+            }}
+            disabled={
+              isLoading ||
+              !customSubdomain ||
+              customSubdomain.length < 3 ||
+              customSubdomain.length > 63
             }
-            disabled={isLoading}
           >
             {isLoading ? (
               <>
@@ -191,7 +321,7 @@ export function SharePanel() {
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-4 space-y-4">
-        {status?.running && url ? (
+        {status?.running && url && lastShareResult?.subdomainUrl ? (
           <div className="space-y-4">
             {/* Preview Card */}
             <Card className="overflow-hidden">
@@ -214,7 +344,7 @@ export function SharePanel() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-muted-foreground mb-1">
-                      Share URL
+                      Share URL (Custom Domain)
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded-md bg-muted/50 border">
                       <Globe className="w-3 h-3 text-muted-foreground flex-shrink-0" />
@@ -227,6 +357,9 @@ export function SharePanel() {
                         {url}
                       </a>
                     </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Share this URL with others to preview your app.
+                    </p>
                   </div>
 
                   <div className="flex gap-2">
@@ -353,33 +486,51 @@ export function SharePanel() {
             )}
           </div>
         ) : (
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <RefreshCw className="w-4 h-4" />
-                {isLoading ? "Deploying..." : "Ready to Share"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] rounded-lg border border-dashed border-muted-foreground/25 p-4 overflow-auto bg-muted/20">
-                <div className="text-sm font-mono whitespace-pre-wrap text-muted-foreground">
-                  {(progress?.lines || []).join("\n")}
-                  {(progress?.lines || []).length > 0 && "\n"}
-                  {(logs?.logs || "").slice(-4000)}
-                  {!isLoading &&
-                    (progress?.lines || []).length === 0 &&
-                    !logs?.logs && (
-                      <div className="text-center py-8">
-                        <Globe className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                        <p className="text-muted-foreground">
-                          Click "Start & Share" to deploy your app
-                        </p>
-                      </div>
-                    )}
+          <div className="space-y-4">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4" />
+                  {isLoading ? "Deploying..." : "Ready to Share"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[200px] rounded-lg border border-dashed border-muted-foreground/25 p-4 overflow-auto bg-muted/20">
+                  <div className="text-sm font-mono whitespace-pre-wrap text-muted-foreground">
+                    {(progress?.lines || []).join("\n")}
+                    {(progress?.lines || []).length > 0 && "\n"}
+                    {(logs?.logs || "")
+                      .slice(-3000)
+                      .split("\n")
+                      .filter(
+                        (line) =>
+                          !line.includes(".e2b.app") &&
+                          !line.includes("Sandbox ready at"),
+                      ) // Hide E2B URLs from users
+                      .join("\n")}
+                    {!isLoading &&
+                      (progress?.lines || []).length === 0 &&
+                      !(logs?.logs || "")
+                        .split("\n")
+                        .filter(
+                          (line) =>
+                            !line.includes(".e2b.app") &&
+                            !line.includes("Sandbox ready at"),
+                        )
+                        .join("\n")
+                        .trim() && (
+                        <div className="text-center py-6">
+                          <Globe className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                          <p className="text-muted-foreground">
+                            Click "Start & Share" to deploy your app
+                          </p>
+                        </div>
+                      )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>

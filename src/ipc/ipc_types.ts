@@ -620,3 +620,47 @@ export interface McpToolConsent {
   consent: McpToolConsentType;
   updatedAt: number;
 }
+
+// --- Agentic Job Types ---
+export interface AgenticJob {
+  id: string;
+  createdAt: Date;
+  mode: "dry-run" | "interactive" | "auto-apply" | "force-apply";
+  status:
+    | "queued"
+    | "planning"
+    | "executing"
+    | "completed"
+    | "failed"
+    | "cancelled";
+  progress?: {
+    phase: "planning" | "executing" | "completed";
+    completedTasks: number;
+    totalTasks: number;
+    percentage: number;
+  };
+  summary?: string;
+  warnings?: string[];
+  errors?: string[];
+}
+
+export interface CreateAgenticJobParams {
+  chatId: number;
+  prompt: string;
+  mode: "dry-run" | "interactive" | "auto-apply" | "force-apply";
+  maxIterations?: number;
+}
+
+export interface CreateAgenticJobResponse {
+  jobId: string;
+  job: AgenticJob;
+}
+
+export interface AgenticJobStatusResponse {
+  job: AgenticJob;
+}
+
+export interface RollbackParams {
+  jobId: string;
+  commitSha?: string;
+}
