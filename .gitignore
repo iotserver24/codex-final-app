@@ -12,7 +12,9 @@ open-lovable/
 /open-lovable/
 # dist
 dist/
-
+workers/
+/workers/
+/workers
 # playwright
 playwright-report/
 test-results/
