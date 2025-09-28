@@ -168,6 +168,7 @@
     "lexical-beautiful-mentions": "^0.1.47",
     "lucide-react": "^0.487.0",
     "monaco-editor": "^0.52.2",
+    "node-fetch": "^3.3.2",
     "openai": "^4.91.1",
     "p-queue": "^8.1.1",
     "posthog-js": "^1.236.3",
