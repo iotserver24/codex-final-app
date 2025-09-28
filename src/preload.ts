@@ -111,6 +111,8 @@ const validInvokeChannels = [
   "portal:migrate-create",
 
   "check-for-updates",
+  "check-for-updates-xibe",
+  "download-update",
   "prompt:enhance",
 
   // MCP
@@ -197,6 +199,8 @@ const validReceiveChannels = [
 
   // MCP consent request from main to renderer
   "mcp:tool-consent-request",
+  // Update notifications
+  "update-available",
 ] as const;
 
 type ValidInvokeChannel = (typeof validInvokeChannels)[number];

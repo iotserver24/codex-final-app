@@ -240,43 +240,17 @@ export function AppSidebar() {
 
   const handleCheckForUpdates = async () => {
     try {
-      const data: UpdateCheckResult =
-        await IpcClient.getInstance().checkForUpdates();
-      if (!appVersion || !settings) {
-        showError("Could not determine current app version or settings.");
-        return;
-      }
+      const result = await IpcClient.getInstance().checkForUpdatesXibe();
 
-      // Get the appropriate channel based on user settings
-      const channel = settings.releaseChannel === "beta" ? "beta" : "stable";
-      const channelData = data[channel];
-
-      const isNewer = (a: string, b: string) => {
-        const pa = a.split(".").map(Number);
-        const pb = b.split(".").map(Number);
-        for (let i = 0; i < 3; i++) {
-          if ((pa[i] || 0) < (pb[i] || 0)) return true;
-          if ((pa[i] || 0) > (pb[i] || 0)) return false;
-        }
-        return false;
-      };
-
-      if (isNewer(appVersion, channelData.version)) {
+      if (result.hasUpdate && result.releaseInfo && result.downloadUrl) {
         const info = {
-          version: channelData.version,
-          releaseNotes: channelData.releaseNotes,
-          downloadUrl: channelData.downloadUrl,
-          downloadPageUrl: channelData.downloadPageUrl,
-          readmeUrl: channelData.readmeUrl,
+          version: result.latestVersion,
+          releaseNotes: result.releaseInfo.description,
+          downloadUrl: result.downloadUrl,
+          downloadPageUrl: result.downloadUrl,
+          readmeUrl: result.releaseInfo.changelogUrl,
         } as const;
-        let readmeMarkdown: string | undefined;
-        if (info.readmeUrl) {
-          try {
-            const res = await fetch(info.readmeUrl);
-            if (res.ok) readmeMarkdown = await res.text();
-          } catch {}
-        }
-        setUpdateInfo({ ...info, readmeMarkdown });
+        setUpdateInfo({ ...info, readmeMarkdown: undefined });
         setShowUpdateModal(true);
       } else {
         toast.success?.("You are using the latest version.") ||

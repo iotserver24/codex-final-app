@@ -17,8 +17,8 @@ export function ChatErrorBox({
       <ChatErrorContainer onDismiss={onDismiss}>
         {error}
         <span className="ml-1">
-          You have access to codeX Pro for free - this shouldn't happen! Please
-          try again.
+          You have access to Xibe AI Pro for free - this shouldn't happen!
+          Please try again.
         </span>
       </ChatErrorContainer>
     );
@@ -34,7 +34,7 @@ export function ChatErrorBox({
       <ChatErrorContainer onDismiss={onDismiss}>
         {error}
         <span className="ml-1">
-          You already have codeX Pro for free! Please try again in a moment.
+          You already have Xibe AI Pro for free! Please try again in a moment.
         </span>
       </ChatErrorContainer>
     );
@@ -44,8 +44,8 @@ export function ChatErrorBox({
     return (
       <ChatInfoContainer onDismiss={onDismiss}>
         <span>
-          codeX Pro is enabled for free! This error shouldn't occur. Please try
-          again.
+          Xibe AI Pro is enabled for free! This error shouldn't occur. Please
+          try again.
         </span>
       </ChatInfoContainer>
     );
@@ -54,8 +54,8 @@ export function ChatErrorBox({
     return (
       <ChatInfoContainer onDismiss={onDismiss}>
         <span>
-          codeX Pro has unlimited usage! This error shouldn't occur. Please try
-          again.
+          Xibe AI Pro has unlimited usage! This error shouldn't occur. Please
+          try again.
         </span>
       </ChatInfoContainer>
     );

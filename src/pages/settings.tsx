@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { AutoFixProblemsSwitch } from "@/components/AutoFixProblemsSwitch";
 import { AutoUpdateSwitch } from "@/components/AutoUpdateSwitch";
 import { ReleaseChannelSelector } from "@/components/ReleaseChannelSelector";
+import { useUpdatePopup, UpdatePopup } from "@/components/UpdatePopup";
 import { NeonIntegration } from "@/components/NeonIntegration";
 import { RuntimeModeSelector } from "@/components/RuntimeModeSelector";
 import { PolarLicenseSettings } from "@/components/PolarLicenseSettings";
@@ -189,6 +190,7 @@ export default function SettingsPage() {
 
 export function GeneralSettings({ appVersion }: { appVersion: string | null }) {
   const { theme, setTheme } = useTheme();
+  const updatePopup = useUpdatePopup();
 
   return (
     <div id="general-settings" className="bg-card rounded-xl shadow-sm p-6">
@@ -244,6 +246,16 @@ export function GeneralSettings({ appVersion }: { appVersion: string | null }) {
           This will automatically update the app when new versions are
           available.
         </div>
+        <div className="mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={updatePopup.checkForUpdates}
+            className="text-sm"
+          >
+            Check for Updates Now
+          </Button>
+        </div>
       </div>
 
       <div className="mt-4">
@@ -260,6 +272,13 @@ export function GeneralSettings({ appVersion }: { appVersion: string | null }) {
           {appVersion ? appVersion : "-"}
         </span>
       </div>
+
+      <UpdatePopup
+        isOpen={updatePopup.isOpen}
+        onClose={updatePopup.hideUpdate}
+        updateInfo={updatePopup.updateInfo}
+        onDismissForSession={updatePopup.dismissForSession}
+      />
     </div>
   );
 }

@@ -75,27 +75,27 @@ export function ProModeSelector() {
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent>Configure codeX Pro settings</TooltipContent>
+        <TooltipContent>Configure Xibe AI Pro settings</TooltipContent>
       </Tooltip>
       <PopoverContent className="w-80 border-primary/20">
         <div className="space-y-4">
           <div className="space-y-1">
             <h4 className="font-medium flex items-center gap-1.5">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-primary font-medium">codeX Pro</span>
+              <span className="text-primary font-medium">Xibe AI Pro</span>
             </h4>
             <div className="h-px bg-gradient-to-r from-primary/50 via-primary/20 to-transparent" />
           </div>
           <div className="text-sm text-center text-muted-foreground">
             <div className="inline-flex items-center justify-center gap-2 rounded-md border border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20 px-3 py-2 text-sm font-medium text-green-700 dark:text-green-300">
               <Sparkles className="h-4 w-4" />
-              CodeX Pro is now FREE!
+              Xibe AI Pro is now FREE!
             </div>
           </div>
           <div className="flex flex-col gap-5">
             <SelectorRow
               id="pro-enabled"
-              label="Enable codeX Pro"
+              label="Enable Xibe AI Pro"
               description="Free client-side Pro features"
               tooltip="Enables advanced Pro features like Smart Context and Turbo Edits."
               isTogglable={hasProKey}

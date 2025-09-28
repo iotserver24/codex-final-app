@@ -293,8 +293,8 @@ export function ModelPicker() {
             {/* Primary providers as submenus */}
             {primaryProvidersOrdered.map(([providerId, models]) => {
               models = models.filter((model) => {
-                // Don't show free models if Codex Pro is enabled because
-                // we will use the paid models (in Codex Pro backend) which
+                // Don't show free models if Xibe AI Pro is enabled because
+                // we will use the paid models (in Xibe AI Pro backend) which
                 // don't have the free limitations.
                 if (
                   isCodexProEnabled(settings) &&
@@ -307,7 +307,7 @@ export function ModelPicker() {
               const provider = providers?.find((p) => p.id === providerId);
               const providerDisplayName =
                 provider?.id === "auto"
-                  ? "Codex Turbo"
+                  ? "Xibe AI Turbo"
                   : (provider?.name ?? providerId);
               return (
                 <DropdownMenuSub key={providerId}>

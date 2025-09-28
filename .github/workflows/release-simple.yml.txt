@@ -103,9 +103,9 @@ jobs:
         with:
           draft: true
           prerelease: true
-          name: "CodeX v${{ github.run_number }} - Draft Release"
+          name: "Xibe AI v${{ github.run_number }} - Draft Release"
           body: |
-            ## CodeX v${{ github.run_number }}
+            ## Xibe AI v${{ github.run_number }}
 
             This is a draft release with unsigned builds for testing purposes.
 

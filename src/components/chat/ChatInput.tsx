@@ -291,7 +291,7 @@ export function ChatInput({ chatId }: { chatId?: number }) {
               onChange={setInputValue}
               onSubmit={handleSubmit}
               onPaste={handlePaste}
-              placeholder="Ask codeX to build..."
+              placeholder="Ask Xibe AI to build..."
               className="text-foreground"
               style={{ resize: "none" }}
               excludeCurrentApp={true}

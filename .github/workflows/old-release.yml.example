@@ -1,4 +1,4 @@
-name: Build and Release CodeX
+name: Build and Release Xibe AI
 
 on:
   push:
@@ -263,39 +263,39 @@ jobs:
           
           # Linux artifacts
           if [ -d "artifacts/linux-builds-x64" ]; then
-            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.deb" \;
-            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \;
-            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \;
+            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-x64.deb" \;
+            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-x64.zip" \;
+            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-x64.rpm" \;
           fi
           
           if [ -d "artifacts/linux-builds-arm64" ]; then
-            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \;
-            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \;
-            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \;
+            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-ARM64.deb" \;
+            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-ARM64.zip" \;
+            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-ARM64.rpm" \;
           fi
           
           # macOS artifacts
           if [ -d "artifacts/macos-builds-x64" ]; then
-            find artifacts/macos-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-macOS-x64.zip" \;
+            find artifacts/macos-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-macOS-x64.zip" \;
           fi
           
           if [ -d "artifacts/macos-builds-arm64" ]; then
-            find artifacts/macos-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-macOS-ARM64.zip" \;
+            find artifacts/macos-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-macOS-ARM64.zip" \;
           fi
           
           if [ -d "artifacts/macos-builds-universal" ]; then
-            find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-macOS-Universal.zip" \;
+            find artifacts/macos-builds-universal -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-macOS-Universal.zip" \;
           fi
           
           # Windows artifacts
           if [ -d "artifacts/windows-builds-x64" ]; then
-            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-x64-Setup.exe" \;
-            find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-x64-Portable.zip" \;
+            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Windows-x64-Setup.exe" \;
+            find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Windows-x64-Portable.zip" \;
           fi
           
           if [ -d "artifacts/windows-builds-arm64" ]; then
-            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-ARM64-Setup.exe" \;
-            find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Windows-ARM64-Portable.zip" \;
+            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Windows-ARM64-Setup.exe" \;
+            find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Windows-ARM64-Portable.zip" \;
           fi
           
           echo "Renamed artifacts:"
@@ -305,7 +305,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: CodeX v${{ steps.version.outputs.version }}
+          name: Xibe AI v${{ steps.version.outputs.version }}
           draft: false
           prerelease: false
           files: |
@@ -314,7 +314,7 @@ jobs:
             renamed-artifacts/*.rpm
             renamed-artifacts/*.exe
           body: |
-            ## CodeX v${{ steps.version.outputs.version }}
+            ## Xibe AI v${{ steps.version.outputs.version }}
 
             ### 🚀 What's New
             - AI-powered code generation and editing
@@ -344,7 +344,7 @@ jobs:
             ### 🔧 Installation
             1. Download the appropriate file for your platform and architecture
             2. Run the installer or extract the zip file
-            3. Launch CodeX and start coding with AI!
+            3. Launch Xibe AI and start coding with AI!
 
             ### ⚠️ Note
             These builds are not code-signed and may show security warnings. This is normal for open-source applications.
@@ -356,7 +356,7 @@ jobs:
             Visit our [documentation](https://codex.anishkumar.tech/docs) for detailed guides and tutorials.
 
             ---
-            *Built with ❤️ by the CodeX team*
+            *Built with ❤️ by the Xibe AI team*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -56,7 +56,7 @@ export const TitleBar = () => {
   const { lastDeepLink } = useDeepLink();
   useEffect(() => {
     const handleDeepLink = async () => {
-      if (lastDeepLink?.type === "codex-pro-return") {
+      if (lastDeepLink?.type === "xibe-ai-pro-return") {
         await refreshSettings();
         showCodexProSuccessDialog();
       }
@@ -76,15 +76,15 @@ export const TitleBar = () => {
     }
   };
 
-  const isCodexPro = !!settings?.providerSettings?.auto?.apiKey?.value;
-  const isCodexProEnabled = Boolean(settings?.enableCodexPro);
+  const isXibeAIPro = !!settings?.providerSettings?.auto?.apiKey?.value;
+  const isXibeAIProEnabled = Boolean(settings?.enableCodexPro);
 
   return (
     <>
       <div className="@container z-11 w-full h-11 bg-(--sidebar) absolute top-0 left-0 app-region-drag flex items-center">
         <div className={`${showWindowControls ? "pl-2" : "pl-18"}`}></div>
 
-        <img src={logo} alt="Codex Logo" className="w-6 h-6 mr-0.5" />
+        <img src={logo} alt="Xibe AI Logo" className="w-6 h-6 mr-0.5" />
         <Button
           data-testid="title-bar-app-name-button"
           variant="outline"
@@ -96,7 +96,9 @@ export const TitleBar = () => {
         >
           {displayText}
         </Button>
-        {isCodexPro && <CodexProButton isCodexProEnabled={isCodexProEnabled} />}
+        {isXibeAIPro && (
+          <XibeAIProButton isXibeAIProEnabled={isXibeAIProEnabled} />
+        )}
 
         {/* Preview Header */}
         {location.pathname === "/chat" && (
@@ -186,15 +188,15 @@ function WindowsControls() {
   );
 }
 
-export function CodexProButton({
-  isCodexProEnabled,
+export function XibeAIProButton({
+  isXibeAIProEnabled,
 }: {
-  isCodexProEnabled: boolean;
+  isXibeAIProEnabled: boolean;
 }) {
   const { navigate } = useRouter();
   return (
     <Button
-      data-testid="title-bar-codex-pro-button"
+      data-testid="title-bar-xibe-ai-pro-button"
       onClick={() => {
         navigate({
           to: providerSettingsRoute.id,
@@ -204,11 +206,11 @@ export function CodexProButton({
       variant="outline"
       className={cn(
         "hidden @2xl:block ml-1 no-app-region-drag h-7 bg-indigo-600 text-white dark:bg-indigo-600 dark:text-white text-xs px-2 pt-1 pb-1",
-        !isCodexProEnabled && "bg-zinc-600 dark:bg-zinc-600",
+        !isXibeAIProEnabled && "bg-zinc-600 dark:bg-zinc-600",
       )}
       size="sm"
     >
-      {isCodexProEnabled ? "Pro" : "Pro (off)"}
+      {isXibeAIProEnabled ? "Pro" : "Pro (off)"}
     </Button>
   );
 }

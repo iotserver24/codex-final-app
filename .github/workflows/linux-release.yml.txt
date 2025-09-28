@@ -1,4 +1,4 @@
-name: Linux Release - CodeX
+name: Linux Release - Xibe AI
 
 on:
   push:
@@ -166,16 +166,16 @@ jobs:
           # Linux artifacts with proper architecture naming
           if [ -d "artifacts/linux-builds-x64" ]; then
             echo "Processing x64 artifacts..."
-            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.deb" \; || echo "No DEB files found for x64"
-            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.zip" \; || echo "No ZIP files found for x64"
-            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-x64.rpm" \; || echo "No RPM files found for x64"
+            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-x64.deb" \; || echo "No DEB files found for x64"
+            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-x64.zip" \; || echo "No ZIP files found for x64"
+            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-x64.rpm" \; || echo "No RPM files found for x64"
           fi
 
           if [ -d "artifacts/linux-builds-arm64" ]; then
             echo "Processing ARM64 artifacts..."
-            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.deb" \; || echo "No DEB files found for ARM64"
-            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.zip" \; || echo "No ZIP files found for ARM64"
-            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/CodeX-${VERSION}-Linux-ARM64.rpm" \; || echo "No RPM files found for ARM64"
+            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-ARM64.deb" \; || echo "No DEB files found for ARM64"
+            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-ARM64.zip" \; || echo "No ZIP files found for ARM64"
+            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-Linux-ARM64.rpm" \; || echo "No RPM files found for ARM64"
           fi
 
           echo "Renamed artifacts:"
@@ -185,7 +185,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}-linux
-          name: CodeX v${{ steps.version.outputs.version }} - Linux
+          name: Xibe AI v${{ steps.version.outputs.version }} - Linux
           draft: false
           prerelease: false
           files: |
@@ -193,7 +193,7 @@ jobs:
             renamed-artifacts/*.deb
             renamed-artifacts/*.rpm
           body: |
-            ## CodeX v${{ steps.version.outputs.version }} - Linux Release
+            ## Xibe AI v${{ steps.version.outputs.version }} - Linux Release
 
             ### 🚀 What's New
             - AI-powered code generation and editing
@@ -220,18 +220,18 @@ jobs:
 
             **For Debian/Ubuntu (.deb):**
             ```bash
-            sudo dpkg -i CodeX-${{ steps.version.outputs.version }}-Linux-*.deb
+            sudo dpkg -i Xibe AI-${{ steps.version.outputs.version }}-Linux-*.deb
             ```
 
             **For Red Hat/Fedora (.rpm):**
             ```bash
-            sudo rpm -i CodeX-${{ steps.version.outputs.version }}-Linux-*.rpm
+            sudo rpm -i Xibe AI-${{ steps.version.outputs.version }}-Linux-*.rpm
             ```
 
             **For Portable (.zip):**
             ```bash
-            unzip CodeX-${{ steps.version.outputs.version }}-Linux-*.zip
-            ./CodeX
+            unzip Xibe AI-${{ steps.version.outputs.version }}-Linux-*.zip
+            ./Xibe AI
             ```
 
             ### ⚠️ Note
@@ -244,6 +244,6 @@ jobs:
             Visit our [documentation](https://codex.anishkumar.tech/docs) for detailed guides and tutorials.
 
             ---
-            *Built with ❤️ by the CodeX team*
+            *Built with ❤️ by the Xibe AI team*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

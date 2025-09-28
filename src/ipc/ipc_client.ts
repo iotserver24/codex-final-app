@@ -839,11 +839,31 @@ export class IpcClient {
     return result.version as string;
   }
 
-  // Check for updates
+  // Check for updates using Xibe AI API
+  public async checkForUpdatesXibe(): Promise<{
+    hasUpdate: boolean;
+    currentVersion: string;
+    latestVersion: string;
+    releaseInfo: any | null;
+    downloadUrl: string | null;
+    changelogUrl?: string | null;
+    error?: string;
+  }> {
+    return this.ipcRenderer.invoke("check-for-updates-xibe");
+  }
+
+  // Legacy method for backward compatibility
   public async checkForUpdates(): Promise<any> {
     const res = await fetch("https://codex.anishkumar.tech/version.json");
     if (!res.ok) throw new Error("Failed to fetch update info");
     return res.json();
+  }
+
+  // Download and install update
+  public async downloadUpdate(
+    downloadUrl: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    return this.ipcRenderer.invoke("download-update", downloadUrl);
   }
 
   // --- MCP Client Methods ---

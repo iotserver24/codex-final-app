@@ -80,7 +80,7 @@ export function HomeChatInput({
               onChange={setInputValue}
               onSubmit={handleCustomSubmit}
               onPaste={handlePaste}
-              placeholder="Ask codeX to build..."
+              placeholder="Ask Xibe AI to build..."
               className="text-foreground"
               style={{ resize: "none" }}
               disabled={isStreaming}

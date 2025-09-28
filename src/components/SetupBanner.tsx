@@ -89,7 +89,7 @@ export function SetupBanner() {
       params: { provider: "openrouter" },
     });
   };
-  const handleDyadProSetupClick = () => {
+  const handleXibeAIProSetupClick = () => {
     posthog.capture("setup-flow:ai-provider-setup:dyad:click");
     IpcClient.getInstance().openExternalUrl(
       "https://www.dyad.sh/pro?utm_source=dyad-app&utm_medium=app&utm_campaign=setup-banner",
@@ -153,7 +153,7 @@ export function SetupBanner() {
   return (
     <>
       <p className="text-xl text-zinc-700 dark:text-zinc-300 p-4">
-        Setup Codex
+        Setup Xibe AI
       </p>
       <div className={bannerClasses}>
         <Accordion
@@ -289,13 +289,17 @@ export function SetupBanner() {
 
               <SetupProviderCard
                 className="mt-2"
-                variant="dyad"
-                onClick={handleDyadProSetupClick}
+                variant="xibe-ai"
+                onClick={handleXibeAIProSetupClick}
                 tabIndex={isNodeSetupComplete ? 0 : -1}
                 leadingIcon={
-                  <img src={logo} alt="Dyad Logo" className="w-6 h-6 mr-0.5" />
+                  <img
+                    src={logo}
+                    alt="Xibe AI Logo"
+                    className="w-6 h-6 mr-0.5"
+                  />
                 }
-                title="Setup Dyad Pro"
+                title="Setup Xibe AI Pro"
                 subtitle={
                   <>
                     <GlobeIcon className="w-3 h-3" />
@@ -396,7 +400,8 @@ function NodeInstallButton({
     case "finished-checking":
       return (
         <div className="mt-3 text-sm text-red-600 dark:text-red-400">
-          Node.js not detected. Closing and re-opening Codex usually fixes this.
+          Node.js not detected. Closing and re-opening Xibe AI usually fixes
+          this.
         </div>
       );
     default:

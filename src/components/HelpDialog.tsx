@@ -27,7 +27,6 @@ import { ChatLogsData } from "../ipc/ipc_types";
 import { showError } from "../lib/toast";
 import { HelpBotDialog } from "./HelpBotDialog";
 import { useSettings } from "../hooks/useSettings";
-import type { UpdateCheckResult } from "../ipc/ipc_types";
 
 interface HelpDialogProps {
   isOpen: boolean;
@@ -55,11 +54,10 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
   const [chatLogsData, setChatLogsData] = useState<ChatLogsData | null>(null);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [sessionId, setSessionId] = useState("");
-  const [appVersionState, setAppVersion] = useState<string | null>(null);
   const [isHelpBotOpen, setIsHelpBotOpen] = useState(false);
   // const _selectedChatId = useAtomValue(selectedChatIdAtom);
 
-  const isCodexProUser = settings?.providerSettings?.["auto"]?.apiKey?.value;
+  const isXibeAIProUser = settings?.providerSettings?.["auto"]?.apiKey?.value;
 
   // Function to reset all dialog state
   const resetDialogState = () => {
@@ -77,11 +75,6 @@ export function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
       resetDialogState();
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    // Fetch app version on mount
-    IpcClient.getInstance().getAppVersion?.().then(setAppVersion);
-  }, []);
 
   // Wrap the original onClose to also reset state
   const handleClose = () => {
@@ -241,48 +234,20 @@ Session ID: ${sessionId}
 
   const handleCheckForUpdates = async () => {
     try {
-      const data: UpdateCheckResult =
-        await IpcClient.getInstance().checkForUpdates();
-      if (!appVersionState || !settings) {
-        showError("Could not determine current app version or settings.");
-        return;
-      }
+      const result = await IpcClient.getInstance().checkForUpdatesXibe();
 
-      // Get the appropriate channel based on user settings
-      const channel = settings.releaseChannel === "beta" ? "beta" : "stable";
-      const channelData = data[channel];
-
-      const isNewer = (a: string, b: string) => {
-        const pa = a.split(".").map(Number);
-        const pb = b.split(".").map(Number);
-        for (let i = 0; i < 3; i++) {
-          if ((pa[i] || 0) < (pb[i] || 0)) return true;
-          if ((pa[i] || 0) > (pb[i] || 0)) return false;
-        }
-        return false;
-      };
-
-      if (isNewer(appVersionState, channelData.version)) {
+      if (result.hasUpdate && result.releaseInfo && result.downloadUrl) {
         const info = {
-          version: channelData.version,
-          releaseNotes: channelData.releaseNotes,
-          downloadUrl: channelData.downloadUrl,
-          downloadPageUrl: channelData.downloadPageUrl,
-          readmeUrl: channelData.readmeUrl,
-          readmeMarkdown: channelData.readmeMarkdown,
-          updateNotice: channelData.updateNotice,
-          updateInfoList: channelData.updateInfo,
+          version: result.latestVersion,
+          releaseNotes: result.releaseInfo.description,
+          downloadUrl: result.downloadUrl,
+          downloadPageUrl: result.downloadUrl,
+          readmeUrl: result.releaseInfo.changelogUrl,
+          readmeMarkdown: undefined,
+          updateNotice: undefined,
+          updateInfoList: undefined,
         } as const;
-        let readmeMarkdown: string | undefined = info.readmeMarkdown;
-        if (!readmeMarkdown && info.readmeUrl) {
-          try {
-            const res = await fetch(info.readmeUrl);
-            if (res.ok) readmeMarkdown = await res.text();
-          } catch (error) {
-            console.error("Failed to fetch README markdown:", error);
-          }
-        }
-        setUpdateInfo({ ...info, readmeMarkdown });
+        setUpdateInfo({ ...info, readmeMarkdown: undefined });
         setShowUpdateModal(true);
       } else {
         showError("You are using the latest version.");
@@ -442,13 +407,13 @@ Session ID: ${sessionId}
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Need help with CodeX?</DialogTitle>
+          <DialogTitle>Need help with Xibe AI?</DialogTitle>
         </DialogHeader>
         <DialogDescription className="">
           If you need help or want to report an issue, here are some options:
         </DialogDescription>
         <div className="flex flex-col space-y-4 w-full">
-          {isCodexProUser ? (
+          {isXibeAIProUser ? (
             <div className="flex flex-col space-y-2">
               <Button
                 variant="default"

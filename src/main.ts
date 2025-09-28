@@ -1,10 +1,10 @@
 import { app, BrowserWindow, dialog } from "electron";
 import * as path from "node:path";
 import { registerIpcHandlers } from "./ipc/ipc_host";
+import { registerUpdateHandlers } from "./ipc/handlers/update_handlers";
 import dotenv from "dotenv";
 // @ts-ignore
 import started from "electron-squirrel-startup";
-import { updateElectronApp, UpdateSourceType } from "update-electron-app";
 import log from "electron-log";
 import {
   getSettingsFilePath,
@@ -26,11 +26,152 @@ log.scope.labelPadding = false;
 
 const logger = log.scope("main");
 
+// Function to check for updates and notify the renderer
+async function checkForUpdatesAndNotify() {
+  try {
+    const { readSettings } = await import("./main/settings");
+    const settings = readSettings();
+    const isBeta = settings.releaseChannel === "beta";
+
+    // Choose the appropriate API endpoint
+    const apiUrl = isBeta
+      ? "https://www.xibe.app/api/downloads-beta.json"
+      : "https://www.xibe.app/api/downloads.json";
+
+    logger.info("Checking for updates from:", apiUrl);
+
+    // Fetch update information
+    const response = await fetch(apiUrl, {
+      headers: {
+        "User-Agent": "Xibe-AI-App/1.0",
+        "Cache-Control": "no-cache",
+      },
+    });
+
+    if (!response.ok) {
+      logger.error("Failed to fetch update info:", response.status);
+      return;
+    }
+
+    const data = await response.json();
+
+    // Parse the response based on channel
+    let latestRelease;
+    if (isBeta) {
+      latestRelease = data.latest;
+    } else {
+      latestRelease = data.releases?.[0] || data.latest;
+    }
+
+    if (!latestRelease) {
+      logger.warn("No release found in update data");
+      return;
+    }
+
+    const currentVersion = app.getVersion();
+    const latestVersion = latestRelease.version;
+
+    logger.info(
+      "Current version:",
+      currentVersion,
+      "Latest version:",
+      latestVersion,
+    );
+
+    // Compare versions using semantic versioning
+    const hasUpdate = compareVersions(currentVersion, latestVersion) < 0;
+
+    if (hasUpdate) {
+      logger.info("New version available:", latestVersion);
+
+      // Find the appropriate download URL for the current platform
+      const downloadUrl = getDownloadUrlForPlatform(
+        latestRelease,
+        process.platform,
+      );
+
+      // Show update notification to user
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        logger.info("Sending update-available event to renderer");
+        mainWindow.webContents.send("update-available", {
+          version: latestVersion,
+          date: latestRelease.date,
+          description: latestRelease.description,
+          isBeta: isBeta,
+          downloadUrl: downloadUrl,
+          changelogUrl: latestRelease.changelogUrl,
+        });
+      } else {
+        logger.warn("Main window not available to send update notification");
+      }
+    } else {
+      logger.info("No update available. Current version is up to date.");
+    }
+  } catch (error) {
+    logger.error("Error checking for updates:", error);
+  }
+}
+
+// Helper function to compare semantic versions
+function compareVersions(version1: string, version2: string): number {
+  const v1parts = version1.split(".").map(Number);
+  const v2parts = version2.split(".").map(Number);
+
+  const maxLength = Math.max(v1parts.length, v2parts.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const v1part = v1parts[i] || 0;
+    const v2part = v2parts[i] || 0;
+
+    if (v1part < v2part) return -1;
+    if (v1part > v2part) return 1;
+  }
+
+  return 0;
+}
+
+// Helper function to get download URL for current platform
+function getDownloadUrlForPlatform(
+  release: any,
+  platform: string,
+): string | null {
+  const downloads = release.downloads;
+
+  switch (platform) {
+    case "win32":
+      // Prefer x64, fallback to ARM64
+      const windowsDownload =
+        downloads.windows.find((d: any) => d.arch === "x64") ||
+        downloads.windows[0];
+      return windowsDownload?.url || null;
+
+    case "darwin":
+      // Prefer ARM64 for Apple Silicon, fallback to x64
+      const macosDownload =
+        downloads.macos.find((d: any) => d.arch === "ARM64") ||
+        downloads.macos.find((d: any) => d.arch === "x64") ||
+        downloads.macos[0];
+      return macosDownload?.url || null;
+
+    case "linux":
+      // Prefer DEB, fallback to RPM
+      const linuxDownload =
+        downloads.linux.find((d: any) => d.type === "deb") ||
+        downloads.linux[0];
+      return linuxDownload?.url || null;
+
+    default:
+      logger.warn("Unknown platform:", platform);
+      return null;
+  }
+}
+
 // Load environment variables from .env file
 dotenv.config();
 
 // Register IPC handlers before app is ready
 registerIpcHandlers();
+registerUpdateHandlers();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -78,20 +219,17 @@ export async function onReady() {
 
   logger.info("Auto-update enabled=", settings.enableAutoUpdate);
   if (settings.enableAutoUpdate) {
-    // Technically we could just pass the releaseChannel directly to the host,
-    // but this is more explicit and falls back to stable if there's an unknown
-    // release channel.
-    const postfix = settings.releaseChannel === "beta" ? "beta" : "stable";
-    const host = `https://api.dyad.sh/v1/update/${postfix}`;
-    logger.info("Auto-update release channel=", postfix);
-    updateElectronApp({
-      logger,
-      updateSource: {
-        type: UpdateSourceType.ElectronPublicUpdateService,
-        repo: "dyad-sh/dyad",
-        host,
-      },
-    }); // additional configuration options available
+    // Use new Xibe AI update system
+    logger.info(
+      "Auto-update release channel=",
+      settings.releaseChannel === "beta" ? "beta" : "stable",
+    );
+
+    // Check for updates after a short delay on startup
+    setTimeout(checkForUpdatesAndNotify, 5000); // Wait 5 seconds after startup
+
+    // Set up periodic update checking (every 4 hours)
+    setInterval(checkForUpdatesAndNotify, 1000 * 60 * 60 * 4);
   }
 }
 

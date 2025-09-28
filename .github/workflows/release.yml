@@ -1,4 +1,4 @@
-name: Build and Release CodeX
+name: Build and Release Xibe AI
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       version:
         description: "Version to release (e.g., 1.2.0)"
         required: true
-        default: "1.2.0"
+        default: "1.2.2"
 
 permissions:
   contents: write
@@ -222,7 +222,7 @@ jobs:
           Write-Host "Creating certificate..."
           $cert = New-SelfSignedCertificate `
             -Type Custom `
-            -Subject "CN=CodeX Development Certificate" `
+            -Subject "CN=Xibe AI Development Certificate" `
             -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3") `
             -KeyUsage DigitalSignature `
             -KeyAlgorithm RSA `
@@ -295,7 +295,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.2.0' }}
+            VERSION=${{ github.event.inputs.version || '1.2.2' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -361,13 +361,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: CodeX v${{ steps.version.outputs.version }}
+          name: Xibe AI v${{ steps.version.outputs.version }}
           draft: false
           prerelease: false
           files: |
             renamed-artifacts/*
           body: |
-            ## CodeX v${{ steps.version.outputs.version }}
+            ## Xibe AI v${{ steps.version.outputs.version }}
 
             ### 🚀 What's New
             - AI-powered code generation and editing
@@ -397,19 +397,19 @@ jobs:
             ### 🔧 Installation
             1. Download the appropriate file for your platform and architecture
             2. Run the installer or extract the zip file
-            3. Launch CodeX and start coding with AI!
+            3. Launch Xibe AI and start coding with AI!
 
             ### ⚠️ Note
-            These builds are code-signed with a self-signed certificate. Windows may show a security warning, but it will display "CodeX Development Certificate" instead of "Unknown Publisher". This is normal for open-source applications and users can safely click "Run anyway" to install.
+            These builds are code-signed with a self-signed certificate. Windows may show a security warning, but it will display "Xibe AI Development Certificate" instead of "Unknown Publisher". This is normal for open-source applications and users can safely click "Run anyway" to install.
 
             ### 🐛 Bug Reports
             If you encounter any issues, please report them on our [GitHub Issues](https://github.com/iotserver24/codex/issues) page.
 
             ### 📚 Documentation
-            Visit our [documentation](https://codex.anishkumar.tech/docs) for detailed guides and tutorials.
+            Visit our [documentation](https://xibe.app/docs) for detailed guides and tutorials.
 
             ---
-            *Built with ❤️ by the CodeX team*
+            *Built with ❤️ by the Xibe AI team*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -428,7 +428,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.2.0' }}
+            VERSION=${{ github.event.inputs.version || '1.2.2' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -487,13 +487,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: CodeX v${{ steps.version.outputs.version }}
+          name: Xibe AI v${{ steps.version.outputs.version }}
           draft: false
           prerelease: false
           files: |
             target-repo-artifacts/*
           body: |
-            ## CodeX v${{ steps.version.outputs.version }}
+            ## Xibe AI v${{ steps.version.outputs.version }}
 
             ### 🚀 What's New
             - AI-powered code generation and editing
@@ -523,19 +523,19 @@ jobs:
             ### 🔧 Installation
             1. Download the appropriate file for your platform and architecture
             2. Run the installer or extract the zip file
-            3. Launch CodeX and start coding with AI!
+            3. Launch Xibe AI and start coding with AI!
 
             ### ⚠️ Note
-            These builds are code-signed with a self-signed certificate. Windows may show a security warning, but it will display "CodeX Development Certificate" instead of "Unknown Publisher". This is normal for open-source applications and users can safely click "Run anyway" to install.
+            These builds are code-signed with a self-signed certificate. Windows may show a security warning, but it will display "Xibe AI Development Certificate" instead of "Unknown Publisher". This is normal for open-source applications and users can safely click "Run anyway" to install.
 
             ### 🐛 Bug Reports
             If you encounter any issues, please report them on our [GitHub Issues](https://github.com/iotserver24/codex/issues) page.
 
             ### 📚 Documentation
-            Visit our [documentation](https://codex.anishkumar.tech/docs) for detailed guides and tutorials.
+            Visit our [documentation](https://xibe.app/docs) for detailed guides and tutorials.
 
             ---
-            *Built with ❤️ by the CodeX team*
+            *Built with ❤️ by the Xibe AI team*
         env:
           # GITHUB_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
