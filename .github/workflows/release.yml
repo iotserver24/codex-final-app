@@ -323,35 +323,35 @@ jobs:
 
           # Windows artifacts - EXE and ZIP files
           if [ -d "artifacts/windows-builds-x64" ]; then
-            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "renamed-artifacts/codex-${VERSION}-windows-x64.exe" \;
-            find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/codex-${VERSION}-windows-x64.zip" \;
+            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-windows-x64.exe" \;
+            find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-windows-x64.zip" \;
           fi
 
           if [ -d "artifacts/windows-builds-arm64" ]; then
-            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "renamed-artifacts/codex-${VERSION}-windows-arm64.exe" \;
-            find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/codex-${VERSION}-windows-arm64.zip" \;
+            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-windows-arm64.exe" \;
+            find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-windows-arm64.zip" \;
           fi
 
           # macOS artifacts - ZIP files
           if [ -d "artifacts/macos-builds-arm64" ]; then
-            find artifacts/macos-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/codex-${VERSION}-macos-arm64.zip" \;
+            find artifacts/macos-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-macos-arm64.zip" \;
           fi
 
           if [ -d "artifacts/macos-builds-x64" ]; then
-            find artifacts/macos-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/codex-${VERSION}-macos-x64.zip" \;
+            find artifacts/macos-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-macos-x64.zip" \;
           fi
 
           # Linux artifacts - ZIP, DEB, and RPM files
           if [ -d "artifacts/linux-builds-x64" ]; then
-            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/codex-${VERSION}-linux-x64.zip" \;
-            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/codex-${VERSION}-linux-x64.deb" \;
-            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/codex-${VERSION}-linux-x64.rpm" \;
+            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-linux-x64.zip" \;
+            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-linux-x64.deb" \;
+            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-linux-x64.rpm" \;
           fi
 
           if [ -d "artifacts/linux-builds-arm64" ]; then
-            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/codex-${VERSION}-linux-arm64.zip" \;
-            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/codex-${VERSION}-linux-arm64.deb" \;
-            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/codex-${VERSION}-linux-arm64.rpm" \;
+            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-linux-arm64.zip" \;
+            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-linux-arm64.deb" \;
+            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "renamed-artifacts/Xibe AI-${VERSION}-linux-arm64.rpm" \;
           fi
 
           echo "All renamed artifacts:"
@@ -449,35 +449,35 @@ jobs:
 
           # Windows artifacts - EXE and ZIP files
           if [ -d "artifacts/windows-builds-x64" ]; then
-            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "target-repo-artifacts/codex-${VERSION}-windows-x64.exe" \;
-            find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/codex-${VERSION}-windows-x64.zip" \;
+            find artifacts/windows-builds-x64 -name "*.exe" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-windows-x64.exe" \;
+            find artifacts/windows-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-windows-x64.zip" \;
           fi
 
           if [ -d "artifacts/windows-builds-arm64" ]; then
-            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "target-repo-artifacts/codex-${VERSION}-windows-arm64.exe" \;
-            find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/codex-${VERSION}-windows-arm64.zip" \;
+            find artifacts/windows-builds-arm64 -name "*.exe" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-windows-arm64.exe" \;
+            find artifacts/windows-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-windows-arm64.zip" \;
           fi
 
           # macOS artifacts - ZIP files
           if [ -d "artifacts/macos-builds-arm64" ]; then
-            find artifacts/macos-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/codex-${VERSION}-macos-arm64.zip" \;
+            find artifacts/macos-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-macos-arm64.zip" \;
           fi
 
           if [ -d "artifacts/macos-builds-x64" ]; then
-            find artifacts/macos-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/codex-${VERSION}-macos-x64.zip" \;
+            find artifacts/macos-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-macos-x64.zip" \;
           fi
 
           # Linux artifacts - ZIP, DEB, and RPM files
           if [ -d "artifacts/linux-builds-x64" ]; then
-            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/codex-${VERSION}-linux-x64.zip" \;
-            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "target-repo-artifacts/codex-${VERSION}-linux-x64.deb" \;
-            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "target-repo-artifacts/codex-${VERSION}-linux-x64.rpm" \;
+            find artifacts/linux-builds-x64 -name "*.zip" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-linux-x64.zip" \;
+            find artifacts/linux-builds-x64 -name "*.deb" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-linux-x64.deb" \;
+            find artifacts/linux-builds-x64 -name "*.rpm" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-linux-x64.rpm" \;
           fi
 
           if [ -d "artifacts/linux-builds-arm64" ]; then
-            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/codex-${VERSION}-linux-arm64.zip" \;
-            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "target-repo-artifacts/codex-${VERSION}-linux-arm64.deb" \;
-            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "target-repo-artifacts/codex-${VERSION}-linux-arm64.rpm" \;
+            find artifacts/linux-builds-arm64 -name "*.zip" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-linux-arm64.zip" \;
+            find artifacts/linux-builds-arm64 -name "*.deb" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-linux-arm64.deb" \;
+            find artifacts/linux-builds-arm64 -name "*.rpm" -exec cp {} "target-repo-artifacts/Xibe AI-${VERSION}-linux-arm64.rpm" \;
           fi
 
           echo "All target repo artifacts:"

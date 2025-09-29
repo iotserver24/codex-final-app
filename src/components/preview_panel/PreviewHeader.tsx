@@ -32,8 +32,8 @@ import { showError, showSuccess } from "@/lib/toast";
 import { useMutation } from "@tanstack/react-query";
 import { useCheckProblems } from "@/hooks/useCheckProblems";
 import { isPreviewOpenAtom } from "@/atoms/viewAtoms";
-import { useSharePreviewE2B } from "@/hooks/useSharePreviewE2B";
-import { E2BSharePreviewPopover } from "@/components/e2b/E2BSharePreviewPopover";
+// import { useSharePreviewE2B } from "@/hooks/useSharePreviewE2B";
+// import { E2BSharePreviewPopover } from "@/components/e2b/E2BSharePreviewPopover";
 
 export type PreviewMode =
   | "preview"
@@ -56,22 +56,22 @@ export const PreviewHeader = () => {
   const problemsRef = useRef<HTMLButtonElement>(null);
   const configureRef = useRef<HTMLButtonElement>(null);
   const publishRef = useRef<HTMLButtonElement>(null);
-  const shareRef = useRef<HTMLButtonElement>(null);
+  // const shareRef = useRef<HTMLButtonElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const { problemReport } = useCheckProblems(selectedAppId);
   const { restartApp, refreshAppIframe } = useRunApp();
-  const {
-    share,
-    isLoading: sharing,
-    useStatus,
-    useLogs,
-    useProgress,
-  } = useSharePreviewE2B(selectedAppId);
-  const { data: status } = useStatus();
-  const { data: _logs } = useLogs();
-  const { data: _progress } = useProgress();
-  const [sharePopoverOpen, setSharePopoverOpen] = useState(false);
+  // const {
+  //   share,
+  //   isLoading: sharing,
+  //   useStatus,
+  //   useLogs,
+  //   useProgress,
+  // } = useSharePreviewE2B(selectedAppId);
+  // const { data: status } = useStatus();
+  // const { data: _logs } = useLogs();
+  // const { data: _progress } = useProgress();
+  // const [sharePopoverOpen, setSharePopoverOpen] = useState(false);
 
   const isCompact = windowWidth < 860;
 
@@ -264,7 +264,8 @@ export const PreviewHeader = () => {
             "Configure",
             "configure-mode-button",
           )}
-          {/* Insert Share Preview (E2B) button after Configure */}
+          {/** Share Preview (E2B) temporarily disabled */}
+          {/**
           <div
             onMouseEnter={() => setSharePopoverOpen(true)}
             onMouseLeave={() => setSharePopoverOpen(false)}
@@ -293,6 +294,7 @@ export const PreviewHeader = () => {
               </button>
             </E2BSharePreviewPopover>
           </div>
+          */}
           {renderButton(
             "publish",
             publishRef,
@@ -313,18 +315,6 @@ export const PreviewHeader = () => {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-60">
-              <DropdownMenuItem
-                onClick={() => share()}
-                disabled={!selectedAppId || sharing}
-              >
-                <Globe size={16} />
-                <div className="flex flex-col">
-                  <span>{sharing ? "Sharing…" : "Share Preview (E2B)"}</span>
-                  <span className="text-xs text-muted-foreground">
-                    Upload, run in sandbox, copy link
-                  </span>
-                </div>
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={onCleanRestart}>
                 <Cog size={16} />
                 <div className="flex flex-col">
@@ -347,7 +337,7 @@ export const PreviewHeader = () => {
           </DropdownMenu>
         </div>
       </div>
-      {/* E2BSharePreviewPopover is rendered inline above as the trigger wrapper */}
+      {/* E2BSharePreviewPopover trigger wrapper is commented out above */}
     </TooltipProvider>
   );
 };

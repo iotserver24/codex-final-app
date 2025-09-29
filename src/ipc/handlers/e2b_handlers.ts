@@ -327,6 +327,12 @@ export function registerE2BHandlers() {
       const sandbox = await Sandbox.create({
         apiKey,
         timeoutMs: ttlMs,
+        allowInternetAccess: true,
+        // Ensure frameworks that read env (not flags) pick correct host/port
+        envs: {
+          PORT: String(port),
+          HOST: "0.0.0.0",
+        } as any,
       });
 
       try {
@@ -469,33 +475,203 @@ export default config;`;
           );
         };
 
+        // Run command in background using a bash wrapper that writes logs to /tmp/app.log
+        const runBackground = async (cmd: string, cwd?: string) => {
+          const ci: any = (sandbox as any).commands;
+          const quoted = cmd.replace(/'/g, "'\\''");
+          const bashBg = `nohup bash -lc '${quoted}' > /tmp/app.log 2>&1 & disown`;
+          if (ci && typeof ci.run === "function") {
+            const res = await ci.run(bashBg, { timeoutMs: 0, cwd });
+            return {
+              exitCode: res.exitCode ?? res.code ?? 0,
+              stdout: res.stdout ?? res.logs ?? "",
+              stderr: res.stderr ?? "",
+            };
+          }
+          // Fallback to POSIX sh
+          const shBg = `sh -lc '${quoted} > /tmp/app.log 2>&1 & echo $!'`;
+          return runCmd(shBg, cwd);
+        };
+
+        // Check for availability of a binary inside the sandbox
+        const hasCommand = async (bin: string): Promise<boolean> => {
+          const res = await runCmd(
+            `command -v ${bin} >/dev/null 2>&1; echo $?`,
+          );
+          return (res.stdout?.trim?.() ?? "1") === "0";
+        };
+
         if (!existing) {
           logProgress(appId, "Installing dependencies");
-          const installRes = await runCmd(
-            "(pnpm i || npm i --legacy-peer-deps)",
-            "/workspace",
+          // Try a sequence of installs from lightest to heaviest, to avoid OOM (exit 137)
+          const installAttempts: string[] = [];
+          if (await hasCommand("pnpm")) {
+            installAttempts.push("pnpm i --frozen-lockfile || pnpm i");
+          }
+          if (await hasCommand("npm")) {
+            installAttempts.push(
+              "npm ci --legacy-peer-deps --no-audit --no-fund || true",
+            );
+            installAttempts.push(
+              "npm i --legacy-peer-deps --omit=optional --no-audit --no-fund",
+            );
+          }
+          if (await hasCommand("yarn")) {
+            installAttempts.push(
+              "yarn install --frozen-lockfile || yarn install",
+            );
+          }
+          // As a very last resort, try to enable corepack and pnpm
+          installAttempts.push(
+            "(corepack enable && corepack prepare pnpm@latest --activate && pnpm i) || true",
           );
-          if (installRes.exitCode !== 0) {
+
+          let success = false;
+          let lastOutput = "";
+          for (const cmd of installAttempts) {
+            logProgress(appId, `Running: ${cmd}`);
+            const res = await runCmd(cmd, "/workspace");
+            lastOutput = res.stderr || res.stdout || "";
+            if (res.exitCode === 0) {
+              success = true;
+              break;
+            }
+            if (res.exitCode === 137) {
+              // OOM killed; surface a clear message and abort further attempts
+              const msg =
+                "Dependency install was killed (exit 137). The sandbox likely ran out of memory. Try reducing project size, closing other processes, or using a smaller dependency set.";
+              logProgress(appId, msg);
+              throw new Error(`${msg} Logs: ${lastOutput.slice(-800)}`);
+            }
+            logProgress(
+              appId,
+              `Install attempt failed with code ${res.exitCode}. Retrying with next strategy...`,
+            );
+          }
+          if (!success) {
             throw new Error(
-              `Dependency install failed: ${installRes.stderr || installRes.stdout || "unknown error"}`,
+              `Dependency install failed after retries. Last logs: ${lastOutput.slice(-1200)}`,
             );
           }
           logProgress(appId, "Dependencies installed");
         }
 
-        const startCmd =
+        // Choose a start command that exists in the sandbox
+        let startCmd =
           app.startCommand?.trim() && app.startCommand !== ""
-            ? `${app.startCommand} --host 0.0.0.0 --port ${port}`
-            : `npm run dev -- --host 0.0.0.0 --port ${port}`;
+            ? `${app.startCommand} --host 0.0.0.0 --port ${port} --strictPort`
+            : "";
+        if (!startCmd) {
+          const candidates: string[] = [];
+          if (await hasCommand("pnpm")) {
+            candidates.push(
+              `pnpm dev -- --host 0.0.0.0 --port ${port} --strictPort`,
+            );
+          }
+          if (await hasCommand("npm")) {
+            candidates.push(
+              `npm run dev -- --host 0.0.0.0 --port ${port} --strictPort`,
+            );
+          }
+          if (await hasCommand("yarn")) {
+            candidates.push(
+              `yarn dev --host 0.0.0.0 --port ${port} --strictPort`,
+            );
+          }
+          // Common direct CLIs
+          if (await hasCommand("vite")) {
+            candidates.push(`vite --host 0.0.0.0 --port ${port} --strictPort`);
+          }
+          if (await hasCommand("next")) {
+            candidates.push(`next dev -H 0.0.0.0 -p ${port}`);
+          }
+          startCmd =
+            candidates[0] ||
+            `npm run dev -- --host 0.0.0.0 --port ${port} --strictPort`;
+        }
 
-        // Start server in background and detach so the command returns
-        const bgStart = `nohup bash -lc '${startCmd.replace(/'/g, "'\\''")}' > /tmp/app.log 2>&1 & disown`;
-        logProgress(appId, "Starting dev server");
-        await runCmd(bgStart, "/workspace");
+        // Ensure env vars also instruct frameworks to bind correctly
+        // Prefix with HOST/PORT to cover frameworks that read env instead of CLI flags
+        const envPrefixedStart = `HOST=0.0.0.0 PORT=${port} ${startCmd}`;
+
+        // Start server using background execution
+        logProgress(appId, `Starting dev server: ${envPrefixedStart}`);
+        const started = await runBackground(envPrefixedStart, "/workspace");
+        if (started.exitCode !== 0) {
+          const recentLogs = (await readSandboxLogs(sandbox)).slice(-2000);
+          throw new Error(
+            `Start command failed with code ${started.exitCode}. Command: ${envPrefixedStart}. Logs: ${recentLogs}`,
+          );
+        }
+        // Emit immediate short tail after triggering the background start
+        try {
+          const initTail = await runCmd(
+            "bash -lc 'tail -n 20 /tmp/app.log 2>/dev/null || true'",
+            "/workspace",
+          );
+          const initStr = (initTail.stdout || initTail.stderr || "").trim();
+          if (initStr)
+            logProgress(appId, `Dev server output (initial):\n${initStr}`);
+        } catch {}
+
+        // Proactively wait for the port to accept TCP connections inside the sandbox
+        // Some frameworks print ready logs before the port actually binds
+        let portReady = false;
+        for (let i = 0; i < 60; i++) {
+          // Try a lightweight TCP connect using Bash's /dev/tcp
+          const tcpProbe = await runCmd(
+            `bash -lc 'exec 3<>/dev/tcp/127.0.0.1/${port}'`,
+            "/workspace",
+          );
+          if (tcpProbe.exitCode === 0) {
+            portReady = true;
+            break;
+          }
+          if (i % 5 === 0) {
+            // Every ~5s, append a short progress with a tiny log tail
+            try {
+              const tail = await runCmd(
+                "bash -lc 'tail -n 20 /tmp/app.log 2>/dev/null || true'",
+                "/workspace",
+              );
+              const tailStr = (tail.stdout || tail.stderr || "")
+                .split("\n")
+                .slice(-10)
+                .join("\n");
+              if (tailStr.trim().length > 0) {
+                logProgress(
+                  appId,
+                  `Waiting for port ${port} to open...\n${tailStr}`,
+                );
+              } else {
+                logProgress(appId, `Waiting for port ${port} to open...`);
+              }
+            } catch {
+              logProgress(appId, `Waiting for port ${port} to open...`);
+            }
+          }
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+        if (!portReady) {
+          let recentLogs = (await readSandboxLogs(sandbox)).slice(-2000);
+          if (!recentLogs) {
+            // Fallback to shell tail if file read via SDK fails
+            try {
+              const tail = await runCmd(
+                "bash -lc 'tail -n 120 /tmp/app.log 2>/dev/null || true'",
+                "/workspace",
+              );
+              recentLogs = (tail.stdout || tail.stderr || "").slice(-2000);
+            } catch {}
+          }
+          throw new Error(
+            `Service did not open port ${port} in time. Check your dev command binds to 0.0.0.0 and the correct port. Recent logs: ${recentLogs}`,
+          );
+        }
 
         // Wait and retry for host exposure to be available
         let host = "";
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 30; i++) {
           try {
             // Some SDKs expose getHost directly on sandbox
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -536,7 +712,9 @@ export default config;`;
           const old = container.versions.shift();
           try {
             await old?.sandbox?.close?.();
-          } catch {}
+          } catch (e) {
+            logger.warn("E2B sandbox close during rotation failed:", e);
+          }
         }
         runningSandboxes.set(appId, container);
 
@@ -560,8 +738,8 @@ export default config;`;
         // Best-effort cleanup on failure
         try {
           await (sandbox as any).close?.();
-        } catch {
-          // Ignore cleanup errors
+        } catch (e) {
+          logger.warn("E2B sandbox cleanup after failure failed:", e);
         }
         throw err;
       }
