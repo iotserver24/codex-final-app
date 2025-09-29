@@ -1,8 +1,8 @@
 {
   "name": "codex",
-  "productName": "codex",
+  "productName": "Xibe AI",
   "version": "1.2.2",
-  "description": "Codex - AI-powered code editor and application builder",
+  "description": "Xibe AI - AI-powered code editor and application builder",
   "main": ".vite/build/main.js",
   "repository": {
     "type": "git",

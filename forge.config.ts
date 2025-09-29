@@ -66,7 +66,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     protocols: [
       {
-        name: "CodeX",
+        name: "Xibe AI",
         schemes: ["codex"],
       },
     ],
@@ -119,7 +119,7 @@ const config: ForgeConfig = {
     ...(process.env.FORGE_ARCH === "universal"
       ? [
           new MakerZIP({
-            name: "CodeX-{productName}-{version}-universal.{ext}",
+            name: "Xibe-AI-{productName}-{version}-universal.{ext}",
             options: {
               // This will create a universal binary
             },
@@ -133,7 +133,7 @@ const config: ForgeConfig = {
           new MakerDeb({
             options: {
               mimeType: ["x-scheme-handler/codex"],
-              maintainer: "CodeX Team <iotserver24@gmail.com>",
+              maintainer: "Xibe AI Team <iotserver24@gmail.com>",
               homepage: "https://github.com/iotserver24/codex",
               categories: ["Development"],
               // Add more specific options for better compatibility

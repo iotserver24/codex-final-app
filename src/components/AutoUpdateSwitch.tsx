@@ -20,9 +20,9 @@ export function AutoUpdateSwitch() {
           updateSettings({ enableAutoUpdate: checked });
           toast("Auto-update settings changed", {
             description:
-              "You will need to restart CodeX for your settings to take effect.",
+              "You will need to restart Xibe AI for your settings to take effect.",
             action: {
-              label: "Restart CodeX",
+              label: "Restart Xibe AI",
               onClick: () => {
                 IpcClient.getInstance().restartCodex();
               },

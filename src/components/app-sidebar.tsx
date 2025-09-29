@@ -253,8 +253,8 @@ export function AppSidebar() {
         setUpdateInfo({ ...info, readmeMarkdown: undefined });
         setShowUpdateModal(true);
       } else {
-        toast.success?.("You are using the latest version.") ||
-          toast("You are using the latest version.");
+        const notify = toast.success ?? toast;
+        notify("You are using the latest version.");
       }
     } catch (e: any) {
       showError(e?.message || "Failed to check for updates.");

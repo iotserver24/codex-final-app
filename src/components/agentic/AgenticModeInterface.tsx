@@ -161,7 +161,6 @@ export const AgenticModeInterface: React.FC = () => {
         timestamp: Date.now(),
       });
       setIsRunning(false);
-      false;
     }
   };
 
@@ -261,7 +260,6 @@ export const AgenticModeInterface: React.FC = () => {
             statusResponse.status === "stopped"
           ) {
             setIsRunning(false);
-            false;
 
             if (statusResponse.status === "completed") {
               addProgressUpdate({
@@ -340,7 +338,6 @@ export const AgenticModeInterface: React.FC = () => {
     try {
       await ipcClient.cancelAgenticJob(currentJob.id);
       setIsRunning(false);
-      false;
       addProgressUpdate({
         type: "status",
         message: "🛑 Job cancelled by user",

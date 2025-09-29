@@ -9,7 +9,7 @@ on:
       version:
         description: "Version to release (e.g., 1.2.0)"
         required: true
-        default: "1.2.2"
+        default: "1.2.3"
 
 permissions:
   contents: write
@@ -295,7 +295,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.2.2' }}
+            VERSION=${{ github.event.inputs.version || '1.2.3' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -428,7 +428,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.2.2' }}
+            VERSION=${{ github.event.inputs.version || '1.2.3' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"

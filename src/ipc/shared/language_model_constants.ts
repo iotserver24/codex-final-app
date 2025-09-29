@@ -502,13 +502,13 @@ export const CLOUD_PROVIDERS: Record<
     gatewayPrefix: "",
   },
   auto: {
-    displayName: "Codex Auto",
+    displayName: "Xibe Auto",
     websiteUrl:
       "https://codex.anishkumar.tech/docs/guides/ai-models/pro-modes#smart-context",
     gatewayPrefix: "codex/",
   },
   codex: {
-    displayName: "codeX",
+    displayName: "Xibe AI",
     hasFreeTier: true,
     websiteUrl: "https://codex.anishkumar.tech",
     gatewayPrefix: "codex/",

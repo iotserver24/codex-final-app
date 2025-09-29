@@ -18,7 +18,17 @@ type ConsentDecision = "accept-once" | "accept-always" | "decline";
 export function registerMcpHandlers() {
   // CRUD for MCP servers
   handle("mcp:list-servers", async () => {
-    return await db.select().from(mcpServers);
+    try {
+      return await db.select().from(mcpServers);
+    } catch (e: any) {
+      // If MCP is not configured or migrations haven't created the tables yet,
+      // gracefully return an empty list instead of throwing.
+      logger.warn(
+        "mcp:list-servers failed; returning empty list",
+        e?.message || e,
+      );
+      return [];
+    }
   });
 
   handle(
@@ -104,7 +114,16 @@ export function registerMcpHandlers() {
   );
   // Consents
   handle("mcp:get-tool-consents", async () => {
-    return await db.select().from(mcpToolConsents);
+    try {
+      return await db.select().from(mcpToolConsents);
+    } catch (e: any) {
+      // Gracefully handle missing table when MCP isn't set up yet
+      logger.warn(
+        "mcp:get-tool-consents failed; returning empty list",
+        e?.message || e,
+      );
+      return [];
+    }
   });
 
   handle(

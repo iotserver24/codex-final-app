@@ -289,6 +289,7 @@ const createWindow = () => {
     height: 700,
     minHeight: 500,
     titleBarStyle: "hidden",
+    title: "Xibe AI",
     titleBarOverlay: false,
     trafficLightPosition: {
       x: 10,

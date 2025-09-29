@@ -49,9 +49,9 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Use fetched data (or defaults for CodeX Auto)
+  // Use fetched data (or defaults for Xibe AI Auto)
   const providerDisplayName = isCodeXAuto
-    ? "CodeX Auto"
+    ? "Xibe AI Turbo"
     : (providerData?.name ?? "Unknown Provider");
   const providerWebsiteUrl = isCodeXAuto
     ? "https://codex.anishkumar.tech/docs/guides/ai-models/pro-modes#smart-context"
@@ -83,8 +83,8 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
       vertexSettings?.serviceAccountKey?.value,
   );
 
-  // codeX is always configured since it uses hardcoded token
-  // CodeX Auto is always configured since it doesn't need API keys
+  // Xibe AI provider is always configured since it uses hardcoded token
+  // Xibe AI Turbo is always configured since it doesn't need API keys
   const isConfigured =
     isCodeX || isCodeXAuto
       ? true
@@ -260,20 +260,20 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
         ) : isCodeX ? (
           <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
             <h3 className="text-lg font-medium text-green-800 dark:text-green-200 mb-2">
-              ✅ codeX Provider Ready
+              ✅ Xibe AI Provider Ready
             </h3>
             <p className="text-green-700 dark:text-green-300">
-              The codeX provider is configured and ready to use with 29 AI
+              The Xibe AI provider is configured and ready to use with 29 AI
               models available.
             </p>
           </div>
         ) : isCodeXAuto ? (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
             <h3 className="text-lg font-medium text-blue-800 dark:text-blue-200 mb-2">
-              ✅ CodeX Auto Ready
+              ✅ Xibe AI Turbo Ready
             </h3>
             <p className="text-blue-700 dark:text-blue-300">
-              CodeX Auto is configured and ready to use. It automatically
+              Xibe AI Turbo is configured and ready to use. It automatically
               selects the best model for your tasks.
             </p>
           </div>
