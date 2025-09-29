@@ -64,6 +64,8 @@ const hasAppleCreds = Boolean(
 
 const config: ForgeConfig = {
   packagerConfig: {
+    // Ensure the Linux executable has a consistent, space-free name
+    executableName: "xibe-ai",
     protocols: [
       {
         name: "Xibe AI",
@@ -132,6 +134,8 @@ const config: ForgeConfig = {
       ? [
           new MakerDeb({
             options: {
+              // Must match the built executable name in out/<product>-linux-*/<bin>
+              bin: "xibe-ai",
               mimeType: ["x-scheme-handler/codex"],
               maintainer: "Xibe AI Team <iotserver24@gmail.com>",
               homepage: "https://github.com/iotserver24/codex",
@@ -161,7 +165,16 @@ const config: ForgeConfig = {
         ]
       : []),
     // RPM maker only for Red Hat-based systems
-    ...(process.env.BUILD_RPM === "true" ? [new MakerRpm({})] : []),
+    ...(process.env.BUILD_RPM === "true"
+      ? [
+          new MakerRpm({
+            options: {
+              // Keep RPM in sync with the Linux executable name
+              bin: "xibe-ai",
+            },
+          }),
+        ]
+      : []),
   ],
   publishers: [
     {
