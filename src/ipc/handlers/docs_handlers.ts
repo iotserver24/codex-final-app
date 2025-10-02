@@ -447,6 +447,24 @@ export function registerDocsHandlers() {
       sourcesWithEmbeddings: number;
     }> => {
       try {
+        // Check if docs tables exist first
+        const dbClient = (db as any).$client;
+        const hasDocsSources = dbClient
+          .prepare(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='docs_sources'",
+          )
+          .get() as { name?: string } | undefined;
+
+        if (!hasDocsSources) {
+          log.warn("Docs tables do not exist yet, returning zero stats");
+          return {
+            totalSources: 0,
+            totalPages: 0,
+            totalChunks: 0,
+            sourcesWithEmbeddings: 0,
+          };
+        }
+
         const [sources, pages, chunks, chunksWithEmbeddings] =
           await Promise.all([
             db.query.docsSources.findMany(),
@@ -476,7 +494,14 @@ export function registerDocsHandlers() {
         };
       } catch (error) {
         log.error("Error getting docs stats:", error);
-        throw new Error("Failed to get docs statistics");
+        // Return zero stats instead of throwing error to prevent app crashes
+        log.warn("Returning zero stats due to error");
+        return {
+          totalSources: 0,
+          totalPages: 0,
+          totalChunks: 0,
+          sourcesWithEmbeddings: 0,
+        };
       }
     },
   );

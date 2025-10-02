@@ -196,6 +196,133 @@ function ensureBaselineSchema(sqlite: Database.Database): void {
         logger.warn("Self-heal: versions unique index create failed (ok)", e);
       }
     }
+
+    // docs_sources table
+    if (!hasTable("docs_sources")) {
+      logger.warn("Self-heal: creating table docs_sources");
+      sqlite
+        .prepare(
+          `CREATE TABLE IF NOT EXISTS \`docs_sources\` (
+            \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+            \`url\` text NOT NULL,
+            \`title\` text,
+            \`status\` text DEFAULT 'pending' NOT NULL,
+            \`total_pages\` integer DEFAULT 0,
+            \`crawled_pages\` integer DEFAULT 0,
+            \`error_message\` text,
+            \`last_crawled_at\` integer,
+            \`created_at\` integer DEFAULT (unixepoch()) NOT NULL,
+            \`updated_at\` integer DEFAULT (unixepoch()) NOT NULL
+          )`,
+        )
+        .run();
+      // Unique index for URL
+      try {
+        sqlite
+          .prepare(
+            `CREATE UNIQUE INDEX IF NOT EXISTS \`docs_sources_url_unique\` ON \`docs_sources\` (\`url\`)`,
+          )
+          .run();
+      } catch (e) {
+        logger.warn(
+          "Self-heal: docs_sources unique index create failed (ok)",
+          e,
+        );
+      }
+    }
+
+    // docs_pages table (depends on docs_sources)
+    if (!hasTable("docs_pages")) {
+      logger.warn("Self-heal: creating table docs_pages");
+      sqlite
+        .prepare(
+          `CREATE TABLE IF NOT EXISTS \`docs_pages\` (
+            \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+            \`source_id\` integer NOT NULL,
+            \`url\` text NOT NULL,
+            \`title\` text,
+            \`content\` text,
+            \`content_hash\` text NOT NULL,
+            \`file_path\` text,
+            \`created_at\` integer DEFAULT (unixepoch()) NOT NULL,
+            \`updated_at\` integer DEFAULT (unixepoch()) NOT NULL,
+            FOREIGN KEY (\`source_id\`) REFERENCES \`docs_sources\`(\`id\`) ON UPDATE NO ACTION ON DELETE CASCADE
+          )`,
+        )
+        .run();
+    }
+
+    // docs_chunks table (depends on docs_pages)
+    if (!hasTable("docs_chunks")) {
+      logger.warn("Self-heal: creating table docs_chunks");
+      sqlite
+        .prepare(
+          `CREATE TABLE IF NOT EXISTS \`docs_chunks\` (
+            \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+            \`page_id\` integer NOT NULL,
+            \`content\` text NOT NULL,
+            \`chunk_type\` text DEFAULT 'text' NOT NULL,
+            \`language\` text,
+            \`embedding\` text,
+            \`heading_path\` text,
+            \`section_position\` integer,
+            \`created_at\` integer DEFAULT (unixepoch()) NOT NULL,
+            FOREIGN KEY (\`page_id\`) REFERENCES \`docs_pages\`(\`id\`) ON UPDATE NO ACTION ON DELETE CASCADE
+          )`,
+        )
+        .run();
+    }
+
+    // mcp_servers table
+    if (!hasTable("mcp_servers")) {
+      logger.warn("Self-heal: creating table mcp_servers");
+      sqlite
+        .prepare(
+          `CREATE TABLE IF NOT EXISTS \`mcp_servers\` (
+            \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+            \`name\` text NOT NULL,
+            \`transport\` text NOT NULL,
+            \`command\` text,
+            \`args\` text,
+            \`env_json\` text,
+            \`url\` text,
+            \`enabled\` integer DEFAULT 0 NOT NULL,
+            \`created_at\` integer DEFAULT (unixepoch()) NOT NULL,
+            \`updated_at\` integer DEFAULT (unixepoch()) NOT NULL
+          )`,
+        )
+        .run();
+    }
+
+    // mcp_tool_consents table (depends on mcp_servers)
+    if (!hasTable("mcp_tool_consents")) {
+      logger.warn("Self-heal: creating table mcp_tool_consents");
+      sqlite
+        .prepare(
+          `CREATE TABLE IF NOT EXISTS \`mcp_tool_consents\` (
+            \`id\` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+            \`server_id\` integer NOT NULL,
+            \`tool_name\` text NOT NULL,
+            \`consent\` text DEFAULT 'ask' NOT NULL,
+            \`updated_at\` integer DEFAULT (unixepoch()) NOT NULL,
+            FOREIGN KEY (\`server_id\`) REFERENCES \`mcp_servers\`(\`id\`) ON UPDATE NO ACTION ON DELETE CASCADE
+          )`,
+        )
+        .run();
+      // Unique index for server_id and tool_name
+      try {
+        sqlite
+          .prepare(
+            `CREATE UNIQUE INDEX IF NOT EXISTS \`uniq_mcp_consent\` ON \`mcp_tool_consents\` (\`server_id\`, \`tool_name\`)`,
+          )
+          .run();
+      } catch (e) {
+        logger.warn(
+          "Self-heal: mcp_tool_consents unique index create failed (ok)",
+          e,
+        );
+      }
+    }
   } catch (e) {
     logger.error("Self-heal baseline schema failed:", e);
   }

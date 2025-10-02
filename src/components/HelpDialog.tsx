@@ -24,7 +24,7 @@ import { Button } from "./ui/button";
 import { IpcClient } from "../ipc/ipc_client";
 import { useState, useEffect } from "react";
 import { ChatLogsData } from "../ipc/ipc_types";
-import { showError } from "../lib/toast";
+import { showError, showInfo } from "../lib/toast";
 import { HelpBotDialog } from "./HelpBotDialog";
 import { useSettings } from "../hooks/useSettings";
 
@@ -250,7 +250,7 @@ Session ID: ${sessionId}
         setUpdateInfo({ ...info, readmeMarkdown: undefined });
         setShowUpdateModal(true);
       } else {
-        showError("You are using the latest version.");
+        showInfo("You are using the latest version.");
       }
     } catch (e: any) {
       showError(e?.message || "Failed to check for updates.");
