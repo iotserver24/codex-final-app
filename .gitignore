@@ -10,9 +10,9 @@ open-lovable
 /open-lovable
 open-lovable/
 /open-lovable/
-/xibe.app/
-xibe.app/
-/xibe.app
+/xibe-app/
+xibe-app/
+/xibe-app
 # dist
 dist/
 workers/
