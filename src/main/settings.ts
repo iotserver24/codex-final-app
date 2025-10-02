@@ -117,6 +117,13 @@ export function readSettings(): UserSettings {
         encryptionType,
       };
     }
+    if (combinedSettings.xibeApiKey) {
+      const encryptionType = combinedSettings.xibeApiKey.encryptionType;
+      combinedSettings.xibeApiKey = {
+        value: decrypt(combinedSettings.xibeApiKey),
+        encryptionType,
+      };
+    }
     // No persisted E2B/Polar keys in settings; license is entered per-share
     for (const provider in combinedSettings.providerSettings) {
       if (combinedSettings.providerSettings[provider].apiKey) {
@@ -167,6 +174,9 @@ export function writeSettings(settings: Partial<UserSettings>): void {
     }
     if (newSettings.polarLicenseKey) {
       newSettings.polarLicenseKey = encrypt(newSettings.polarLicenseKey.value);
+    }
+    if (newSettings.xibeApiKey) {
+      newSettings.xibeApiKey = encrypt(newSettings.xibeApiKey.value);
     }
     // No persisted E2B/Polar keys in settings; license is entered per-share
     if (newSettings.supabase) {

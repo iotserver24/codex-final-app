@@ -26,6 +26,7 @@ import { createOllamaProvider } from "./ollama_provider";
 import { getOllamaApiUrl } from "../handlers/local_model_ollama_handler";
 import { createFallback } from "./fallback_ai_model";
 import { createDyadEngine } from "./llm_engine_provider";
+import { XibeApiClient } from "../services/xibe_api_client";
 
 const _codexEngineUrl = process.env.CODEX_ENGINE_URL;
 const _codexGatewayUrl = process.env.CODEX_GATEWAY_URL;
@@ -426,35 +427,68 @@ function getRegularModelClient(
       };
     }
     case "codex": {
+      // Check if user has Xibe API key for usage tracking
+      const xibeApiKey = settings.xibeApiKey?.value;
+      if (!xibeApiKey) {
+        throw new Error(
+          "Xibe API key is required. Please sign up at https://xibe.app and add your API key in settings.",
+        );
+      }
+
+      // Initialize Xibe API client for usage tracking
+      const xibeClient = new XibeApiClient(xibeApiKey);
+
       // Hardcoded token for Pollinations API
       const hardcodedToken = "uNoesre5jXDzjhiY";
 
-      // Based on the error, we need to modify how we create the provider
-      // Use custom fetch function to properly add the token
-      const fetchWithToken: FetchFunction = (url, options = {}) => {
-        // Convert URL to string if it's not already
-        const urlStr = url.toString();
+      // Create custom fetch function that tracks usage with Xibe API
+      const fetchWithUsageTracking: FetchFunction = async (
+        url,
+        options = {},
+      ) => {
+        try {
+          // Check usage before making the request
+          await xibeClient.ensureUsageAvailable();
 
-        // Ensure we're using the correct URL with token parameter
-        const finalUrl = urlStr.includes("?")
-          ? `${urlStr}&token=${hardcodedToken}`
-          : `${urlStr}?token=${hardcodedToken}`;
+          // Convert URL to string if it's not already
+          const urlStr = url.toString();
 
-        // Set Authorization header with Bearer token
-        const headers = new Headers(options.headers);
-        headers.set("Authorization", `Bearer ${hardcodedToken}`);
+          // Ensure we're using the correct URL with token parameter
+          const finalUrl = urlStr.includes("?")
+            ? `${urlStr}&token=${hardcodedToken}`
+            : `${urlStr}?token=${hardcodedToken}`;
 
-        // Return fetch with both token in URL and Authorization header
-        return fetch(finalUrl, {
-          ...options,
-          headers,
-        });
+          // Set Authorization header with Bearer token
+          const headers = new Headers(options.headers);
+          headers.set("Authorization", `Bearer ${hardcodedToken}`);
+
+          // Make the actual request to Pollinations
+          const response = await fetch(finalUrl, {
+            ...options,
+            headers,
+          });
+
+          // If successful, decrement usage
+          if (response.ok) {
+            try {
+              await xibeClient.decrementUsage();
+            } catch (usageError) {
+              log.warn("Failed to decrement usage:", usageError);
+              // Don't fail the request if usage tracking fails
+            }
+          }
+
+          return response;
+        } catch (error) {
+          log.error("Error in Xibe usage tracking:", error);
+          throw error;
+        }
       };
 
       const provider = createOpenAICompatible({
         name: "codex",
         baseURL: "https://text.pollinations.ai/openai",
-        fetch: fetchWithToken,
+        fetch: fetchWithUsageTracking,
       });
 
       return {

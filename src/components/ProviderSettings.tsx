@@ -110,7 +110,14 @@ export function ProviderSettingsGrid() {
       <h2 className="text-lg font-medium mb-6">AI Providers</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {providers
-          ?.filter((p) => p.type !== "local")
+          ?.filter((p) => p.type !== "local" && p.id !== "auto")
+          .sort((a, b) => {
+            // Show Xibe AI first
+            if (a.id === "codex") return -1;
+            if (b.id === "codex") return 1;
+            // Keep other providers in their original order
+            return 0;
+          })
           .map((provider: LanguageModelProvider) => {
             const isCustom = provider.type === "custom";
 

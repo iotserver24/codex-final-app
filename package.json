@@ -1,7 +1,7 @@
 {
   "name": "codex",
   "productName": "Xibe AI",
-  "version": "1.2.3",
+  "version": "1.2.5",
   "description": "Xibe AI - AI-powered code editor and application builder",
   "main": ".vite/build/main.js",
   "repository": {
@@ -177,6 +177,8 @@
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.7",
     "react-shiki": "^0.5.2",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "shell-env": "^4.0.1",
     "shiki": "^3.2.1",

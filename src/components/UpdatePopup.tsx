@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
 import {
@@ -22,14 +21,16 @@ import {
 } from "lucide-react";
 import { IpcClient } from "../ipc/ipc_client";
 import { showError, showSuccess } from "../lib/toast";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface UpdateInfo {
   version: string;
   date: string;
   description: string;
-  isBeta: boolean;
   downloadUrl: string;
-  changelogUrl?: string;
+  changelog?: string;
+  platformButtons?: { label: string; url: string }[];
 }
 
 interface UpdatePopupProps {
@@ -77,15 +78,7 @@ export function UpdatePopup({
     onClose();
   };
 
-  const handleViewChangelog = async () => {
-    if (!updateInfo?.changelogUrl) return;
-
-    try {
-      await IpcClient.getInstance().openExternalUrl(updateInfo.changelogUrl);
-    } catch (error: any) {
-      showError(error.message || "Failed to open changelog");
-    }
-  };
+  // Removed unused handler: changelog renders inline
 
   if (!updateInfo) return null;
 
@@ -112,11 +105,6 @@ export function UpdatePopup({
             <div className="flex items-center gap-2">
               <Tag className="w-4 h-4 text-gray-500" />
               <span className="font-medium">Version {updateInfo.version}</span>
-              {updateInfo.isBeta && (
-                <Badge variant="secondary" className="text-xs">
-                  Beta
-                </Badge>
-              )}
             </div>
             <Separator orientation="vertical" className="h-4" />
             <div className="flex items-center gap-2">
@@ -132,12 +120,89 @@ export function UpdatePopup({
             <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">
               What's New
             </h4>
-            <ScrollArea className="h-32 w-full">
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                {updateInfo.description}
-              </p>
+            <ScrollArea className="h-48 w-full">
+              <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({ children }) => (
+                      <h1 className="text-lg font-semibold mb-2">{children}</h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-base font-semibold mb-2">
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-sm font-semibold mb-1">{children}</h3>
+                    ),
+                    p: ({ children }) => <p className="mb-2">{children}</p>,
+                    ul: ({ children }) => (
+                      <ul className="list-disc list-inside mb-2">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal list-inside mb-2">
+                        {children}
+                      </ol>
+                    ),
+                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                    strong: ({ children }) => (
+                      <strong className="font-semibold">{children}</strong>
+                    ),
+                    em: ({ children }) => (
+                      <em className="italic">{children}</em>
+                    ),
+                    code: ({ children }) => (
+                      <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs">
+                        {children}
+                      </code>
+                    ),
+                    a: ({ href, children }) => (
+                      <a
+                        href={href}
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {children}
+                      </a>
+                    ),
+                  }}
+                >
+                  {updateInfo.changelog || updateInfo.description}
+                </ReactMarkdown>
+              </div>
             </ScrollArea>
           </div>
+
+          {/* Platform-specific Downloads */}
+          {updateInfo.platformButtons &&
+            updateInfo.platformButtons.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">
+                  Download Options
+                </h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {updateInfo.platformButtons.map((button, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(button.url, "_blank")}
+                      className="justify-start text-left h-auto py-2"
+                    >
+                      <Download className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm">
+                          {button.label}
+                        </div>
+                      </div>
+                      <ExternalLink className="w-3 h-3 ml-2 flex-shrink-0" />
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
 
           {/* Update Notice */}
           <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -160,16 +225,6 @@ export function UpdatePopup({
             <X className="w-4 h-4 mr-2" />
             Later
           </Button>
-          {updateInfo.changelogUrl && (
-            <Button
-              variant="outline"
-              onClick={handleViewChangelog}
-              className="flex items-center gap-2"
-            >
-              <ExternalLink className="w-4 h-4" />
-              View Changelog
-            </Button>
-          )}
           <Button
             onClick={handleDownload}
             disabled={isDownloading}
@@ -224,13 +279,24 @@ export function useUpdatePopup() {
       const result = await IpcClient.getInstance().checkForUpdatesXibe();
 
       if (result.hasUpdate && result.releaseInfo && result.downloadUrl) {
+        // Create platform buttons from the API response
+        let platformButtons: { label: string; url: string }[] = [];
+        if (result.releaseInfo.items) {
+          platformButtons = result.releaseInfo.items.flatMap((item) =>
+            item.variants.map((variant) => ({
+              label: `${item.platform} (${variant.arch}) - ${variant.packageType}`,
+              url: variant.url,
+            })),
+          );
+        }
+
         showUpdate({
           version: result.latestVersion,
-          date: result.releaseInfo.date,
-          description: result.releaseInfo.description,
-          isBeta: result.releaseInfo.isStable === false,
+          date: result.releaseInfo.updatedAt,
+          description: result.releaseInfo.changelog,
           downloadUrl: result.downloadUrl,
-          changelogUrl: result.releaseInfo.changelogUrl,
+          changelog: result.changelog,
+          platformButtons,
         });
         return true;
       }

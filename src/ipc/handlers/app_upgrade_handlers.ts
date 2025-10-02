@@ -20,8 +20,7 @@ const availableUpgrades: Omit<AppUpgrade, "isNeeded">[] = [
     title: "Enable select component to edit",
     description:
       "Installs the CodeX component tagger Vite plugin and its dependencies.",
-    manualUpgradeUrl:
-      "https://codex.anishkumar.tech/docs/upgrades/select-component",
+    manualUpgradeUrl: "https://docs.xibe.app/upgrades/select-component",
   },
   {
     id: "capacitor",
@@ -29,7 +28,7 @@ const availableUpgrades: Omit<AppUpgrade, "isNeeded">[] = [
     description:
       "Adds Capacitor to your app lets it run on iOS and Android in addition to the web.",
     manualUpgradeUrl:
-      "https://codex.anishkumar.tech/docs/guides/mobile-app#upgrade-your-app",
+      "https://docs.xibe.app/guides/mobile-app#upgrade-your-app",
   },
 ];
 

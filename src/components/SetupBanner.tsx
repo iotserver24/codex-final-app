@@ -347,7 +347,7 @@ function NodeJsHelpCallout() {
         <a
           onClick={() => {
             IpcClient.getInstance().openExternalUrl(
-              "https://codex.anishkumar.tech/docs/help/nodejs",
+              "https://docs.xibe.app/help/nodejs",
             );
           }}
           className="text-blue-600 dark:text-blue-400 hover:underline font-medium"

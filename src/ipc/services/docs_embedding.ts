@@ -53,57 +53,7 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
   }
 }
 
-// Pollinations embedding provider (free alternative)
-export class PollinationsEmbeddingProvider implements EmbeddingProvider {
-  async generateEmbeddings(texts: string[]): Promise<number[][]> {
-    try {
-      const embeddings: number[][] = [];
-
-      for (const text of texts) {
-        // First try with an explicit model
-        let response = await fetch("https://text.pollinations.ai/embeddings", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            input: text,
-            model: "text-embedding-3-small",
-          }),
-        });
-
-        // If that fails (e.g., 404 or model not supported), try without model
-        if (!response.ok) {
-          const status = response.status;
-          log.warn(
-            `Pollinations with model failed (${status}). Retrying without model...`,
-          );
-          response = await fetch("https://text.pollinations.ai/embeddings", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ input: text }),
-          });
-        }
-
-        if (!response.ok) {
-          throw new Error(
-            `Pollinations API error: ${response.status} ${response.statusText}`,
-          );
-        }
-
-        const data = await response.json();
-        embeddings.push(data.embedding || data.data?.[0]?.embedding);
-      }
-
-      return embeddings;
-    } catch (error) {
-      log.error("Error generating embeddings with Pollinations:", error);
-      throw error;
-    }
-  }
-}
+// Pollinations does not provide embeddings API - removed broken implementation
 
 export class DocsEmbeddingService {
   private provider: EmbeddingProvider;
@@ -132,12 +82,18 @@ export class DocsEmbeddingService {
       // For now, skip Azure integration as the settings structure may differ
       // TODO: Update when Azure settings structure is confirmed
 
-      // Fallback to Pollinations (free)
-      log.info("No OpenAI API key found, using Pollinations for embeddings");
-      return new PollinationsEmbeddingProvider();
+      // No fallback available - Pollinations doesn't provide embeddings
+      log.error(
+        "No OpenAI API key found and no free embeddings provider available",
+      );
+      throw new Error(
+        "OpenAI API key is required for embeddings. Please configure your API key in settings.",
+      );
     } catch (error) {
-      log.warn("Error reading settings, using Pollinations:", error);
-      return new PollinationsEmbeddingProvider();
+      log.warn("Error reading settings:", error);
+      throw new Error(
+        "OpenAI API key is required for embeddings. Please configure your API key in settings.",
+      );
     }
   }
 

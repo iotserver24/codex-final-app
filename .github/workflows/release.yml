@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., 1.2.0)"
+        description: "Version to release (e.g., 1.2.5)"
         required: true
-        default: "1.2.3"
+        default: "1.2.5"
 
 permissions:
   contents: write
@@ -295,7 +295,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.2.3' }}
+            VERSION=${{ github.event.inputs.version || '1.2.5' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -406,7 +406,7 @@ jobs:
             If you encounter any issues, please report them on our [GitHub Issues](https://github.com/iotserver24/codex/issues) page.
 
             ### 📚 Documentation
-            Visit our [documentation](https://xibe.app/docs) for detailed guides and tutorials.
+            Visit our [documentation](https://docs.xibe.app/) for detailed guides and tutorials.
 
             ---
             *Built with ❤️ by the Xibe AI team*
@@ -428,7 +428,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.2.3' }}
+            VERSION=${{ github.event.inputs.version || '1.2.5' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -532,7 +532,7 @@ jobs:
             If you encounter any issues, please report them on our [GitHub Issues](https://github.com/iotserver24/codex/issues) page.
 
             ### 📚 Documentation
-            Visit our [documentation](https://xibe.app/docs) for detailed guides and tutorials.
+            Visit our [documentation](https://docs.xibe.app/) for detailed guides and tutorials.
 
             ---
             *Built with ❤️ by the Xibe AI team*

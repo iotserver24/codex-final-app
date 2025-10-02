@@ -152,7 +152,7 @@ If you encounter any issues, please report them on our [GitHub Issues](https://g
 
 ## 📚 Documentation
 
-Visit our [documentation](https://codex.anishkumar.tech/docs) for detailed guides and tutorials.
+Visit our [documentation](https://docs.xibe.app/) for detailed guides and tutorials.
 
 ## 🔄 Updating from v1.0.4
 

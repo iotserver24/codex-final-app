@@ -29,14 +29,8 @@ const logger = log.scope("main");
 // Function to check for updates and notify the renderer
 async function checkForUpdatesAndNotify() {
   try {
-    const { readSettings } = await import("./main/settings");
-    const settings = readSettings();
-    const isBeta = settings.releaseChannel === "beta";
-
-    // Choose the appropriate API endpoint
-    const apiUrl = isBeta
-      ? "https://www.xibe.app/api/downloads-beta.json"
-      : "https://www.xibe.app/api/downloads.json";
+    // Use the new unified API endpoint
+    const apiUrl = "http://api.xibe.app/api/releases/latest";
 
     logger.info("Checking for updates from:", apiUrl);
 
@@ -55,21 +49,13 @@ async function checkForUpdatesAndNotify() {
 
     const data = await response.json();
 
-    // Parse the response based on channel
-    let latestRelease;
-    if (isBeta) {
-      latestRelease = data.latest;
-    } else {
-      latestRelease = data.releases?.[0] || data.latest;
-    }
-
-    if (!latestRelease) {
+    if (!data || !data.version) {
       logger.warn("No release found in update data");
       return;
     }
 
     const currentVersion = app.getVersion();
-    const latestVersion = latestRelease.version;
+    const latestVersion = data.version;
 
     logger.info(
       "Current version:",
@@ -85,21 +71,17 @@ async function checkForUpdatesAndNotify() {
       logger.info("New version available:", latestVersion);
 
       // Find the appropriate download URL for the current platform
-      const downloadUrl = getDownloadUrlForPlatform(
-        latestRelease,
-        process.platform,
-      );
+      const downloadUrl = getDownloadUrlForPlatform(data, process.platform);
 
       // Show update notification to user
       if (mainWindow && !mainWindow.isDestroyed()) {
         logger.info("Sending update-available event to renderer");
         mainWindow.webContents.send("update-available", {
           version: latestVersion,
-          date: latestRelease.date,
-          description: latestRelease.description,
-          isBeta: isBeta,
+          date: data.updatedAt,
+          description: data.changelog,
           downloadUrl: downloadUrl,
-          changelogUrl: latestRelease.changelogUrl,
+          changelog: data.changelog,
         });
       } else {
         logger.warn("Main window not available to send update notification");
@@ -135,34 +117,61 @@ function getDownloadUrlForPlatform(
   release: any,
   platform: string,
 ): string | null {
-  const downloads = release.downloads;
+  const platformName =
+    platform === "win32"
+      ? "windows"
+      : platform === "darwin"
+        ? "mac"
+        : platform === "linux"
+          ? "linux"
+          : null;
 
+  if (!platformName) {
+    logger.warn("Unknown platform:", platform);
+    return null;
+  }
+
+  const platformItem = release.items.find(
+    (item: any) => item.platform === platformName,
+  );
+  if (!platformItem || !platformItem.variants.length) {
+    logger.warn("No downloads found for platform:", platformName);
+    return null;
+  }
+
+  // Select the best variant for the platform
   switch (platform) {
     case "win32":
-      // Prefer x64, fallback to ARM64
-      const windowsDownload =
-        downloads.windows.find((d: any) => d.arch === "x64") ||
-        downloads.windows[0];
-      return windowsDownload?.url || null;
+      // Prefer x64 exe, fallback to ARM64 exe
+      const windowsVariant =
+        platformItem.variants.find(
+          (v: any) => v.arch === "x64" && v.packageType === "exe",
+        ) ||
+        platformItem.variants.find(
+          (v: any) => v.arch === "arm64" && v.packageType === "exe",
+        ) ||
+        platformItem.variants[0];
+      return windowsVariant?.url || null;
 
     case "darwin":
       // Prefer ARM64 for Apple Silicon, fallback to x64
-      const macosDownload =
-        downloads.macos.find((d: any) => d.arch === "ARM64") ||
-        downloads.macos.find((d: any) => d.arch === "x64") ||
-        downloads.macos[0];
-      return macosDownload?.url || null;
+      const macVariant =
+        platformItem.variants.find((v: any) => v.arch === "arm64") ||
+        platformItem.variants.find((v: any) => v.arch === "x64") ||
+        platformItem.variants[0];
+      return macVariant?.url || null;
 
     case "linux":
-      // Prefer DEB, fallback to RPM
-      const linuxDownload =
-        downloads.linux.find((d: any) => d.type === "deb") ||
-        downloads.linux[0];
-      return linuxDownload?.url || null;
+      // Prefer DEB, fallback to RPM, then zip
+      const linuxVariant =
+        platformItem.variants.find((v: any) => v.packageType === "deb") ||
+        platformItem.variants.find((v: any) => v.packageType === "rpm") ||
+        platformItem.variants.find((v: any) => v.packageType === "zip") ||
+        platformItem.variants[0];
+      return linuxVariant?.url || null;
 
     default:
-      logger.warn("Unknown platform:", platform);
-      return null;
+      return platformItem.variants[0]?.url || null;
   }
 }
 

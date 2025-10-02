@@ -220,6 +220,8 @@ export const UserSettingsSchema = z.object({
   e2bApiKey: SecretSchema.optional(),
   // Optional: Polar API key for additional functionality
   polarApiKey: SecretSchema.optional(),
+  // Xibe AI API key for usage tracking
+  xibeApiKey: SecretSchema.optional(),
   // Default share duration in minutes
   defaultShareDuration: z.number().optional(),
   supabase: SupabaseSchema.optional(),

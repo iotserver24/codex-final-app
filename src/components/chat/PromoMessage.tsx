@@ -197,7 +197,7 @@ export const GITHUB_TIP: MessageConfig = {
   ],
 };
 
-// Like codeX? Donate or share now! https://codex.anishkumar.tech/docs/support#-one-time-donations
+// Like codeX? Donate or share now! https://docs.xibe.app/support#-one-time-donations
 export const CODEX_DONATION_TIP: MessageConfig = {
   spans: [
     {
@@ -207,7 +207,7 @@ export const CODEX_DONATION_TIP: MessageConfig = {
     {
       type: "link",
       content: "Donate",
-      url: "https://codex.anishkumar.tech/docs/support#-one-time-donations",
+      url: "https://docs.xibe.app/support#-one-time-donations",
     },
     {
       type: "text",

@@ -5,50 +5,34 @@ import { app } from "electron";
 const logger = log.scope("update-handlers");
 
 // Types for Xibe AI API responses
-interface XibeDownloadInfo {
-  name: string;
-  url: string;
-  type: string;
+interface XibeDownloadVariant {
   arch: string;
+  packageType: string;
+  url: string;
+  sizeMB: number;
 }
 
-interface XibeRelease {
+interface XibePlatformItem {
+  platform: string;
   version: string;
-  date: string;
-  isLatest: boolean;
-  isStable: boolean;
-  description: string;
-  downloads: {
-    windows: XibeDownloadInfo[];
-    macos: XibeDownloadInfo[];
-    linux: XibeDownloadInfo[];
-  };
+  latest: boolean;
+  variants: XibeDownloadVariant[];
 }
 
 interface XibeApiResponse {
-  releases: XibeRelease[];
-  latest: XibeRelease;
-  totalVersions: number;
-  apiInfo: {
-    endpoints: Record<string, string>;
-    usage: string;
-  };
-}
-
-interface XibeBetaApiResponse {
-  latest: XibeRelease;
-  apiInfo: {
-    endpoints: Record<string, string>;
-  };
+  updatedAt: string;
+  version: string;
+  changelog: string;
+  items: XibePlatformItem[];
 }
 
 interface UpdateCheckResult {
   hasUpdate: boolean;
   currentVersion: string;
   latestVersion: string;
-  releaseInfo: XibeRelease | null;
+  releaseInfo: XibeApiResponse | null;
   downloadUrl: string | null;
-  changelogUrl?: string | null;
+  changelog?: string | null;
   error?: string;
 }
 
@@ -61,22 +45,10 @@ export function registerUpdateHandlers() {
         const currentVersion = app.getVersion();
         logger.info("Checking for updates. Current version:", currentVersion);
 
-        // Get user settings to determine release channel
-        const { readSettings } = await import("../../main/settings");
-        const settings = readSettings();
-        const isBeta = settings.releaseChannel === "beta";
+        // Use the new unified API endpoint
+        const apiUrl = "http://api.xibe.app/api/releases/latest";
 
-        // Choose the appropriate API endpoint
-        const apiUrl = isBeta
-          ? "https://www.xibe.app/api/downloads-beta.json"
-          : "https://www.xibe.app/api/downloads.json";
-
-        logger.info(
-          "Using API URL:",
-          apiUrl,
-          "Channel:",
-          isBeta ? "beta" : "stable",
-        );
+        logger.info("Using API URL:", apiUrl);
 
         // Fetch update information
         const response = await fetch(apiUrl, {
@@ -90,49 +62,35 @@ export function registerUpdateHandlers() {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const data: XibeApiResponse | XibeBetaApiResponse =
-          await response.json();
+        const data: XibeApiResponse = await response.json();
 
-        // Parse the response based on channel
-        let latestRelease: XibeRelease;
-        if (isBeta) {
-          latestRelease = (data as XibeBetaApiResponse).latest;
-        } else {
-          const stableData = data as XibeApiResponse;
-          latestRelease = stableData.releases?.[0] || stableData.latest;
-        }
-
-        if (!latestRelease) {
+        if (!data || !data.version) {
           throw new Error("No release information found in API response");
         }
 
-        logger.info("Latest version found:", latestRelease.version);
+        logger.info("Latest version found:", data.version);
 
         // Compare versions using semantic versioning
-        const hasUpdate =
-          compareVersions(currentVersion, latestRelease.version) < 0;
+        const hasUpdate = compareVersions(currentVersion, data.version) < 0;
 
         if (!hasUpdate) {
           logger.info("No update available. Current version is up to date.");
           return {
             hasUpdate: false,
             currentVersion,
-            latestVersion: latestRelease.version,
+            latestVersion: data.version,
             releaseInfo: null,
             downloadUrl: null,
-            changelogUrl: null,
+            changelog: null,
           };
         }
 
         // Find the appropriate download URL for the current platform
-        const downloadUrl = getDownloadUrlForPlatform(
-          latestRelease,
-          process.platform,
-        );
+        const downloadUrl = getDownloadUrlForPlatform(data, process.platform);
 
         logger.info(
           "Update available:",
-          latestRelease.version,
+          data.version,
           "Download URL:",
           downloadUrl,
         );
@@ -140,10 +98,10 @@ export function registerUpdateHandlers() {
         return {
           hasUpdate: true,
           currentVersion,
-          latestVersion: latestRelease.version,
-          releaseInfo: latestRelease,
+          latestVersion: data.version,
+          releaseInfo: data,
           downloadUrl,
-          changelogUrl: latestRelease.changelogUrl,
+          changelog: data.changelog,
         };
       } catch (error: any) {
         logger.error("Failed to check for updates:", error);
@@ -153,7 +111,7 @@ export function registerUpdateHandlers() {
           latestVersion: app.getVersion(),
           releaseInfo: null,
           downloadUrl: null,
-          changelogUrl: null,
+          changelog: null,
           error: error.message,
         };
       }
@@ -212,34 +170,63 @@ function compareVersions(version1: string, version2: string): number {
 
 // Helper function to get download URL for current platform
 function getDownloadUrlForPlatform(
-  release: XibeRelease,
+  release: XibeApiResponse,
   platform: string,
 ): string | null {
-  const downloads = release.downloads;
+  const platformName =
+    platform === "win32"
+      ? "windows"
+      : platform === "darwin"
+        ? "mac"
+        : platform === "linux"
+          ? "linux"
+          : null;
 
+  if (!platformName) {
+    logger.warn("Unknown platform:", platform);
+    return null;
+  }
+
+  const platformItem = release.items.find(
+    (item) => item.platform === platformName,
+  );
+  if (!platformItem || !platformItem.variants.length) {
+    logger.warn("No downloads found for platform:", platformName);
+    return null;
+  }
+
+  // Select the best variant for the platform
   switch (platform) {
     case "win32":
-      // Prefer x64, fallback to ARM64
-      const windowsDownload =
-        downloads.windows.find((d) => d.arch === "x64") || downloads.windows[0];
-      return windowsDownload?.url || null;
+      // Prefer x64 exe, fallback to ARM64 exe
+      const windowsVariant =
+        platformItem.variants.find(
+          (v) => v.arch === "x64" && v.packageType === "exe",
+        ) ||
+        platformItem.variants.find(
+          (v) => v.arch === "arm64" && v.packageType === "exe",
+        ) ||
+        platformItem.variants[0];
+      return windowsVariant?.url || null;
 
     case "darwin":
       // Prefer ARM64 for Apple Silicon, fallback to x64
-      const macosDownload =
-        downloads.macos.find((d) => d.arch === "ARM64") ||
-        downloads.macos.find((d) => d.arch === "x64") ||
-        downloads.macos[0];
-      return macosDownload?.url || null;
+      const macVariant =
+        platformItem.variants.find((v) => v.arch === "arm64") ||
+        platformItem.variants.find((v) => v.arch === "x64") ||
+        platformItem.variants[0];
+      return macVariant?.url || null;
 
     case "linux":
-      // Prefer DEB, fallback to RPM
-      const linuxDownload =
-        downloads.linux.find((d) => d.type === "deb") || downloads.linux[0];
-      return linuxDownload?.url || null;
+      // Prefer DEB, fallback to RPM, then zip
+      const linuxVariant =
+        platformItem.variants.find((v) => v.packageType === "deb") ||
+        platformItem.variants.find((v) => v.packageType === "rpm") ||
+        platformItem.variants.find((v) => v.packageType === "zip") ||
+        platformItem.variants[0];
+      return linuxVariant?.url || null;
 
     default:
-      logger.warn("Unknown platform:", platform);
-      return null;
+      return platformItem.variants[0]?.url || null;
   }
 }

@@ -27,9 +27,7 @@ export function ReleaseChannelSelector() {
         action: {
           label: "Download Stable",
           onClick: () => {
-            IpcClient.getInstance().openExternalUrl(
-              "https://codex.anishkumar.tech/",
-            );
+            IpcClient.getInstance().openExternalUrl("https://docs.xibe.app/");
           },
         },
       });

@@ -32,6 +32,7 @@ import type { FileAttachment } from "@/ipc/ipc_types";
 import { NEON_TEMPLATE_IDS } from "@/shared/templates";
 import { neonTemplateHook } from "@/client_logic/template_hook";
 import { ProBanner } from "@/components/ProBanner";
+import { XibeSetupPopup, useXibeSetupPopup } from "@/components/XibeSetupPopup";
 
 // Adding an export for attachments
 export interface HomeSubmitOptions {
@@ -53,6 +54,7 @@ export default function HomePage() {
   const [releaseUrl, setReleaseUrl] = useState("");
   const { theme } = useTheme();
   const queryClient = useQueryClient();
+  const xibeSetupPopup = useXibeSetupPopup();
   useEffect(() => {
     const updateLastVersionLaunched = async () => {
       if (
@@ -83,6 +85,23 @@ export default function HomePage() {
     };
     updateLastVersionLaunched();
   }, [appVersion, settings, updateSettings, theme]);
+
+  // Show Xibe setup popup if no API key is configured
+  useEffect(() => {
+    const hasXibeApiKey =
+      settings?.xibeApiKey?.value &&
+      !settings.xibeApiKey.value.startsWith("Invalid Key") &&
+      settings.xibeApiKey.value !== "Not Set";
+
+    if (settings && !hasXibeApiKey) {
+      // Show popup after a short delay to let the page load
+      const timer = setTimeout(() => {
+        xibeSetupPopup.showSetup();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [settings, xibeSetupPopup]);
 
   // Get the appId from search params
   const appId = search.appId ? Number(search.appId) : null;
@@ -276,6 +295,13 @@ export default function HomePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Xibe Setup Popup */}
+      <XibeSetupPopup
+        isOpen={xibeSetupPopup.isOpen}
+        onClose={xibeSetupPopup.hideSetup}
+        onDismissForSession={xibeSetupPopup.dismissForSession}
+      />
     </div>
   );
 }

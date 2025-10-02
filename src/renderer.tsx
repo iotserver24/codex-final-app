@@ -11,7 +11,6 @@ import {
 } from "@tanstack/react-query";
 import { showError, showMcpConsentToast } from "./lib/toast";
 import { IpcClient } from "./ipc/ipc_client";
-import { UpdatePopup, useUpdatePopup } from "./components/UpdatePopup";
 
 // @ts-ignore
 console.log("Running in mode:", import.meta.env.MODE);
@@ -89,8 +88,6 @@ const queryClient = new QueryClient({
 // );
 
 function App() {
-  const updatePopup = useUpdatePopup();
-
   // Navigation tracking disabled - telemetry removed
   useEffect(() => {
     // Subscribe to navigation state changes
@@ -125,45 +122,12 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Listen for update notifications from main process
-  useEffect(() => {
-    const handleUpdateAvailable = (updateData: any) => {
-      console.log("Update available event received:", updateData);
-      updatePopup.showUpdate({
-        version: updateData.version,
-        date: updateData.date,
-        description: updateData.description,
-        isBeta: updateData.isBeta,
-        downloadUrl: updateData.downloadUrl,
-        changelogUrl: updateData.changelogUrl,
-      });
-    };
-
-    // Listen for update-available events from main process
-    const ipcRenderer = (window as any).electron.ipcRenderer;
-    if (ipcRenderer) {
-      ipcRenderer.on("update-available", handleUpdateAvailable);
-
-      return () => {
-        ipcRenderer.removeListener("update-available", handleUpdateAvailable);
-      };
-    }
-  }, [updatePopup]);
+  // Note: Update notifications are now handled by the app-sidebar component
 
   // Note: Automatic update checking is handled by the main process
   // No need for fallback check here to avoid loops
 
-  return (
-    <>
-      <RouterProvider router={router} />
-      <UpdatePopup
-        isOpen={updatePopup.isOpen}
-        onClose={updatePopup.hideUpdate}
-        updateInfo={updatePopup.updateInfo}
-        onDismissForSession={updatePopup.dismissForSession}
-      />
-    </>
-  );
+  return <RouterProvider router={router} />;
 }
 
 createRoot(document.getElementById("root")!).render(

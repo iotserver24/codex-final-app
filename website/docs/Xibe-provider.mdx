@@ -1,0 +1,301 @@
+---
+title: Xibe AI API Reference
+description: Unified reference for Xibe AI public API endpoints, auth, and examples
+---
+
+import React from 'react'
+
+export const meta = {
+  apiBase: 'https://api.xibe.app',
+  appBase: 'https://xibe.app',
+}
+
+# Xibe AI API Reference
+
+- API Base: `https://api.xibe.app`
+- App/Dashboard: `https://xibe.app`
+- Authentication: `x-api-key` header (keys start with `XAI_`)
+- Content-Type: `application/json` for POST requests
+- Rate limits: Per user per day (plan-based)
+
+## Getting Started
+
+1. Sign in at `https://xibe.app`
+2. Create an API key in your dashboard
+3. Copy your key (format: `XAI_` + 32 chars)
+4. Use it in the `x-api-key` header for all API calls
+
+### Test Health
+```bash
+curl -X GET "https://api.xibe.app/api/health"
+```
+Expected response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-01-01T00:00:00.000Z",
+  "uptime": 123.45
+}
+```
+
+---
+
+## Authentication & Usage Endpoints
+
+### Verify API Key (No Decrement)
+GET `/api/verifyApiKeyInfo`
+
+Headers:
+- `x-api-key: XAI_your_api_key`
+
+```bash
+curl -X GET "https://api.xibe.app/api/verifyApiKeyInfo" \
+  -H "x-api-key: XAI_your_api_key"
+```
+Response:
+```json
+{
+  "valid": true,
+  "userId": "USER_UID",
+  "usage": 12,
+  "limit": 300,
+  "remaining": 288,
+  "resetTime": "2025-01-02T00:00:00.000Z",
+  "planType": "free",
+  "planName": "Free"
+}
+```
+
+### Get Usage Count (No Decrement)
+GET `/api/getUsageCount`
+
+```bash
+curl -X GET "https://api.xibe.app/api/getUsageCount" \
+  -H "x-api-key: XAI_your_api_key"
+```
+Response:
+```json
+{
+  "valid": true,
+  "remaining": 288,
+  "usage": 12,
+  "limit": 300,
+  "resetTime": "2025-01-02T00:00:00.000Z",
+  "planType": "free",
+  "planName": "Free"
+}
+```
+
+### Decrement Usage (Manual)
+POST `/api/decrementUsage`
+
+```bash
+curl -X POST "https://api.xibe.app/api/decrementUsage" \
+  -H "x-api-key: XAI_your_api_key" \
+  -H "Content-Type: application/json"
+```
+Response:
+```json
+{
+  "valid": true,
+  "success": true,
+  "message": "Usage count decreased by 1",
+  "userId": "USER_UID",
+  "usage": 13,
+  "limit": 300,
+  "remaining": 287,
+  "resetTime": "2025-01-02T00:00:00.000Z",
+  "planType": "free",
+  "planName": "Free"
+}
+```
+
+### Key Status (Detailed)
+GET `/api/keyStatus`
+
+```bash
+curl -X GET "https://api.xibe.app/api/keyStatus" \
+  -H "x-api-key: XAI_your_api_key"
+```
+Response:
+```json
+{
+  "valid": true,
+  "keyData": {
+    "name": "My API Key",
+    "description": "Dashboard key",
+    "isActive": true,
+    "planType": "free",
+    "planName": "Free",
+    "dailyLimit": 300,
+    "createdAt": null,
+    "lastUsedAt": null
+  },
+  "usage": {
+    "today": 13,
+    "limit": 300,
+    "remaining": 287,
+    "resetTime": "2025-01-02T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+## Chat Completions (OpenAI-Compatible)
+
+POST `/api/xibe/v1/chat/completions`
+
+Headers:
+- `x-api-key: XAI_your_api_key`
+- `Content-Type: application/json`
+
+### curl
+```bash
+curl -X POST "https://api.xibe.app/api/xibe/v1/chat/completions" \
+  -H "x-api-key: XAI_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-3.5-turbo",
+    "messages": [
+      {"role": "user", "content": "Say hello!"}
+    ]
+  }'
+```
+
+### fetch (browser)
+```ts
+const resp = await fetch('https://api.xibe.app/api/xibe/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'x-api-key': 'XAI_your_api_key',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    model: 'gpt-3.5-turbo',
+    messages: [{ role: 'user', content: 'Say hello!' }],
+  }),
+})
+const data = await resp.json()
+```
+
+### axios (node)
+```ts
+import axios from 'axios'
+
+const { data } = await axios.post(
+  'https://api.xibe.app/api/xibe/v1/chat/completions',
+  {
+    model: 'gpt-3.5-turbo',
+    messages: [{ role: 'user', content: 'Say hello!' }],
+  },
+  {
+    headers: { 'x-api-key': 'XAI_your_api_key' },
+    timeout: 60000,
+  }
+)
+```
+
+Example response (truncated):
+```json
+{
+  "id": "chatcmpl-...",
+  "object": "chat.completion",
+  "created": 1735756800,
+  "model": "gpt-3.5-turbo",
+  "choices": [
+    {
+      "index": 0,
+      "message": { "role": "assistant", "content": "Hello!" },
+      "finish_reason": "stop"
+    }
+  ]
+}
+```
+
+---
+
+## Simple Prompt (Lightweight)
+
+GET `/api/xibe/simple?prompt=...`
+
+```bash
+curl -X GET "https://api.xibe.app/api/xibe/simple?prompt=Write%20a%20haiku" \
+  -H "x-api-key: XAI_your_api_key"
+```
+
+If upstream returns text, the response is `text/plain`; otherwise `application/json`.
+
+---
+
+## Models (No Usage Consumption)
+
+GET `/api/xibe/models`
+
+```bash
+curl -X GET "https://api.xibe.app/api/xibe/models" \
+  -H "x-api-key: XAI_your_api_key"
+```
+
+Returns a list of available models (shape depends on upstream provider).
+
+---
+
+## Error Responses
+
+### 401 Missing or Invalid API Key
+```json
+{ "error": "API key is required", "valid": false }
+```
+```json
+{ "error": "Invalid API key", "valid": false }
+```
+
+### 403 Inactive Key
+```json
+{ "error": "API key is inactive", "valid": false }
+```
+
+### 429 Daily Limit Exceeded
+```json
+{ "error": "Daily limit exceeded", "valid": false, "usage": 300, "limit": 300, "remaining": 0 }
+```
+
+### 502 Upstream Error
+```json
+{ "error": "AI service temporarily unavailable", "detail": "Connection timeout" }
+```
+
+---
+
+## Integration Notes
+
+- Use `GET /api/getUsageCount` before calling chat to confirm remaining quota
+- All AI calls consume usage automatically (chat) or via `/api/decrementUsage`
+- Daily quota resets at 00:00 UTC
+- All API keys for a user share the same daily pool (per plan)
+
+### Environment Variables (client-side)
+```bash
+VITE_API_URL=https://api.xibe.app/api
+```
+
+### Quick Client Helper (fetch)
+```ts
+const API = 'https://api.xibe.app/api'
+const KEY = 'XAI_your_api_key'
+
+export async function xibeChat(messages) {
+  const res = await fetch(`${API}/xibe/v1/chat/completions`, {
+    method: 'POST',
+    headers: { 'x-api-key': KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'gpt-3.5-turbo', messages }),
+  })
+  if (!res.ok) throw new Error('Chat failed')
+  return res.json()
+}
+```
+
+---
+
+For dashboard-based key management and usage, visit `https://xibe.app`.

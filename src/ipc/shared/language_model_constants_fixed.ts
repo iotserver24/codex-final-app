@@ -485,13 +485,13 @@ export const CLOUD_PROVIDERS: Record<
   auto: {
     displayName: "Xibe Auto",
     websiteUrl:
-      "https://codex.anishkumar.tech/docs/guides/ai-models/pro-modes#smart-context",
+      "https://docs.xibe.app/guides/ai-models/pro-modes#smart-context",
     gatewayPrefix: "codex/",
   },
   codex: {
     displayName: "Xibe AI",
     hasFreeTier: true,
-    websiteUrl: "https://codex.anishkumar.tech",
+    websiteUrl: "https://docs.xibe.app",
     gatewayPrefix: "codex/",
   },
 };

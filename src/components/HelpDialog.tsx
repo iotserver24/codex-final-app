@@ -228,7 +228,7 @@ Session ID: ${sessionId}
 
   const handleDonate = () => {
     IpcClient.getInstance().openExternalUrl(
-      "https://codex.anishkumar.tech/docs/support#-one-time-donations",
+      "https://docs.xibe.app/support#-one-time-donations",
     );
   };
 
@@ -436,7 +436,7 @@ Session ID: ${sessionId}
                 variant="outline"
                 onClick={() => {
                   IpcClient.getInstance().openExternalUrl(
-                    "https://codex.anishkumar.tech/docs",
+                    "https://docs.xibe.app/",
                   );
                 }}
                 className="w-full py-6 bg-(--background-lightest)"

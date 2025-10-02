@@ -15,6 +15,7 @@ import { UserSettings } from "@/lib/schemas";
 import { ProviderSettingsHeader } from "./ProviderSettingsHeader";
 import { ApiKeyConfiguration } from "./ApiKeyConfiguration";
 import { ModelsSection } from "./ModelsSection";
+import { XibeApiKeySettings } from "./XibeApiKeySettings";
 
 interface ProviderSettingsPageProps {
   provider: string;
@@ -54,7 +55,7 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
     ? "Xibe AI Turbo"
     : (providerData?.name ?? "Unknown Provider");
   const providerWebsiteUrl = isCodeXAuto
-    ? "https://codex.anishkumar.tech/docs/guides/ai-models/pro-modes#smart-context"
+    ? "https://docs.xibe.app/guides/ai-models/pro-modes#smart-context"
     : providerData?.websiteUrl;
   const hasFreeTier = isCodeXAuto ? false : providerData?.hasFreeTier;
   const envVarName = isCodeXAuto ? undefined : providerData?.envVarName;
@@ -258,14 +259,17 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
             </AlertDescription>
           </Alert>
         ) : isCodeX ? (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
-            <h3 className="text-lg font-medium text-green-800 dark:text-green-200 mb-2">
-              ✅ Xibe AI Provider Ready
-            </h3>
-            <p className="text-green-700 dark:text-green-300">
-              The Xibe AI provider is configured and ready to use with 29 AI
-              models available.
-            </p>
+          <div className="space-y-6">
+            <XibeApiKeySettings />
+            <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
+              <h3 className="text-lg font-medium text-green-800 dark:text-green-200 mb-2">
+                ✅ Xibe AI Provider Ready
+              </h3>
+              <p className="text-green-700 dark:text-green-300">
+                The Xibe AI provider is configured and ready to use with 29 AI
+                models available.
+              </p>
+            </div>
           </div>
         ) : isCodeXAuto ? (
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
