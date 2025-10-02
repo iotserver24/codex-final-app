@@ -26,6 +26,7 @@ import { useLanguageModelProviders } from "@/hooks/useLanguageModelProviders";
 import { useSettings } from "@/hooks/useSettings";
 import { PriceBadge } from "@/components/PriceBadge";
 import { TURBO_MODELS } from "@/ipc/shared/language_model_constants";
+import { cn } from "@/lib/utils";
 
 export function ModelPicker() {
   const { settings, updateSettings } = useSettings();
@@ -263,7 +264,12 @@ export function ModelPicker() {
                           </span>
                           <div className="flex items-center gap-1.5">
                             {model.tag && (
-                              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                              <span
+                                className={cn(
+                                  "text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium",
+                                  model.tagColor,
+                                )}
+                              >
                                 {model.tag}
                               </span>
                             )}

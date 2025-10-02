@@ -9,8 +9,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {} from "@/components/ui/accordion";
 
 import { Button } from "@/components/ui/button";
-// import { showError } from "@/lib/toast";
-import { UserSettings } from "@/lib/schemas";
+import {
+  UserSettings,
+  AzureProviderSetting,
+  VertexProviderSetting,
+} from "@/lib/schemas";
 
 import { ProviderSettingsHeader } from "./ProviderSettingsHeader";
 import { ApiKeyConfiguration } from "./ApiKeyConfiguration";
@@ -70,22 +73,34 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
     userApiKey !== "Not Set";
   const hasEnvKey = !!(envVarName && envVars[envVarName]);
 
-  // Special handling for Azure OpenAI configuration
-  const isAzureConfigured =
-    provider === "azure"
-      ? !!(envVars["AZURE_API_KEY"] && envVars["AZURE_RESOURCE_NAME"])
-      : false;
+  const azureSettings = settings?.providerSettings?.azure as
+    | AzureProviderSetting
+    | undefined;
+  const azureApiKeyFromSettings = (azureSettings?.apiKey?.value ?? "").trim();
+  const azureResourceNameFromSettings = (
+    azureSettings?.resourceName ?? ""
+  ).trim();
+  const azureHasSavedSettings = Boolean(
+    azureApiKeyFromSettings && azureResourceNameFromSettings,
+  );
+  const azureHasEnvConfiguration = Boolean(
+    envVars["AZURE_API_KEY"] && envVars["AZURE_RESOURCE_NAME"],
+  );
 
-  // Special handling for Vertex configuration status
-  const vertexSettings = settings?.providerSettings?.vertex as any;
+  const vertexSettings = settings?.providerSettings?.vertex as
+    | VertexProviderSetting
+    | undefined;
   const isVertexConfigured = Boolean(
     vertexSettings?.projectId &&
       vertexSettings?.location &&
       vertexSettings?.serviceAccountKey?.value,
   );
 
-  // Xibe AI provider is always configured since it uses hardcoded token
-  // Xibe AI Turbo is always configured since it doesn't need API keys
+  const isAzureConfigured =
+    provider === "azure"
+      ? azureHasSavedSettings || azureHasEnvConfiguration
+      : false;
+
   const isConfigured =
     isCodeX || isCodeXAuto
       ? true

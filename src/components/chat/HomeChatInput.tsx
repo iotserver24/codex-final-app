@@ -12,6 +12,7 @@ import { FileAttachmentDropdown } from "./FileAttachmentDropdown";
 import { HomeSubmitOptions } from "@/pages/home";
 import { ChatInputControls } from "../ChatInputControls";
 import { LexicalChatInput } from "./LexicalChatInput";
+import { useChatModeToggle } from "@/hooks/useChatModeToggle";
 export function HomeChatInput({
   onSubmit,
 }: {
@@ -22,6 +23,7 @@ export function HomeChatInput({
   const { isStreaming } = useStreamChat({
     hasChatId: false,
   }); // eslint-disable-line @typescript-eslint/no-unused-vars
+  useChatModeToggle();
 
   // Use the attachments hook
   const {
