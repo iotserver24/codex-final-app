@@ -25,6 +25,9 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import { useSettings } from "@/hooks/useSettings";
 import { IpcClient } from "@/ipc/ipc_client";
+import { useAuth } from "@/hooks/useAuth";
+import { loginDialogOpenAtom } from "@/atoms/appAtoms";
+import { LogIn, LogOut, User, Crown } from "lucide-react";
 // Removed unused local interface
 
 import {
@@ -118,6 +121,8 @@ export function AppSidebar() {
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [systemPlatform, setSystemPlatform] = useState<string>("");
   const { settings } = useSettings();
+  const { authState, logout } = useAuth();
+  const [, setLoginDialogOpen] = useAtom(loginDialogOpenAtom);
 
   // Strict sanitation schema for inline HTML in markdown (images, audio/video only)
   const markdownSanitizeSchema = {
@@ -473,6 +478,38 @@ export function AppSidebar() {
             </div>
           </DialogContent>
         </Dialog>
+        {/* Authentication Section */}
+        <div className="mt-4 pt-4 border-t border-sidebar-border">
+          {authState.isAuthenticated && authState.user ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-3 py-2 text-sm">
+                <User className="w-4 h-4" />
+                <span className="truncate">{authState.user.email}</span>
+                {authState.user.plan === "pro" && (
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                )}
+              </div>
+              <button
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm w-full text-left"
+                onClick={logout}
+                disabled={authState.isLoading}
+              >
+                <LogOut className="w-4 h-4" />
+                {authState.isLoading ? "Logging out..." : "Logout"}
+              </button>
+            </div>
+          ) : (
+            <button
+              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm w-full"
+              onClick={() => setLoginDialogOpen(true)}
+              disabled={authState.isLoading}
+            >
+              <LogIn className="w-4 h-4" />
+              {authState.isLoading ? "Authenticating..." : "Sign In"}
+            </button>
+          )}
+        </div>
+
         <button
           className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm mt-2"
           onClick={handleCheckForUpdates}

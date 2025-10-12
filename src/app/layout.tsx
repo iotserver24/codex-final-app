@@ -8,6 +8,8 @@ import { useEffect } from "react";
 import { useRunApp } from "@/hooks/useRunApp";
 import { useAtomValue } from "jotai";
 import { previewModeAtom } from "@/atoms/appAtoms";
+import { LoginDialog } from "@/components/LoginDialog";
+import { AuthGuard } from "@/components/AuthGuard";
 
 export default function RootLayout({
   children,
@@ -48,9 +50,10 @@ export default function RootLayout({
               id="layout-main-content-container"
               className="flex h-screenish w-full overflow-x-hidden mt-12 mb-4 mr-4 border-t border-l border-border rounded-lg bg-background"
             >
-              {children}
+              <AuthGuard>{children}</AuthGuard>
             </div>
             <Toaster richColors />
+            <LoginDialog />
           </SidebarProvider>
         </DeepLinkProvider>
       </ThemeProvider>

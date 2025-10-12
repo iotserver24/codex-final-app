@@ -1612,4 +1612,55 @@ export class IpcClient {
     return this.ipcRenderer.invoke("agentic:stop-autonomous", agenticChatId);
   }
   // --- End Agentic Mode Methods ---
+
+  // --- Authentication Methods ---
+  public async getMachineId(): Promise<{ machineId: string }> {
+    return this.ipcRenderer.invoke("get-machine-id");
+  }
+
+  public async authLogin(params: {
+    machineId: string;
+    callbackUrl: string;
+  }): Promise<{
+    success: boolean;
+    user?: {
+      id: string;
+      email: string;
+      plan: "free" | "pro";
+      machineId: string;
+    };
+    apiKey?: string;
+    error?: string;
+  }> {
+    return this.ipcRenderer.invoke("auth-login", params);
+  }
+
+  public async authLogout(): Promise<{ success: boolean }> {
+    return this.ipcRenderer.invoke("auth-logout");
+  }
+
+  public async authStatus(): Promise<{
+    isAuthenticated: boolean;
+    user?: {
+      id: string;
+      email: string;
+      plan: "free" | "pro";
+      machineId: string;
+      apiKey: string;
+    };
+  }> {
+    return this.ipcRenderer.invoke("auth-status");
+  }
+
+  public async validateMachineId(params: {
+    machineId: string;
+    userId: string;
+  }): Promise<{
+    valid: boolean;
+    plan: "free" | "pro";
+    maxMachines: number;
+  }> {
+    return this.ipcRenderer.invoke("validate-machine-id", params);
+  }
+  // --- End Authentication Methods ---
 }

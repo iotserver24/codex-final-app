@@ -26,3 +26,26 @@ export const previewPanelKeyAtom = atom<number>(0);
 export const previewErrorMessageAtom = atom<
   { message: string; source: "preview-app" | "dyad-app" } | undefined
 >(undefined);
+
+// Authentication atoms
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: {
+    id: string;
+    email: string;
+    plan: "free" | "pro";
+    machineId: string;
+    apiKey: string;
+  } | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export const authAtom = atom<AuthState>({
+  isAuthenticated: false,
+  user: null,
+  isLoading: false,
+  error: null,
+});
+
+export const loginDialogOpenAtom = atom<boolean>(false);
