@@ -204,15 +204,27 @@ export class IpcClient {
       }
     });
 
-    this.ipcRenderer.on("chat:response:error", (error) => {
+    this.ipcRenderer.on("chat:response:error", (payload) => {
       console.debug("chat:response:error");
-      if (typeof error === "string") {
-        for (const [chatId, callbacks] of this.chatStreams.entries()) {
+      if (
+        payload &&
+        typeof payload === "object" &&
+        "chatId" in payload &&
+        "error" in payload
+      ) {
+        const { chatId, error } = payload as { chatId: number; error: string };
+        const callbacks = this.chatStreams.get(chatId);
+        if (callbacks) {
           callbacks.onError(error);
           this.chatStreams.delete(chatId);
+        } else {
+          console.warn(
+            `[IPC] No callbacks found for chat ${chatId} on error`,
+            this.chatStreams,
+          );
         }
       } else {
-        console.error("[IPC] Invalid error data received:", error);
+        console.error("[IPC] Invalid error data received:", payload);
       }
     });
 
@@ -287,6 +299,20 @@ export class IpcClient {
 
   public async getApp(appId: number): Promise<App> {
     return this.ipcRenderer.invoke("get-app", appId);
+  }
+
+  public async addAppToFavorite(
+    appId: number,
+  ): Promise<{ isFavorite: boolean }> {
+    try {
+      const result = await this.ipcRenderer.invoke("add-to-favorite", {
+        appId,
+      });
+      return result;
+    } catch (error) {
+      showError(error);
+      throw error;
+    }
   }
 
   public async getAppEnvVars(

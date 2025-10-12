@@ -62,7 +62,8 @@ function ensureBaselineSchema(sqlite: Database.Database): void {
             \`vercel_deployment_url\` text,
             \`install_command\` text,
             \`start_command\` text,
-            \`chat_context\` text
+            \`chat_context\` text,
+            \`is_favorite\` integer DEFAULT 0 NOT NULL
           )`,
         )
         .run();
@@ -75,6 +76,14 @@ function ensureBaselineSchema(sqlite: Database.Database): void {
       if (!hasColumn("apps", "start_command")) {
         logger.warn("Self-heal: adding apps.start_command column");
         sqlite.prepare("ALTER TABLE `apps` ADD `start_command` text").run();
+      }
+      if (!hasColumn("apps", "is_favorite")) {
+        logger.warn("Self-heal: adding apps.is_favorite column");
+        sqlite
+          .prepare(
+            "ALTER TABLE `apps` ADD `is_favorite` integer DEFAULT 0 NOT NULL",
+          )
+          .run();
       }
     }
 

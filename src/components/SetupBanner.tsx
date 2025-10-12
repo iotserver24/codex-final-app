@@ -36,6 +36,7 @@ import { useLanguageModelProviders } from "@/hooks/useLanguageModelProviders";
 import { useScrollAndNavigateTo } from "@/hooks/useScrollAndNavigateTo";
 // @ts-ignore
 import logo from "../../assets/logo.svg";
+import { OnboardingBanner } from "./home/OnboardingBanner";
 
 type NodeInstallStep =
   | "install"
@@ -45,6 +46,7 @@ type NodeInstallStep =
 
 export function SetupBanner() {
   const navigate = useNavigate();
+  const [isOnboardingVisible, setIsOnboardingVisible] = useState(true);
   const { isAnyProviderSetup, isLoading: loading } =
     useLanguageModelProviders();
   const [nodeSystemInfo, setNodeSystemInfo] = useState<NodeSystemInfo | null>(
@@ -152,9 +154,13 @@ export function SetupBanner() {
 
   return (
     <>
-      <p className="text-xl text-zinc-700 dark:text-zinc-300 p-4">
+      <p className="text-xl font-medium text-zinc-700 dark:text-zinc-300 p-4">
         Setup Xibe AI
       </p>
+      <OnboardingBanner
+        isVisible={isOnboardingVisible}
+        setIsVisible={setIsOnboardingVisible}
+      />
       <div className={bannerClasses}>
         <Accordion
           type="multiple"

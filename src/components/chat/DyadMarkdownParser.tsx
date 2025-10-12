@@ -12,7 +12,7 @@ import { DyadCodebaseContext } from "./DyadCodebaseContext";
 import { DyadThink } from "./DyadThink";
 import { CodeHighlight } from "./CodeHighlight";
 import { useAtomValue } from "jotai";
-import { isStreamingAtom } from "@/atoms/chatAtoms";
+import { isStreamingByIdAtom, selectedChatIdAtom } from "@/atoms/chatAtoms";
 import { CustomTagState } from "./stateTypes";
 import { DyadOutput } from "./DyadOutput";
 import { DyadProblemSummary } from "./DyadProblemSummary";
@@ -22,6 +22,8 @@ import { DyadMcpToolResult } from "./DyadMcpToolResult";
 import { DyadWebSearchResult } from "./DyadWebSearchResult";
 import { DyadWebSearch } from "./DyadWebSearch";
 import { DyadRead } from "./DyadRead";
+import { mapActionToButton } from "./ChatInput";
+import { SuggestedAction } from "@/lib/schemas";
 
 interface DyadMarkdownParserProps {
   content: string;
@@ -77,7 +79,8 @@ export const VanillaMarkdownParser = ({ content }: { content: string }) => {
 export const DyadMarkdownParser: React.FC<DyadMarkdownParserProps> = ({
   content,
 }) => {
-  const isStreaming = useAtomValue(isStreamingAtom);
+  const chatId = useAtomValue(selectedChatIdAtom);
+  const isStreaming = useAtomValue(isStreamingByIdAtom).get(chatId!) ?? false;
   // Extract content pieces (markdown and custom tags)
   const contentPieces = useMemo(() => {
     return parseCustomTags(content);
@@ -498,7 +501,12 @@ function renderCustomTag(
       return null;
 
     case "dyad-command":
-      // Don't render anything for dyad-command
+      if (attributes.type) {
+        const action = {
+          id: attributes.type,
+        } as SuggestedAction;
+        return <>{mapActionToButton(action)}</>;
+      }
       return null;
 
     default:

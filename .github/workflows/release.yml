@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., 1.2.5)"
+        description: "Version to release (e.g., 1.3.0)"
         required: true
-        default: "1.2.5"
+        default: "1.3.0"
 
 permissions:
   contents: write
@@ -295,7 +295,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.2.5' }}
+            VERSION=${{ github.event.inputs.version || '1.3.0' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -428,7 +428,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.2.5' }}
+            VERSION=${{ github.event.inputs.version || '1.3.0' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -557,7 +557,7 @@ jobs:
 
       - name: Update version in package.json
         run: |
-          VERSION=${{ github.event.inputs.version || '1.2.0' }}
+          VERSION=${{ github.event.inputs.version || '1.3.0' }}
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           if [ "$CURRENT_VERSION" != "$VERSION" ]; then
             npm version $VERSION --no-git-tag-version
@@ -568,7 +568,7 @@ jobs:
 
       - name: Commit and push version update
         run: |
-          VERSION=${{ github.event.inputs.version || '1.2.0' }}
+          VERSION=${{ github.event.inputs.version || '1.3.0' }}
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           if [ "$CURRENT_VERSION" != "$VERSION" ]; then
             git config --local user.email "action@github.com"

@@ -12,6 +12,7 @@ import {
   Wrench,
   Globe,
 } from "lucide-react";
+import { ChatActivityButton } from "@/components/chat/ChatActivity";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState, useCallback } from "react";
 
@@ -47,7 +48,7 @@ const BUTTON_CLASS_NAME =
   "no-app-region-drag cursor-pointer relative flex items-center gap-1 px-2 py-1 rounded-md text-[13px] font-medium z-10 hover:bg-[var(--background)]";
 
 // Preview Header component with preview mode toggle
-export const PreviewHeader = () => {
+export const ActionHeader = () => {
   const [previewMode, setPreviewMode] = useAtom(previewModeAtom);
   const [isPreviewOpen, setIsPreviewOpen] = useAtom(isPreviewOpenAtom);
   const selectedAppId = useAtomValue(selectedAppIdAtom);
@@ -73,7 +74,7 @@ export const PreviewHeader = () => {
   // const { data: _progress } = useProgress();
   // const [sharePopoverOpen, setSharePopoverOpen] = useState(false);
 
-  const isCompact = windowWidth < 860;
+  const isCompact = windowWidth < 888;
 
   // Track window width
   useEffect(() => {
@@ -303,7 +304,9 @@ export const PreviewHeader = () => {
             "publish-mode-button",
           )}
         </div>
-        <div className="flex items-center">
+        {/* Chat activity bell */}
+        <div className="flex items-center gap-1">
+          <ChatActivityButton />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button

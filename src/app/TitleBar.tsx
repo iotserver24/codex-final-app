@@ -17,14 +17,8 @@ import { useDeepLink } from "@/contexts/DeepLinkContext";
 import { useEffect, useState } from "react";
 import { CodexProSuccessDialog } from "@/components/CodexProSuccessDialog";
 import { IpcClient } from "@/ipc/ipc_client";
-
-import { PreviewHeader } from "@/components/preview_panel/PreviewHeader";
-
-// Define the UserBudgetInfo type
-interface UserBudgetInfo {
-  totalCredits: number;
-  usedCredits: number;
-}
+import { UserBudgetInfo } from "@/ipc/ipc_types";
+import { ActionHeader } from "@/components/preview_panel/ActionHeader";
 
 export const TitleBar = () => {
   const [selectedAppId] = useAtom(selectedAppIdAtom);
@@ -103,7 +97,7 @@ export const TitleBar = () => {
         {/* Preview Header */}
         {location.pathname === "/chat" && (
           <div className="flex-1 flex justify-end">
-            <PreviewHeader />
+            <ActionHeader />
           </div>
         )}
 

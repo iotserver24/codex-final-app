@@ -9,7 +9,6 @@ import {
   RefreshCw,
   Info,
   BookOpen,
-  Globe,
   Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,11 +63,11 @@ const items = [
     to: "/chat",
     icon: Inbox,
   },
-  {
-    title: "Docs",
-    to: "/docs",
-    icon: Globe,
-  },
+  // {
+  //   title: "Docs",
+  //   to: "/docs",
+  //   icon: Globe,
+  // },
   {
     title: "Settings",
     to: "/settings",
