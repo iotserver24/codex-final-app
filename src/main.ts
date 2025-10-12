@@ -197,10 +197,14 @@ if (process.defaultApp) {
     app.setAsDefaultProtocolClient("codex", process.execPath, [
       path.resolve(process.argv[1]),
     ]);
+    app.setAsDefaultProtocolClient("xibeai", process.execPath, [
+      path.resolve(process.argv[1]),
+    ]);
   }
 } else {
   app.setAsDefaultProtocolClient("dyad");
   app.setAsDefaultProtocolClient("codex");
+  app.setAsDefaultProtocolClient("xibeai");
 }
 
 export async function onReady() {
@@ -407,10 +411,14 @@ function handleDeepLinkReturn(url: string) {
     "hostname",
     parsed.hostname,
   );
-  if (parsed.protocol !== "dyad:" && parsed.protocol !== "codex:") {
+  if (
+    parsed.protocol !== "dyad:" &&
+    parsed.protocol !== "codex:" &&
+    parsed.protocol !== "xibeai:"
+  ) {
     dialog.showErrorBox(
       "Invalid Protocol",
-      `Expected dyad:// or codex://, got ${parsed.protocol}. Full URL: ${url}`,
+      `Expected dyad://, codex://, or xibeai://, got ${parsed.protocol}. Full URL: ${url}`,
     );
     return;
   }
@@ -477,6 +485,35 @@ function handleDeepLinkReturn(url: string) {
     });
     return;
   }
+
+  // Handle Xibe AI authentication callback
+  if (parsed.hostname === "auth" && parsed.pathname === "/callback") {
+    const dataParam = parsed.searchParams.get("data");
+    if (dataParam) {
+      try {
+        const authData = JSON.parse(decodeURIComponent(dataParam));
+        log.info(
+          "Received auth callback data:",
+          authData.success ? "success" : "error",
+        );
+
+        // Send auth data to renderer
+        mainWindow?.webContents.send("deep-link-received", {
+          type: "auth-callback",
+          data: authData,
+        });
+        return;
+      } catch (error) {
+        log.error("Failed to parse auth callback data:", error);
+        dialog.showErrorBox(
+          "Invalid Auth Data",
+          "Failed to parse authentication data",
+        );
+        return;
+      }
+    }
+  }
+
   dialog.showErrorBox("Invalid deep link URL", url);
 }
 

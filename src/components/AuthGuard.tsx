@@ -16,6 +16,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
     // Only show login dialog if auth is initialized and user is not authenticated
     if (isInitialized && !authState.isAuthenticated && !authState.isLoading) {
       setLoginDialogOpen(true);
+    } else if (isInitialized && authState.isAuthenticated) {
+      // Hide login dialog if user becomes authenticated
+      setLoginDialogOpen(false);
     }
   }, [
     isInitialized,
@@ -36,7 +39,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // If not authenticated, the LoginDialog will be shown by the AuthGuard
-  // The children will still be rendered but the dialog will overlay them
-  return <>{children}</>;
+  // If authenticated, show children normally
+  if (authState.isAuthenticated) {
+    return <>{children}</>;
+  }
+
+  // If not authenticated, show a loading state while login dialog is open
+  // The login dialog will be rendered by the LoginDialog component
+  return (
+    <div className="relative">
+      {/* Render children in background but login dialog will overlay */}
+      <div className="opacity-50 pointer-events-none">{children}</div>
+    </div>
+  );
 }

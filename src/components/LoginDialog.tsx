@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { loginDialogOpenAtom, authAtom } from "@/atoms/appAtoms";
 import { useAuth } from "@/hooks/useAuth";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -22,6 +21,13 @@ export function LoginDialog() {
   const { login } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  // Close dialog when user becomes authenticated
+  useEffect(() => {
+    if (authState.isAuthenticated) {
+      setIsOpen(false);
+    }
+  }, [authState.isAuthenticated, setIsOpen]);
+
   const handleLogin = async () => {
     setIsLoggingIn(true);
     try {
@@ -36,16 +42,52 @@ export function LoginDialog() {
     }
   };
 
-  const handleOpenWebsite = () => {
-    IpcClient.getInstance().openExternalUrl(
-      "https://xibe.app/auth?desktop=true",
-    );
+  const handleOpenWebsite = async () => {
+    try {
+      // Get machine ID before opening browser
+      const { machineId } = await IpcClient.getInstance().getMachineId();
+      IpcClient.getInstance().openExternalUrl(
+        `https://www.xibe.app/auth?desktop=true&machine_id=${machineId}`,
+      );
+    } catch (error) {
+      console.error("Failed to get machine ID:", error);
+      // Fallback without machine ID
+      IpcClient.getInstance().openExternalUrl(
+        "https://www.xibe.app/auth?desktop=true",
+      );
+    }
   };
 
+  // Don't render anything if not open
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="fixed inset-0 h-screen w-screen max-w-none max-h-none m-0 p-0 border-0 rounded-none">
-        <div className="flex h-full w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="relative w-full max-w-6xl h-full max-h-[90vh] bg-white dark:bg-gray-900 rounded-lg shadow-2xl overflow-hidden">
+        {/* Close button */}
+        <button
+          onClick={() => setIsOpen(false)}
+          title="Close login dialog"
+          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+
+        <div className="flex h-full">
           {/* Left side - Branding */}
           <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-purple-700 text-white p-12 flex-col justify-center items-center">
             <div className="max-w-md text-center space-y-6">
@@ -74,7 +116,7 @@ export function LoginDialog() {
           </div>
 
           {/* Right side - Login Form */}
-          <div className="flex-1 flex flex-col justify-center items-center p-8 lg:p-12">
+          <div className="flex-1 flex flex-col justify-center items-center p-8 lg:p-12 overflow-y-auto">
             <div className="w-full max-w-md space-y-8">
               {/* Mobile/Compact Header */}
               <div className="lg:hidden text-center space-y-2">
@@ -83,7 +125,7 @@ export function LoginDialog() {
                   <h1 className="text-2xl font-bold">Xibe AI</h1>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Sign in to access AI features
+                  Continue in offline mode to access basic features
                 </p>
               </div>
 
@@ -91,7 +133,7 @@ export function LoginDialog() {
               <div className="hidden lg:block text-center space-y-2">
                 <h2 className="text-3xl font-bold">Welcome Back</h2>
                 <p className="text-muted-foreground">
-                  Sign in to your Xibe AI account to continue
+                  Continue in offline mode to access basic features
                 </p>
               </div>
 
@@ -117,7 +159,7 @@ export function LoginDialog() {
                   ) : (
                     <>
                       <LogIn className="w-5 h-5 mr-3" />
-                      Sign In with GitHub
+                      Continue in Offline Mode
                     </>
                   )}
                 </Button>
@@ -127,7 +169,7 @@ export function LoginDialog() {
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
+                    <span className="bg-white dark:bg-gray-900 px-2 text-muted-foreground">
                       Or
                     </span>
                   </div>
@@ -153,7 +195,8 @@ export function LoginDialog() {
                   </p>
                   <p>📱 Free users: 1 machine • Pro users: up to 5 machines</p>
                   <p>
-                    🚀 Sign up for free at xibe.app if you don't have an account
+                    🚀 Sign up for free at localhost:8080 if you don't have an
+                    account
                   </p>
                 </div>
 
@@ -168,7 +211,7 @@ export function LoginDialog() {
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

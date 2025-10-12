@@ -178,6 +178,12 @@ const validInvokeChannels = [
   "agentic:create-autonomous-chat",
   "agentic:get-autonomous-status",
   "agentic:stop-autonomous",
+  // Authentication
+  "get-machine-id",
+  "auth-login",
+  "auth-logout",
+  "auth-status",
+  "validate-machine-id",
 ];
 
 // Add valid receive channels
@@ -203,6 +209,7 @@ const validReceiveChannels = [
   "mcp:tool-consent-request",
   // Update notifications
   "update-available",
+  "deep-link-received",
 ] as const;
 
 type ValidInvokeChannel = (typeof validInvokeChannels)[number];

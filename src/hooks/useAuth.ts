@@ -4,6 +4,19 @@ import { authAtom, loginDialogOpenAtom } from "@/atoms/appAtoms";
 import { IpcClient } from "@/ipc/ipc_client";
 import { showError, showSuccess } from "@/lib/toast";
 
+// Deep link auth data type
+interface DeepLinkAuthData {
+  success: boolean;
+  user?: {
+    id: string;
+    email: string;
+    plan: string;
+    machineId: string;
+  };
+  apiKey?: string;
+  error?: string;
+}
+
 export function useAuth() {
   const [authState, setAuthState] = useAtom(authAtom);
   const [, setLoginDialogOpen] = useAtom(loginDialogOpenAtom);
@@ -30,8 +43,47 @@ export function useAuth() {
     initializeAuth();
   }, [setAuthState]);
 
+  // Listen for deep link auth events
+  useEffect(() => {
+    const ipcClient = IpcClient.getInstance();
+    const unsubscribe = ipcClient.onDeepLinkReceived((data) => {
+      if (data.type === "auth-callback" && data.data) {
+        const authData = data.data as DeepLinkAuthData;
+        if (authData.success && authData.user && authData.apiKey) {
+          // Update auth state with successful authentication
+          setAuthState((prev) => ({
+            ...prev,
+            isAuthenticated: true,
+            user: {
+              id: authData.user.id,
+              email: authData.user.email,
+              plan: authData.user.plan,
+              machineId: authData.user.machineId,
+              apiKey: authData.apiKey,
+            },
+            isLoading: false,
+            error: null,
+          }));
+
+          showSuccess("Successfully logged in!");
+          setLoginDialogOpen(false);
+        } else if (authData.error) {
+          // Handle authentication error
+          setAuthState((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: authData.error,
+          }));
+          showError(authData.error);
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [setAuthState, setLoginDialogOpen]);
+
   const login = useCallback(
-    async (callbackUrl: string = "https://xibe.app/api/auth/callback") => {
+    async (callbackUrl: string = "https://www.xibe.app/api/auth/callback") => {
       try {
         setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 

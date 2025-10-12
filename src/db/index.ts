@@ -401,6 +401,8 @@ export function initializeDatabase(): BetterSQLite3Database<typeof schema> & {
     }
   } catch (error) {
     logger.error("Migration error:", error);
+    // If migrations fail, the baseline schema should be sufficient
+    logger.log("Continuing with baseline schema after migration failure");
   }
 
   return _db as any;
