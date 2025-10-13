@@ -18,7 +18,6 @@ import {
 import { ProviderSettingsHeader } from "./ProviderSettingsHeader";
 import { ApiKeyConfiguration } from "./ApiKeyConfiguration";
 import { ModelsSection } from "./ModelsSection";
-import { XibeApiKeySettings } from "./XibeApiKeySettings";
 
 interface ProviderSettingsPageProps {
   provider: string;
@@ -284,14 +283,13 @@ export function ProviderSettingsPage({ provider }: ProviderSettingsPageProps) {
           </Alert>
         ) : isCodeX ? (
           <div className="space-y-6">
-            <XibeApiKeySettings />
             <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
               <h3 className="text-lg font-medium text-green-800 dark:text-green-200 mb-2">
                 ✅ Xibe AI Provider Ready
               </h3>
               <p className="text-green-700 dark:text-green-300">
-                The Xibe AI provider is configured and ready to use with 29 AI
-                models available.
+                Xibe API key is managed automatically by the app and is not
+                visible or editable.
               </p>
             </div>
           </div>

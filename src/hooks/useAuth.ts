@@ -46,27 +46,46 @@ export function useAuth() {
   // Listen for deep link auth events
   useEffect(() => {
     const ipcClient = IpcClient.getInstance();
-    const unsubscribe = ipcClient.onDeepLinkReceived((data) => {
+    const unsubscribe = ipcClient.onDeepLinkReceived(async (data) => {
       if (data.type === "auth-callback" && data.data) {
         const authData = data.data as DeepLinkAuthData;
         if (authData.success && authData.user && authData.apiKey) {
-          // Update auth state with successful authentication
-          setAuthState((prev) => ({
-            ...prev,
-            isAuthenticated: true,
-            user: {
-              id: authData.user.id,
-              email: authData.user.email,
-              plan: authData.user.plan,
-              machineId: authData.user.machineId,
-              apiKey: authData.apiKey,
-            },
-            isLoading: false,
-            error: null,
-          }));
+          try {
+            // Process authentication data through IPC
+            const result = await IpcClient.getInstance().authLogin({
+              authData,
+            });
 
-          showSuccess("Successfully logged in!");
-          setLoginDialogOpen(false);
+            if (result.success) {
+              // Update auth state with successful authentication
+              setAuthState((prev) => ({
+                ...prev,
+                isAuthenticated: true,
+                user: {
+                  id: authData.user.id,
+                  email: authData.user.email,
+                  plan: authData.user.plan,
+                  machineId: authData.user.machineId,
+                  // Server now returns machine ID as API key
+                  apiKey: authData.apiKey,
+                },
+                isLoading: false,
+                error: null,
+              }));
+
+              showSuccess("Successfully logged in!");
+              setLoginDialogOpen(false);
+            }
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : "Authentication failed";
+            setAuthState((prev) => ({
+              ...prev,
+              isLoading: false,
+              error: errorMessage,
+            }));
+            showError(errorMessage);
+          }
         } else if (authData.error) {
           // Handle authentication error
           setAuthState((prev) => ({
@@ -83,47 +102,33 @@ export function useAuth() {
   }, [setAuthState, setLoginDialogOpen]);
 
   const login = useCallback(
-    async (callbackUrl: string = "https://www.xibe.app/api/auth/callback") => {
+    async (
+      _callbackUrl: string = "http://localhost:3000/api/auth/callback",
+    ) => {
       try {
         setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
         // Get machine ID
         const { machineId } = await IpcClient.getInstance().getMachineId();
 
-        // Perform authentication
-        const result = await IpcClient.getInstance().authLogin({
-          machineId,
-          callbackUrl,
-        });
+        // Open browser for authentication instead of direct login
+        await IpcClient.getInstance().openExternalUrl(
+          `http://localhost:8080/auth?desktop=true&machine_id=${machineId}`,
+        );
 
-        if (result.success && result.user && result.apiKey) {
-          // Update auth state
-          setAuthState((prev) => ({
-            ...prev,
-            isAuthenticated: true,
-            user: {
-              id: result.user?.id || "",
-              email: result.user?.email || "",
-              plan: result.user?.plan || "free",
-              machineId: result.user?.machineId || "",
-              apiKey: result.apiKey || "",
-            },
-            isLoading: false,
-            error: null,
-          }));
+        // Reset loading state since we're redirecting to browser
+        setAuthState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: null,
+        }));
 
-          // Update API key in settings if needed
-          // This could be handled by updating the settings atom
-
-          showSuccess("Successfully logged in!");
-          setLoginDialogOpen(false);
-          return true;
-        } else {
-          throw new Error(result.error || "Login failed");
-        }
+        return true;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Login failed";
+          error instanceof Error
+            ? error.message
+            : "Failed to open authentication page";
         setAuthState((prev) => ({
           ...prev,
           isLoading: false,
@@ -194,7 +199,8 @@ export function useAuth() {
         user: status.user
           ? {
               ...status.user,
-              apiKey: status.user.apiKey || "", // Provide default empty string if missing
+              // Server now returns machine ID as API key
+              apiKey: status.user.apiKey || "",
             }
           : null,
       }));

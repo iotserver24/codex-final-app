@@ -18,7 +18,7 @@ import { IpcClient } from "@/ipc/ipc_client";
 export function LoginDialog() {
   const [isOpen, setIsOpen] = useAtom(loginDialogOpenAtom);
   const [authState] = useAtom(authAtom);
-  const { login } = useAuth();
+  const { login: _login } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Close dialog when user becomes authenticated
@@ -31,10 +31,9 @@ export function LoginDialog() {
   const handleLogin = async () => {
     setIsLoggingIn(true);
     try {
-      const success = await login();
-      if (success) {
-        setIsOpen(false);
-      }
+      // Redirect to browser authentication instead of offline login
+      await handleOpenWebsite();
+      setIsOpen(false);
     } catch (error) {
       console.error("Login failed:", error);
     } finally {
@@ -47,13 +46,13 @@ export function LoginDialog() {
       // Get machine ID before opening browser
       const { machineId } = await IpcClient.getInstance().getMachineId();
       IpcClient.getInstance().openExternalUrl(
-        `https://www.xibe.app/auth?desktop=true&machine_id=${machineId}`,
+        `http://localhost:8080/auth?desktop=true&machine_id=${machineId}`,
       );
     } catch (error) {
       console.error("Failed to get machine ID:", error);
       // Fallback without machine ID
       IpcClient.getInstance().openExternalUrl(
-        "https://www.xibe.app/auth?desktop=true",
+        "http://localhost:8080/auth?desktop=true",
       );
     }
   };
@@ -125,7 +124,7 @@ export function LoginDialog() {
                   <h1 className="text-2xl font-bold">Xibe AI</h1>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Continue in offline mode to access basic features
+                  Sign in with GitHub to access your account
                 </p>
               </div>
 
@@ -133,7 +132,7 @@ export function LoginDialog() {
               <div className="hidden lg:block text-center space-y-2">
                 <h2 className="text-3xl font-bold">Welcome Back</h2>
                 <p className="text-muted-foreground">
-                  Continue in offline mode to access basic features
+                  Sign in with GitHub to access your account
                 </p>
               </div>
 
@@ -154,36 +153,14 @@ export function LoginDialog() {
                   {isLoggingIn ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                      Signing In...
+                      Opening Browser...
                     </>
                   ) : (
                     <>
                       <LogIn className="w-5 h-5 mr-3" />
-                      Continue in Offline Mode
+                      Sign in with GitHub
                     </>
                   )}
-                </Button>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white dark:bg-gray-900 px-2 text-muted-foreground">
-                      Or
-                    </span>
-                  </div>
-                </div>
-
-                <Button
-                  onClick={handleOpenWebsite}
-                  variant="outline"
-                  className="w-full h-12 text-lg"
-                  size="lg"
-                  disabled={isLoggingIn}
-                >
-                  <ExternalLink className="w-5 h-5 mr-3" />
-                  Open in Browser
                 </Button>
               </div>
 
@@ -195,16 +172,14 @@ export function LoginDialog() {
                   </p>
                   <p>📱 Free users: 1 machine • Pro users: up to 5 machines</p>
                   <p>
-                    🚀 Sign up for free at localhost:8080 if you don't have an
-                    account
+                    🚀 Sign up for free at xibe.app if you don't have an account
                   </p>
                 </div>
 
                 <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800">
                   <ExternalLink className="h-4 w-4 text-blue-600" />
                   <AlertDescription className="text-blue-800 dark:text-blue-200">
-                    You'll be redirected to complete authentication in your
-                    browser
+                    You'll be redirected to GitHub to complete authentication
                   </AlertDescription>
                 </Alert>
               </div>

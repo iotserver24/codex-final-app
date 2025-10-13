@@ -1,9 +1,8 @@
-import { ipcMain } from "electron";
-import { app } from "electron";
+import { ipcMain, app } from "electron";
 import { randomUUID } from "crypto";
 import { join } from "path";
 import { writeFileSync, readFileSync, existsSync } from "fs";
-import axios from "axios";
+// axios no longer used for auth-status validation; keep imports minimal
 import { readSettings, writeSettings } from "../../main/settings";
 
 // Machine ID generation and storage
@@ -51,41 +50,30 @@ export function registerAuthHandlers() {
     }
   });
 
-  // Login with website callback
-  ipcMain.handle("auth-login", async (event, { machineId, _callbackUrl }) => {
+  // Process authentication data from deep link callback
+  ipcMain.handle("auth-login", async (event, { authData }) => {
     try {
-      let authData;
+      if (
+        !authData ||
+        !authData.success ||
+        !authData.user ||
+        !authData.apiKey
+      ) {
+        throw new Error("Invalid authentication data received");
+      }
 
-      // For desktop authentication, we should open the browser to the auth page
-      // and wait for the deep link callback. The actual authentication happens
-      // on the website, which then sends the result back via deep link.
-
-      // For now, create a temporary authentication for offline mode
-      // This allows the app to work without requiring the full OAuth flow
-      console.log("Creating temporary authentication for offline mode");
-      const tempApiKey = `temp-${machineId}-${Date.now()}`;
-      authData = {
-        success: true,
-        user: {
-          id: `temp-user-${machineId}`,
-          email: "user@offline.local",
-          plan: "free",
-          machineId: machineId,
-        },
-        apiKey: tempApiKey,
-      };
-      console.log("Created temporary authentication for offline mode");
-
-      // Store API key in settings
+      // Store MACHINE ID as the API key in settings (do not expose to renderer)
       const currentSettings = readSettings();
+      const machineId = getMachineId();
       writeSettings({
         ...currentSettings,
-        xibeApiKey: { value: authData.apiKey },
+        xibeApiKey: { value: machineId },
       });
 
       return {
         success: true,
         user: authData.user,
+        // Return the machine ID as API key (server now returns machine ID)
         apiKey: authData.apiKey,
       };
     } catch (error) {
@@ -119,53 +107,43 @@ export function registerAuthHandlers() {
       const settings = readSettings();
       const apiKey = settings?.xibeApiKey?.value;
 
-      if (apiKey && apiKey !== "Not Set" && !apiKey.startsWith("Invalid Key")) {
-        // In a real implementation, you would validate this API key with your backend
-        // For now, assume if an API key exists, the user is authenticated
-        // This is a placeholder for actual backend validation
-        try {
-          const response = await axios.get(
-            `http://localhost:3000/api/keyStatus`,
-            {
-              headers: { "x-api-key": apiKey },
-              timeout: 5000, // 5 second timeout
-            },
-          );
+      // 🚀 NEW: Clear temporary API keys and force re-authentication
+      if (
+        apiKey &&
+        (apiKey.startsWith("temp-") ||
+          apiKey.includes("offline") ||
+          apiKey === "Not Set" ||
+          apiKey.startsWith("Invalid Key"))
+      ) {
+        console.log("Clearing temporary/invalid API key:", apiKey);
+        // Clear the temporary API key
+        writeSettings({
+          ...settings,
+          xibeApiKey: undefined,
+        });
+        return {
+          isAuthenticated: false,
+          user: null,
+        };
+      }
 
-          if (response.data.valid) {
-            const keyData = response.data.keyData;
-            return {
-              isAuthenticated: true,
-              user: {
-                id: keyData.userId,
-                email: keyData.email || "unknown@example.com",
-                plan: keyData.planType,
-                machineId: keyData.machineId || "unknown",
-                apiKey: apiKey,
-              },
-            };
-          }
-        } catch (error) {
-          console.error("API key validation failed:", error);
-          // If API key validation fails due to network/server issues,
-          // still allow authentication if we have a valid-looking API key
-          if (apiKey && apiKey.length > 10 && !apiKey.startsWith("Invalid")) {
-            console.log(
-              "Backend server unavailable, but API key looks valid - allowing authentication",
-            );
-            return {
-              isAuthenticated: true,
-              user: {
-                id: "offline-user",
-                email: "user@offline.local",
-                plan: "free",
-                machineId: "offline",
-                apiKey: apiKey,
-              },
-            };
-          }
-          // If API key validation fails, treat as not authenticated
-        }
+      if (apiKey && apiKey !== "Not Set" && !apiKey.startsWith("Invalid Key")) {
+        // Treat presence of stored key (machine ID) as authenticated without exposing it
+        console.log(
+          "Auth status: Found valid machine ID in settings:",
+          apiKey?.substring(0, 8) + "...",
+        );
+        return {
+          isAuthenticated: true,
+          user: {
+            id: "unknown",
+            email: "unknown@example.com",
+            plan: "free",
+            machineId: apiKey,
+            // Return machine ID as API key (server now returns machine ID)
+            apiKey: apiKey,
+          },
+        };
       }
 
       return {
@@ -179,7 +157,7 @@ export function registerAuthHandlers() {
   });
 
   // Validate machine ID against user's account
-  ipcMain.handle("validate-machine-id", async (_event, _params) => {
+  ipcMain.handle("validate-machine-id", async () => {
     try {
       // This would validate that the machine ID is associated with the user account
       // For now, we'll simulate this validation

@@ -443,6 +443,10 @@ function getRegularModelClient(
     case "codex": {
       // Check if user has Xibe API key for usage tracking
       const xibeApiKey = settings.xibeApiKey?.value;
+      console.log(
+        "Codex provider: Xibe API key from settings:",
+        xibeApiKey?.substring(0, 8) + "...",
+      );
       if (!xibeApiKey) {
         throw new Error(
           "Xibe API key is required. Please sign up at https://xibe.app and add your API key in settings.",
@@ -451,6 +455,10 @@ function getRegularModelClient(
 
       // Initialize Xibe API client for usage tracking
       const xibeClient = new XibeApiClient(xibeApiKey);
+      console.log(
+        "Codex provider: XibeApiClient initialized with base URL:",
+        xibeClient.baseUrl,
+      );
 
       // Hardcoded token for Pollinations API
       const hardcodedToken = "uNoesre5jXDzjhiY";

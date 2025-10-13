@@ -26,7 +26,8 @@ export interface XibeApiResponse {
 }
 
 export class XibeApiClient {
-  private baseUrl = "https://api.xibe.app/api";
+  // Local development: API server at http://localhost:3000
+  public readonly baseUrl = "http://localhost:3000/api";
   private apiKey: string | null = null;
 
   constructor(apiKey?: string) {
@@ -41,6 +42,10 @@ export class XibeApiClient {
     if (!this.apiKey) {
       throw new Error("Xibe API key is required");
     }
+    console.log(
+      "XibeApiClient: Using API key:",
+      this.apiKey?.substring(0, 8) + "...",
+    );
     return {
       "x-api-key": this.apiKey,
       "Content-Type": "application/json",
@@ -52,12 +57,18 @@ export class XibeApiClient {
    */
   async verifyApiKeyInfo(): Promise<XibeUsageInfo> {
     try {
+      console.log("XibeApiClient: Checking API key validity...");
       const response = await fetch(`${this.baseUrl}/verifyApiKeyInfo`, {
         method: "GET",
         headers: this.getHeaders(),
       });
 
       const data = await response.json();
+      console.log(
+        "XibeApiClient: API key check response:",
+        response.status,
+        data,
+      );
 
       if (!response.ok) {
         log.error("Xibe API verification failed:", data);
@@ -100,12 +111,18 @@ export class XibeApiClient {
    */
   async decrementUsage(): Promise<XibeApiResponse> {
     try {
+      console.log("XibeApiClient: Decrementing usage...");
       const response = await fetch(`${this.baseUrl}/decrementUsage`, {
         method: "POST",
         headers: this.getHeaders(),
       });
 
       const data = await response.json();
+      console.log(
+        "XibeApiClient: Usage decrement response:",
+        response.status,
+        data,
+      );
 
       if (!response.ok) {
         log.error("Xibe API usage decrement failed:", data);
@@ -136,16 +153,21 @@ export class XibeApiClient {
    * Get usage info and throw error if no remaining usage
    */
   async ensureUsageAvailable(): Promise<XibeUsageInfo> {
+    console.log("XibeApiClient: Ensuring usage is available...");
     const usage = await this.getUsageCount();
+    console.log("XibeApiClient: Usage check result:", usage);
 
     if (!usage.valid) {
+      console.error("XibeApiClient: Invalid API key detected");
       throw new Error("Invalid API key");
     }
 
     if (usage.remaining <= 0) {
+      console.error("XibeApiClient: Daily limit exceeded");
       throw new Error(`Daily limit exceeded. Plan: ${usage.planName}`);
     }
 
+    console.log("XibeApiClient: Usage available, proceeding with AI request");
     return usage;
   }
 }

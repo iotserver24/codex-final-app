@@ -1620,8 +1620,17 @@ export class IpcClient {
   }
 
   public async authLogin(params: {
-    machineId: string;
-    callbackUrl: string;
+    authData?: {
+      success: boolean;
+      user: {
+        id: string;
+        email: string;
+        plan: "free" | "pro";
+        machineId: string;
+      };
+      apiKey: string;
+      error?: string;
+    };
   }): Promise<{
     success: boolean;
     user?: {

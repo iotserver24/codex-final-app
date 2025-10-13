@@ -18,7 +18,7 @@ Create `api/.env` from `api/.env.example` and set:
 
 ```ini
 PORT=3001
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://localhost:8080
 POLLINATIONS_TOKEN=your_pollinations_token_here
 ```
 
