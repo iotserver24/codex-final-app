@@ -102,9 +102,7 @@ export function useAuth() {
   }, [setAuthState, setLoginDialogOpen]);
 
   const login = useCallback(
-    async (
-      _callbackUrl: string = "http://localhost:3000/api/auth/callback",
-    ) => {
+    async (_callbackUrl: string = "https://api.xibe.app/auth/callback") => {
       try {
         setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
 
@@ -113,7 +111,7 @@ export function useAuth() {
 
         // Open browser for authentication instead of direct login
         await IpcClient.getInstance().openExternalUrl(
-          `http://localhost:8080/auth?desktop=true&machine_id=${machineId}`,
+          `https://xibe.app/auth?desktop=true&machine_id=${machineId}`,
         );
 
         // Reset loading state since we're redirecting to browser

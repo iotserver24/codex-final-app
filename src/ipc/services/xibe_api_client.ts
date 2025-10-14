@@ -26,8 +26,8 @@ export interface XibeApiResponse {
 }
 
 export class XibeApiClient {
-  // Local development: API server at http://localhost:3000
-  public readonly baseUrl = "http://localhost:3000/api";
+  // Production API server at https://api.xibe.app
+  public readonly baseUrl = "https://api.xibe.app";
   private apiKey: string | null = null;
 
   constructor(apiKey?: string) {
@@ -58,7 +58,7 @@ export class XibeApiClient {
   async verifyApiKeyInfo(): Promise<XibeUsageInfo> {
     try {
       console.log("XibeApiClient: Checking API key validity...");
-      const response = await fetch(`${this.baseUrl}/verifyApiKeyInfo`, {
+      const response = await fetch(`${this.baseUrl}/api/verifyApiKeyInfo`, {
         method: "GET",
         headers: this.getHeaders(),
       });
@@ -87,7 +87,7 @@ export class XibeApiClient {
    */
   async getUsageCount(): Promise<XibeUsageInfo> {
     try {
-      const response = await fetch(`${this.baseUrl}/getUsageCount`, {
+      const response = await fetch(`${this.baseUrl}/api/getUsageCount`, {
         method: "GET",
         headers: this.getHeaders(),
       });
@@ -112,7 +112,7 @@ export class XibeApiClient {
   async decrementUsage(): Promise<XibeApiResponse> {
     try {
       console.log("XibeApiClient: Decrementing usage...");
-      const response = await fetch(`${this.baseUrl}/decrementUsage`, {
+      const response = await fetch(`${this.baseUrl}/api/decrementUsage`, {
         method: "POST",
         headers: this.getHeaders(),
       });

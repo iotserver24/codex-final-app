@@ -10,6 +10,7 @@ export const PROVIDERS_THAT_SUPPORT_THINKING: (keyof typeof MODEL_OPTIONS)[] = [
   "xai",
   "bedrock",
   "europeanswallow",
+  "agentrouter",
   "auto",
   "codex",
 ];
@@ -466,6 +467,89 @@ export const MODEL_OPTIONS: Record<string, ModelOption[]> = {
       temperature: 0,
     },
   ],
+  agentrouter: [
+    {
+      name: "claude-3-5-haiku-20241022",
+      displayName: "Claude 3.5 Haiku",
+      description: "Fast and efficient Claude model",
+      maxOutputTokens: 8_000,
+      contextWindow: 200_000,
+      temperature: 0,
+      dollarSigns: 1,
+    },
+    {
+      name: "claude-sonnet-4-20250514",
+      displayName: "Claude 4 Sonnet",
+      description: "Advanced Claude 4 model",
+      maxOutputTokens: 8_000,
+      contextWindow: 200_000,
+      temperature: 0,
+      dollarSigns: 3,
+    },
+    {
+      name: "claude-sonnet-4-5-20250929",
+      displayName: "Claude 4.5 Sonnet",
+      description: "Latest Claude 4.5 model",
+      maxOutputTokens: 8_000,
+      contextWindow: 200_000,
+      temperature: 0,
+      dollarSigns: 3,
+    },
+    {
+      name: "deepseek-r1-0528",
+      displayName: "DeepSeek R1",
+      description: "DeepSeek reasoning model",
+      maxOutputTokens: 16_000,
+      contextWindow: 128_000,
+      temperature: 0,
+      dollarSigns: 2,
+    },
+    {
+      name: "deepseek-v3.1",
+      displayName: "DeepSeek V3.1",
+      description: "DeepSeek V3.1 model",
+      maxOutputTokens: 16_000,
+      contextWindow: 128_000,
+      temperature: 0,
+      dollarSigns: 1,
+    },
+    {
+      name: "deepseek-v3.2",
+      displayName: "DeepSeek V3.2",
+      description: "DeepSeek V3.2 model",
+      maxOutputTokens: 16_000,
+      contextWindow: 128_000,
+      temperature: 0,
+      dollarSigns: 1,
+    },
+    {
+      name: "glm-4.5",
+      displayName: "GLM 4.5",
+      description: "GLM 4.5 model",
+      maxOutputTokens: 16_000,
+      contextWindow: 128_000,
+      temperature: 0,
+      dollarSigns: 2,
+    },
+    {
+      name: "gpt-5",
+      displayName: "GPT 5 Codex",
+      description: "OpenAI GPT 5 model",
+      maxOutputTokens: 16_000,
+      contextWindow: 128_000,
+      temperature: 0,
+      dollarSigns: 3,
+    },
+    {
+      name: "grok-code-fast-1",
+      displayName: "Grok Code 4",
+      description: "Grok Code model",
+      maxOutputTokens: 16_000,
+      contextWindow: 128_000,
+      temperature: 0,
+      dollarSigns: 2,
+    },
+  ],
 };
 
 export const TURBO_MODELS: LanguageModel[] = [
@@ -504,6 +588,7 @@ export const PROVIDER_TO_ENV_VAR: Record<string, string> = {
   xai: "XAI_API_KEY",
   bedrock: "AWS_BEARER_TOKEN_BEDROCK",
   europeanswallow: "EUROPEAN_SWALLOW_AI_API_KEY",
+  agentrouter: "AGENT_ROUTER_API_KEY",
   // codex doesn't need an env var as it uses hardcoded token
 };
 
@@ -575,6 +660,12 @@ export const CLOUD_PROVIDERS: Record<
     displayName: "European Swallow AI",
     hasFreeTier: false,
     websiteUrl: "https://api.europeanswallowai.com",
+    gatewayPrefix: "",
+  },
+  agentrouter: {
+    displayName: "Agent Router",
+    hasFreeTier: true,
+    websiteUrl: "https://agentrouter.org/register?aff=ywol",
     gatewayPrefix: "",
   },
 };

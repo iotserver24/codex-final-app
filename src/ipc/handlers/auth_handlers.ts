@@ -68,6 +68,13 @@ export function registerAuthHandlers() {
       writeSettings({
         ...currentSettings,
         xibeApiKey: { value: machineId },
+        // Store authenticated user information for persistence
+        authenticatedUser: {
+          id: authData.user.id,
+          email: authData.user.email,
+          plan: authData.user.plan,
+          machineId: authData.user.machineId,
+        },
       });
 
       return {
@@ -87,11 +94,12 @@ export function registerAuthHandlers() {
   // Logout
   ipcMain.handle("auth-logout", async () => {
     try {
-      // Clear API key from settings
+      // Clear API key and authenticated user from settings
       const currentSettings = readSettings();
       writeSettings({
         ...currentSettings,
         xibeApiKey: undefined,
+        authenticatedUser: undefined,
       });
       return { success: true };
     } catch (error) {
@@ -116,10 +124,11 @@ export function registerAuthHandlers() {
           apiKey.startsWith("Invalid Key"))
       ) {
         console.log("Clearing temporary/invalid API key:", apiKey);
-        // Clear the temporary API key
+        // Clear the temporary API key and user data
         writeSettings({
           ...settings,
           xibeApiKey: undefined,
+          authenticatedUser: undefined,
         });
         return {
           isAuthenticated: false,
@@ -133,17 +142,33 @@ export function registerAuthHandlers() {
           "Auth status: Found valid machine ID in settings:",
           apiKey?.substring(0, 8) + "...",
         );
-        return {
-          isAuthenticated: true,
-          user: {
-            id: "unknown",
-            email: "unknown@example.com",
-            plan: "free",
-            machineId: apiKey,
-            // Return machine ID as API key (server now returns machine ID)
-            apiKey: apiKey,
-          },
-        };
+
+        // Return stored user information if available, otherwise fallback to basic info
+        const authenticatedUser = settings?.authenticatedUser;
+        if (authenticatedUser) {
+          return {
+            isAuthenticated: true,
+            user: {
+              id: authenticatedUser.id,
+              email: authenticatedUser.email,
+              plan: authenticatedUser.plan,
+              machineId: authenticatedUser.machineId,
+              apiKey: apiKey,
+            },
+          };
+        } else {
+          // Fallback for users who authenticated before this update
+          return {
+            isAuthenticated: true,
+            user: {
+              id: "unknown",
+              email: "unknown@example.com",
+              plan: "free",
+              machineId: apiKey,
+              apiKey: apiKey,
+            },
+          };
+        }
       }
 
       return {

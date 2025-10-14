@@ -44,12 +44,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return <>{children}</>;
   }
 
-  // If not authenticated, show a loading state while login dialog is open
-  // The login dialog will be rendered by the LoginDialog component
-  return (
-    <div className="relative">
-      {/* Render children in background but login dialog will overlay */}
-      <div className="opacity-50 pointer-events-none">{children}</div>
-    </div>
-  );
+  // If not authenticated, don't show any content - only the fullscreen login dialog
+  // This ensures users cannot bypass authentication
+  return null;
 }

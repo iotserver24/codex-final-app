@@ -33,7 +33,7 @@ export function LoginDialog() {
     try {
       // Redirect to browser authentication instead of offline login
       await handleOpenWebsite();
-      setIsOpen(false);
+      // Don't close dialog here - let it close automatically when auth state changes
     } catch (error) {
       console.error("Login failed:", error);
     } finally {
@@ -46,13 +46,13 @@ export function LoginDialog() {
       // Get machine ID before opening browser
       const { machineId } = await IpcClient.getInstance().getMachineId();
       IpcClient.getInstance().openExternalUrl(
-        `http://localhost:8080/auth?desktop=true&machine_id=${machineId}`,
+        `https://xibe.app/auth?desktop=true&machine_id=${machineId}`,
       );
     } catch (error) {
       console.error("Failed to get machine ID:", error);
       // Fallback without machine ID
       IpcClient.getInstance().openExternalUrl(
-        "http://localhost:8080/auth?desktop=true",
+        "https://xibe.app/auth?desktop=true",
       );
     }
   };
@@ -63,28 +63,9 @@ export function LoginDialog() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="relative w-full max-w-6xl h-full max-h-[90vh] bg-white dark:bg-gray-900 rounded-lg shadow-2xl overflow-hidden">
-        {/* Close button */}
-        <button
-          onClick={() => setIsOpen(false)}
-          title="Close login dialog"
-          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+    <div className="fixed inset-0 z-50 bg-black backdrop-blur-sm flex items-center justify-center">
+      <div className="relative w-full h-full bg-white dark:bg-gray-900 overflow-hidden">
+        {/* Removed close button - users must authenticate */}
 
         <div className="flex h-full">
           {/* Left side - Branding */}

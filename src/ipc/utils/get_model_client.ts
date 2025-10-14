@@ -551,6 +551,27 @@ function getRegularModelClient(
         backupModelClients: [],
       };
     }
+    case "agentrouter": {
+      // Agent Router uses OpenAI-compatible API with special headers
+      const provider = createOpenAICompatible({
+        name: "agentrouter",
+        baseURL: "https://agentrouter.org/v1",
+        apiKey,
+        headers: {
+          "x-api-key": apiKey,
+          "x-app": "cli",
+          "User-Agent": "claude-cli/2.0.14 (external, cli)",
+          "anthropic-beta": "fine-grained-tool-streaming-2025-05-14",
+        },
+      });
+      return {
+        modelClient: {
+          model: provider(model.name),
+          builtinProviderId: providerId,
+        },
+        backupModelClients: [],
+      };
+    }
     default: {
       // Handle custom providers
       if (providerConfig.type === "custom") {

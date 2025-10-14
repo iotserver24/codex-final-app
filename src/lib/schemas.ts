@@ -220,6 +220,17 @@ export const ReleaseChannelSchema = z.enum(["stable", "beta"]);
 export type ReleaseChannel = z.infer<typeof ReleaseChannelSchema>;
 
 /**
+ * Schema for authenticated user information
+ */
+export const AuthenticatedUserSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  plan: z.string(),
+  machineId: z.string(),
+});
+export type AuthenticatedUser = z.infer<typeof AuthenticatedUserSchema>;
+
+/**
  * Zod schema for user settings
  */
 export const UserSettingsSchema = z.object({
@@ -236,6 +247,8 @@ export const UserSettingsSchema = z.object({
   polarApiKey: SecretSchema.optional(),
   // Xibe AI API key for usage tracking
   xibeApiKey: SecretSchema.optional(),
+  // Authenticated user information for persistence
+  authenticatedUser: AuthenticatedUserSchema.optional(),
   // Default share duration in minutes
   defaultShareDuration: z.number().optional(),
   supabase: SupabaseSchema.optional(),
