@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., 1.3.0)"
+        description: "Version to release (e.g., 1.3.5)"
         required: true
-        default: "1.3.0"
+        default: "1.3.5"
 
 permissions:
   contents: write
@@ -295,7 +295,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.3.0' }}
+            VERSION=${{ github.event.inputs.version || '1.3.5' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -369,7 +369,14 @@ jobs:
           body: |
             ## Xibe AI v${{ steps.version.outputs.version }}
 
-            ### 🚀 What's New
+            ### 🚀 What's New in v1.3.5
+            - **Agent Router Integration**: New AI provider with $200 free credits and access to Claude 4.5, DeepSeek V3.2, GPT-5, and Grok Code models
+            - **Enhanced Authentication**: Improved login persistence with proper user email storage
+            - **App Favorites**: Mark your most-used apps as favorites for quick access
+            - **Enhanced Chat Activity Tracking**: Better visibility into recent chat sessions and concurrent conversations
+            - **Production API Integration**: Updated all endpoints to use production URLs instead of localhost
+            - **Modernized UI Components**: Cleaner, more intuitive interface throughout the application
+            - **Fullscreen Login Experience**: Streamlined authentication flow with no bypass options
             - AI-powered code generation and editing
             - 50+ AI models support including GPT-5, Claude, and free models
             - Vercel integration for one-click deployment
@@ -408,6 +415,11 @@ jobs:
             ### 📚 Documentation
             Visit our [documentation](https://docs.xibe.app/) for detailed guides and tutorials.
 
+            ### 🎁 New AI Provider - Agent Router
+            Get started with **Agent Router** - our new AI provider featuring 9 premium models including Claude 4.5, DeepSeek V3.2, GPT-5, and Grok Code. **New users get $200 free credits!**
+
+            [Sign up for Agent Router now →](https://agentrouter.org/register?aff=ywol)
+
             ---
             *Built with ❤️ by the Xibe AI team*
         env:
@@ -428,7 +440,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
           else
-            VERSION=${{ github.event.inputs.version || '1.3.0' }}
+            VERSION=${{ github.event.inputs.version || '1.3.5' }}
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
@@ -495,7 +507,14 @@ jobs:
           body: |
             ## Xibe AI v${{ steps.version.outputs.version }}
 
-            ### 🚀 What's New
+            ### 🚀 What's New in v1.3.5
+            - **Agent Router Integration**: New AI provider with $200 free credits and access to Claude 4.5, DeepSeek V3.2, GPT-5, and Grok Code models
+            - **Enhanced Authentication**: Improved login persistence with proper user email storage
+            - **App Favorites**: Mark your most-used apps as favorites for quick access
+            - **Enhanced Chat Activity Tracking**: Better visibility into recent chat sessions and concurrent conversations
+            - **Production API Integration**: Updated all endpoints to use production URLs instead of localhost
+            - **Modernized UI Components**: Cleaner, more intuitive interface throughout the application
+            - **Fullscreen Login Experience**: Streamlined authentication flow with no bypass options
             - AI-powered code generation and editing
             - 50+ AI models support including GPT-5, Claude, and free models
             - Vercel integration for one-click deployment
@@ -534,6 +553,11 @@ jobs:
             ### 📚 Documentation
             Visit our [documentation](https://docs.xibe.app/) for detailed guides and tutorials.
 
+            ### 🎁 New AI Provider - Agent Router
+            Get started with **Agent Router** - our new AI provider featuring 9 premium models including Claude 4.5, DeepSeek V3.2, GPT-5, and Grok Code. **New users get $200 free credits!**
+
+            [Sign up for Agent Router now →](https://agentrouter.org/register?aff=ywol)
+
             ---
             *Built with ❤️ by the Xibe AI team*
         env:
@@ -557,7 +581,7 @@ jobs:
 
       - name: Update version in package.json
         run: |
-          VERSION=${{ github.event.inputs.version || '1.3.0' }}
+          VERSION=${{ github.event.inputs.version || '1.3.5' }}
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           if [ "$CURRENT_VERSION" != "$VERSION" ]; then
             npm version $VERSION --no-git-tag-version
@@ -568,7 +592,7 @@ jobs:
 
       - name: Commit and push version update
         run: |
-          VERSION=${{ github.event.inputs.version || '1.3.0' }}
+          VERSION=${{ github.event.inputs.version || '1.3.5' }}
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           if [ "$CURRENT_VERSION" != "$VERSION" ]; then
             git config --local user.email "action@github.com"
