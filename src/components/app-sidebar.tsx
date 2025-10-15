@@ -86,6 +86,12 @@ const items = [
     to: "/hub",
     icon: Store,
   },
+  {
+    title: "Help",
+    to: "/help",
+    icon: HelpCircle,
+    isSpecial: true, // Flag to indicate this is a special button (opens dialog)
+  },
 ];
 
 // Hover state types
@@ -383,16 +389,19 @@ export function AppSidebar() {
       <SidebarContent className="overflow-hidden">
         <div className="flex mt-8">
           {/* Left Column: Menu items */}
-          <div className="">
+          <div className="w-16 flex-shrink-0">
             <SidebarTrigger
               onMouseEnter={() => {
                 setHoverState("clear-hover");
               }}
             />
-            <AppIcons onHoverChange={setHoverState} />
+            <AppIcons
+              onHoverChange={setHoverState}
+              onHelpClick={() => setIsHelpDialogOpen(true)}
+            />
           </div>
           {/* Right Column: Chat List Section */}
-          <div className="w-[240px]">
+          <div className="w-[240px] flex-shrink-0">
             <AppList show={selectedItem === "Apps"} />
             <ChatList show={selectedItem === "Chat"} />
             <SettingsList show={selectedItem === "Settings"} />
@@ -401,29 +410,51 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            {/* Change button to open dialog instead of linking */}
-            <SidebarMenuButton
-              size="sm"
-              className="font-medium w-14 flex flex-col items-center gap-1 h-14 mb-2 rounded-2xl"
-              onClick={() => setIsHelpDialogOpen(true)} // Open dialog on click
-            >
-              <HelpCircle className="h-5 w-5" />
-              <span className={"text-xs"}>Help</span>
-            </SidebarMenuButton>
-            <HelpDialog
-              isOpen={isHelpDialogOpen}
-              onClose={() => setIsHelpDialogOpen(false)}
-            />
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <button
-          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm mt-2"
-          onClick={() => setIsDonateOpen(true)}
-        >
-          <Gift className="w-4 h-4" /> Donate
-        </button>
+        {/* Authentication Section */}
+        <div className="mt-4 pt-4 border-t border-sidebar-border">
+          {authState.isAuthenticated && authState.user ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 px-3 py-2 text-sm">
+                <User className="w-4 h-4" />
+                <span className="truncate">{authState.user.email}</span>
+                {authState.user.plan === "pro" && (
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                )}
+              </div>
+              <button
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm w-full"
+                onClick={() => setIsDonateOpen(true)}
+              >
+                <Gift className="w-4 h-4" /> Donate
+              </button>
+              <button
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm w-full text-left"
+                onClick={logout}
+                disabled={authState.isLoading}
+              >
+                <LogOut className="w-4 h-4" />
+                {authState.isLoading ? "Logging out..." : "Logout"}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <button
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm w-full"
+                onClick={() => setIsDonateOpen(true)}
+              >
+                <Gift className="w-4 h-4" /> Donate
+              </button>
+              <button
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm w-full"
+                onClick={() => setLoginDialogOpen(true)}
+                disabled={authState.isLoading}
+              >
+                <LogIn className="w-4 h-4" />
+                {authState.isLoading ? "Authenticating..." : "Sign In"}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Donate Modal */}
         <Dialog open={isDonateOpen} onOpenChange={setIsDonateOpen}>
@@ -478,37 +509,6 @@ export function AppSidebar() {
             </div>
           </DialogContent>
         </Dialog>
-        {/* Authentication Section */}
-        <div className="mt-4 pt-4 border-t border-sidebar-border">
-          {authState.isAuthenticated && authState.user ? (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 px-3 py-2 text-sm">
-                <User className="w-4 h-4" />
-                <span className="truncate">{authState.user.email}</span>
-                {authState.user.plan === "pro" && (
-                  <Crown className="w-4 h-4 text-yellow-500" />
-                )}
-              </div>
-              <button
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm w-full text-left"
-                onClick={logout}
-                disabled={authState.isLoading}
-              >
-                <LogOut className="w-4 h-4" />
-                {authState.isLoading ? "Logging out..." : "Logout"}
-              </button>
-            </div>
-          ) : (
-            <button
-              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm w-full"
-              onClick={() => setLoginDialogOpen(true)}
-              disabled={authState.isLoading}
-            >
-              <LogIn className="w-4 h-4" />
-              {authState.isLoading ? "Authenticating..." : "Sign In"}
-            </button>
-          )}
-        </div>
 
         <button
           className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sm mt-2"
@@ -648,6 +648,11 @@ export function AppSidebar() {
         </Dialog>
       </SidebarFooter>
 
+      <HelpDialog
+        isOpen={isHelpDialogOpen}
+        onClose={() => setIsHelpDialogOpen(false)}
+      />
+
       <SidebarRail />
     </Sidebar>
   );
@@ -655,18 +660,20 @@ export function AppSidebar() {
 
 function AppIcons({
   onHoverChange,
+  onHelpClick,
 }: {
   onHoverChange: (state: HoverState) => void;
+  onHelpClick: () => void;
 }) {
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
 
   return (
     // When collapsed: only show the main menu
-    <SidebarGroup className="pr-0">
+    <SidebarGroup className="pr-0 overflow-visible">
       {/* <SidebarGroupLabel>Dyad</SidebarGroupLabel> */}
 
-      <SidebarGroupContent>
+      <SidebarGroupContent className="overflow-visible">
         <SidebarMenu>
           {items.map((item) => {
             const isActive =
@@ -676,39 +683,79 @@ function AppIcons({
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
-                  asChild
+                  asChild={!item.isSpecial}
                   size="sm"
-                  className="font-medium w-14"
+                  className="font-medium w-14 flex-shrink-0"
+                  onClick={
+                    item.isSpecial
+                      ? () => {
+                          if (item.title === "Help") {
+                            onHelpClick();
+                          }
+                        }
+                      : undefined
+                  }
                 >
-                  <Link
-                    to={item.to}
-                    className={`flex flex-col items-center gap-1 h-14 mb-2 rounded-2xl ${
-                      isActive ? "bg-sidebar-accent" : ""
-                    }`}
-                    onMouseEnter={() => {
-                      if (item.title === "Apps") {
-                        onHoverChange("start-hover:app");
-                      } else if (item.title === "Chat") {
-                        onHoverChange("start-hover:chat");
-                      } else if (item.title === "Settings") {
-                        onHoverChange("start-hover:settings");
-                      } else if (item.title === "Library") {
-                        onHoverChange("start-hover:library");
-                      }
-                    }}
-                  >
-                    <div className="flex flex-col items-center gap-1">
-                      <item.icon className="h-5 w-5" />
-                      <span className={"text-sm flex items-center gap-1"}>
-                        {item.title}
-                        {item.title === "Docs" && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted-foreground/15 text-muted-foreground">
-                            Beta
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  </Link>
+                  {item.isSpecial ? (
+                    <button
+                      className={`flex flex-col items-center gap-1 h-14 mb-2 rounded-2xl w-full ${
+                        isActive ? "bg-sidebar-accent" : ""
+                      }`}
+                      onMouseEnter={() => {
+                        if (item.title === "Apps") {
+                          onHoverChange("start-hover:app");
+                        } else if (item.title === "Chat") {
+                          onHoverChange("start-hover:chat");
+                        } else if (item.title === "Settings") {
+                          onHoverChange("start-hover:settings");
+                        } else if (item.title === "Library") {
+                          onHoverChange("start-hover:library");
+                        }
+                      }}
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <item.icon className="h-5 w-5" />
+                        <span className={"text-sm flex items-center gap-1"}>
+                          {item.title}
+                          {item.title === "Docs" && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted-foreground/15 text-muted-foreground">
+                              Beta
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </button>
+                  ) : (
+                    <Link
+                      to={item.to}
+                      className={`flex flex-col items-center gap-1 h-14 mb-2 rounded-2xl ${
+                        isActive ? "bg-sidebar-accent" : ""
+                      }`}
+                      onMouseEnter={() => {
+                        if (item.title === "Apps") {
+                          onHoverChange("start-hover:app");
+                        } else if (item.title === "Chat") {
+                          onHoverChange("start-hover:chat");
+                        } else if (item.title === "Settings") {
+                          onHoverChange("start-hover:settings");
+                        } else if (item.title === "Library") {
+                          onHoverChange("start-hover:library");
+                        }
+                      }}
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <item.icon className="h-5 w-5" />
+                        <span className={"text-sm flex items-center gap-1"}>
+                          {item.title}
+                          {item.title === "Docs" && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted-foreground/15 text-muted-foreground">
+                              Beta
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </Link>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
